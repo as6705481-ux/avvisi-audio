@@ -124,7 +124,7 @@
             transform: scale(0.8);
         }
         .carousel-item img {
-            max-width: 50%; /* Reduce el tamaño de la imagen */
+            max-width: 60%; /* Reduce el tamaño de la imagen */
             height: auto; /* Mantiene la proporción */
             margin: 0 auto; /* Centra las imágenes */
         }
@@ -355,22 +355,22 @@
         }
 
         /* ESTILO LOGOS */
-    .container2 {
-        overflow: hidden;
-        .slider {
-            animation: slidein 30s linear infinite;
-            white-space: nowrap;
-            .logos {
-            width: 100%;
-            display: inline-block;
-            margin: 0px 0;
-            .fab {
-                width: calc(100% / 5);
-                animation: fade-in 0.5s 
-                cubic-bezier(0.455, 0.03, 0.515, 0.955) forwards;
-            }
-            }
-        }
+        .container2 {
+            overflow: hidden;
+                .slider {
+                    animation: slidein 30s linear infinite;
+                    white-space: nowrap;
+                    .logos {
+                    width: 100%;
+                    display: inline-block;
+                    margin: 0px 50px;
+                    .fab {
+                        width: calc(100% / 5);
+                        animation: fade-in 0.5s 
+                        cubic-bezier(0.455, 0.03, 0.515, 0.955) forwards;
+                    }
+                    }
+                }
         }
 
         @keyframes slidein {
@@ -444,6 +444,20 @@
     .cta:active {
         transform: scale(0.96);
     }
+    @media (max-width: 992px){
+        .slider .logos .fab{ width:20vw; max-width:128px; }
+        .carousel-item img {
+            max-width: 90%;
+        }
+
+    }
+    @media (max-width: 600px){
+        .slider .logos .fab{ width:33.33vw; max-width:120px; min-width:80px; }
+    }
+    @media (prefers-reduced-motion: reduce){
+        .slider{ animation: none; }
+    }
+
 
     /*  */
     .autoShow{
@@ -500,8 +514,17 @@
                 scale: 1;
                 translate: 0 0;
             }
-    }
+        }
      }
+     html::-webkit-scrollbar {
+        width: 0.6vw;
+        height: 0.6vw;
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0) 30%, #004e92 30%, #004e92 70%, rgba(255, 255, 255, 0) 70%);
+    }
+    html::-webkit-scrollbar-thumb {
+        background: #fa6721ff;
+        border-radius: 4px;
+    }
     </style>
 </head>
 <body>
@@ -517,9 +540,9 @@
             <div class='collapse navbar-collapse' id='navbarNav'>
                 <ul class='navbar-nav ms-auto'>
                     <li class='nav-item'><a class='nav-link highlight' href="{{ url_for('home') }}">Inicio</a></li>
-                    <li class='nav-item'><a class='nav-link' href='/eventos'>Eventos</a></li>
-                    <li class='nav-item'><a class='nav-link highlight' href='/testimonios'>Testimonios</a></li>
-                    <li class='nav-item'><a class='nav-link' href='/contacto'>Contacto</a></li>
+                    <li class='nav-item'><a class='nav-link' href='#eventos'>Eventos</a></li>
+                    <li class='nav-item'><a class='nav-link highlight' href='#servicios'>Servicios disponibles</a></li>
+                    <!-- <li class='nav-item'><a class='nav-link' href='/contacto'>Contacto</a></li> -->
                 </ul>
                 <a href="{{ url_for('login_get') }}" class="btn btn-orange ms-3">Iniciar Sesión</a>
             </div>
@@ -551,7 +574,14 @@
         <div class='overlay'>
             <h1 class="fade-in">El <span class='highlight'>Sonido</span> de Tus Momentos Especiales</h1>
             <p class="fade-in">Haz de tu evento una experiencia inolvidable con Avissi Audio.</p>
-            <a href='/contacto' class='btn btn-orange btn-lg fade-in'>Cotiza tu evento</a>
+            <a
+            class="btn btn-orange btn-lg fade-in"
+            target="_blank" rel="noopener"
+            href="https://wa.me/50432490824?text=Hola%2C%20soy%20[Tu%20Nombre].%0AQuiero%20cotizar%20un%20evento%3A%0A•%20Fecha%3A%20[dd%2Fmm%2Faaaa]%0A•%20Ciudad%3A%20[Tegucigalpa]%0A•%20Tipo%3A%20[Cena%20corporativa]%0A•%20Invitados%3A%20[120]%0A•%20Presupuesto%3A%20[L%2020%2C000]%0A%C2%BF"
+            >
+                Cotiza tu evento
+            </a>
+
         </div>
     </section>
 
@@ -575,7 +605,7 @@
         </div>
     </section> -->
 
-    <section class="container my-5">
+    <section id="servicios" class="container my-5">
         <h2 class="text-center autoShow"><span class="highlight">Servicios</span> Disponibles</h2>
         <div class="body_card">
             <div class="card-grid imageReveal">
@@ -723,9 +753,6 @@
                 <h1 class="text-center">Nuestros Clientes:</h1>
                 <div class="slider">
                     <div class="logos">
-                        <!-- <i class="fab fa-4x">
-                            <img src="../static/logo-1.png" alt="" width="auto" height="auto" loading="lazy">
-                        </i> -->
                         <i class="fab fa-4x">
                             <img src="../static/logo-2.svg" alt="nestle" width="50" height="50" loading="lazy">
                         </i>
@@ -736,27 +763,24 @@
                             <img src="../static/logo-4.svg" alt="huawei" width="50" height="50" loading="lazy">
                         </i>
                         <i class="fab fa-4x">
-                            <img src="../static/logo-5.svg" alt="puma_energi" width="120" height="120" loading="lazy">
+                            <img src="../static/logo-5.svg" alt="puma_energi" width="50" height="50" loading="lazy">
                         </i>
                         <i class="fab fa-4x">
                             <img src="../static/logo-6.svg" alt="volkswagen" width="50" height="50" loading="lazy">
                         </i>
                     </div>
                     <div class="logos">
-                        <!-- <i class="fab fa-4x">
-                            <img src="../static/logo-1.png" alt="" width="auto" height="auto" loading="lazy">
-                        </i> -->
                         <i class="fab  fa-4x">
                             <img src="../static/logo-2.svg" alt="nestle" width="50" height="50" loading="lazy">
                         </i>
                         <i class="fab fa-4x">
                             <img src="../static/logo-3.svg" alt="nissan" width="50" height="50" loading="lazy">
                         </i>
-                        <i class="fabm fa-4x">
+                        <i class="fab fa-4x">
                             <img src="../static/logo-4.svg" alt="huawei" width="50" height="50" loading="lazy">
                         </i>
-                        <i class="fabm fa-4x">
-                            <img src="../static/logo-5.svg" alt="puma_energi" width="120" height="120" loading="lazy">
+                        <i class="fab fa-4x">
+                            <img src="../static/logo-5.svg" alt="puma_energi" width="50" height="50" loading="lazy">
                         </i>
                         <i class="fab fa-4x">
                             <img src="../static/logo-6.svg" alt="volkswagen" width="50" height="50" loading="lazy">
@@ -780,7 +804,7 @@
         </div>
     </section>
 
-    <section class="container my-5 autoShow">
+    <section id="eventos" class="container my-5 autoShow">
         <h2 class="text-center autoShow"><span class="highlight">Galería</span> de Eventos</h2>
         
         <div id="eventosCarousel" class="carousel slide mt-2 imageReveal" data-bs-ride="carousel">
