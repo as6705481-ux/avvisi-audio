@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang='es'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>Avissi Audio - Eventos Inolvidables</title>
+    <link rel="icon" href="../static/logo_avvisi.svg" type="image/svg">
+    <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css">
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css"> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script> -->
+    <style>
+        :root {
+            --bg: #0a0c10;
+            --card-bg: rgba(20, 25, 35, 0.9);
+            --accent: #ff6600;
+            --text: #fafbfd;
+            --text-dim: #c6c7cc;
+            --radius: 20px;
+            --shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+            --color-primary: #ff6600;
+        }
+
+        body {
+            background: linear-gradient(to right, #000428, #004e92);
+            color: #fff;
+        }
+        
+        .colorBlue { color: #004e92; }
+
+        .hero {
+            background: url('../static/bodas/10.png') no-repeat center center;
+            background-size: cover;
+            height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+         /* --- HERO con video --- */
+        .hero{
+            position: relative;
+            height: 80vh;            /* ya lo tenías; dejo explícito */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            overflow: hidden;         /* importante para recortar el video */
+            isolation: isolate;       /* asegura el stacking context del scrim */
+        }
+
+        /* .hero-video{
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;        
+            z-index: 0;
+            filter: saturate(1.05) contrast(1.05);
+        }
+
+        .hero-scrim{
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.6));
+        }
+
+        .hero .overlay{
+            position: relative;
+            z-index: 2;
+            background: rgba(0,0,0,0.6);
+            padding: 50px;
+            border-radius: 10px;
+            color: var(--text, #fafbfd);
+        }
+        */
+        .fade-in{
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp .8s ease forwards;
+        }
+        .fade-in:nth-child(2){ animation-delay: .10s; }
+        .fade-in:nth-child(3){ animation-delay: .20s; }
+
+        @keyframes fadeInUp{
+            to{ opacity: 1; transform: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce){
+            .hero-video{ display:none; }
+            .hero{ background: url('/static/img/hero-poster.jpg') center/cover no-repeat; }
+            .fade-in{ animation: none; opacity: 1; transform: none; }
+        } 
+
+        .overlay {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 50px;
+            border-radius: 10px;
+        }
+        .btn-orange {
+            background-color: var(--color-primary);
+            border: none;
+            color: white;
+            transition: transform 0.2s ease-in-out;
+        }
+        .btn-orange:hover {
+            background-color: #cc5500;
+            transform: scale(1.1);
+        }
+        .highlight { color: var(--color-primary); }
+        .bg-orange { background-color: var(--color-primary); color: white; }
+
+        /* Animaciones */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .zoom-in {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        .carousel-item img {
+            max-width: 50%; /* Reduce el tamaño de la imagen */
+            height: auto; /* Mantiene la proporción */
+            margin: 0 auto; /* Centra las imágenes */
+        }
+
+        /* SECCIÓN DE CARD INTERACTIVAS */
+        .body_card {
+            /* background: var(--bg); */
+            color: var(--text);
+            font-family: "Inter", sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 70vh;
+            /* padding: 40px; */
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 30px;
+            width: 100%;
+            max-width: 1200px;
+            }
+
+        .card {
+            perspective: 1000px;
+            cursor: pointer;
+            position: relative;
+            transform-style: preserve-3d;
+            --bs-card-bg: tr;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            min-height: 360px;
+            transform-style: preserve-3d;
+            border-radius: var(--radius);
+            transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            inset: 0;
+            border-radius: var(--radius);
+            background: var(--card-bg);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            backface-visibility: hidden;
+            transform-style: preserve-3d;
+            transition: box-shadow 0.3s, filter 0.3s;
+        }
+
+        .card-face::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: var(--radius);
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.25),
+                0 0 25px rgba(0, 255, 255, 0.15) inset;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .card:hover .card-face::before,
+        .card.flipped .card-face::before {
+            opacity: 1;
+            animation: pulse 2s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 12px rgba(0, 255, 255, 0.25),
+                0 0 25px rgba(0, 255, 255, 0.15) inset;
+            }
+            50% {
+                box-shadow: 0 0 22px rgba(0, 255, 255, 0.4),
+                0 0 35px rgba(0, 255, 255, 0.25) inset;
+            }
+            100% {
+                box-shadow: 0 0 12px rgba(0, 255, 255, 0.25),
+                0 0 25px rgba(0, 255, 255, 0.15) inset;
+            }
+        }
+
+        .card-front h2 {
+            font-family: "Orbitron", sans-serif;
+            font-size: 1.6rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .card-front p {
+            font-size: 1rem;
+            /* color: var(--text-dim); */
+            line-height: 1.5;
+            color: white;
+        }
+
+        .one {
+            /* background: url("{{ url_for('static', filename='dj.jpg') }}"); */
+            background: url("../static/CATEGORIAS/bg-bodas.svg");
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        .two {
+            /* background: url("{{ url_for('static', filename='dj.jpg') }}"); */
+            background: url("../static/CATEGORIAS/bg-coorporativos.svg");
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        .three {
+            /* background: url("{{ url_for('static', filename='dj.jpg') }}"); */
+            background: url("../static/CATEGORIAS/bg-activaciones.svg");
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        .four {
+            /* background: url("{{ url_for('static', filename='dj.jpg') }}"); */
+            background: url("../static/CATEGORIAS/bg-otros.svg");
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-weight: bold;
+        }
+
+        .card-back h3 {
+            font-family: "Orbitron", sans-serif;
+            font-size: 1.4rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        ul.features {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        ul.features li {
+            margin-bottom: 0.6rem;
+            padding-left: 1.4rem;
+            position: relative;
+            color: var(--text-dim);
+            font-size: 0.95rem;
+        }
+
+        ul.features li::before {
+            content: "⚡";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 1.5rem;
+            z-index: 100;
+        }
+
+        .cta-buttons a {
+            flex: 1;
+            text-align: center;
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .cta-buttons a.primary {
+            background: var(--accent);
+            color: #000;
+            z-index: 90;
+        }
+
+        .cta-buttons a.primary:hover {
+            background: #00ffff;
+        }
+
+        .cta-buttons a.secondary {
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .cta-buttons a.secondary:hover {
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 20px;
+            }
+            .card-inner {
+                min-height: 300px;
+            }
+            .card-face {
+                padding: 18px;
+            }
+            .card-front h2 {
+                font-size: 1.3rem;
+            }
+            .card-back h3 {
+                font-size: 1.2rem;
+            }
+            ul.features li {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* ESTILO LOGOS */
+    .container2 {
+        overflow: hidden;
+        .slider {
+            animation: slidein 30s linear infinite;
+            white-space: nowrap;
+            .logos {
+            width: 100%;
+            display: inline-block;
+            margin: 0px 0;
+            .fab {
+                width: calc(100% / 5);
+                animation: fade-in 0.5s 
+                cubic-bezier(0.455, 0.03, 0.515, 0.955) forwards;
+            }
+            }
+        }
+        }
+
+        @keyframes slidein {
+        from {
+            transform: translate3d(0, 0, 0);
+        }
+        to {
+            transform: translate3d(-100%, 0, 0);
+        }
+        }
+
+        @keyframes fade-in {
+        0% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+    span {
+        text-decoration: none;
+        color: inherit;
+    }
+    .cta {
+        position: relative;
+        margin: auto;
+        padding: 8px 15px;
+        transition: all 0.2s ease;
+    }
+    .cta:before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: block;
+        border-radius: 28px;
+        background: var(--color-primary);
+        width: 40px;
+        height: 40px;
+        transition: all 0.3s ease;
+    }
+    .cta span {
+        position: relative;
+        font-size: 12px;
+        line-height: 12px;
+        font-weight: 900;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        vertical-align: middle;
+        color: white;
+    }
+    .cta svg {
+        position: relative;
+        top: 0;
+        margin-left: 10px;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke: white;
+        stroke-width: 2;
+        transform: translateX(-5px);
+        transition: all 0.3s ease;
+    }
+    .cta:hover:before {
+        width: 100%;
+        background: #ff6600d1;
+    }
+    .cta:hover svg {
+        transform: translateX(0);
+    }
+    .cta:active {
+        transform: scale(0.96);
+    }
+
+    /*  */
+    .autoShow{
+        animation: text-apper both;
+        animation-timeline: view();
+        animation-range: entry 20% cover 100vh;
+    }
+
+    @keyframes text-apper {
+        from {
+            opacity: 0;
+            transform: translateY(100px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .imageReveal {
+        animation: imageReveal both;
+        animation-timeline: view(60% 5%);
+    }
+
+    @keyframes imageReveal {
+        from {
+            filter: saturate(0) contrast(4) brightness(1) blur(5px);
+            opacity: 0;
+            scale: 0.95;
+            translate: 0 4rem;
+        }
+        to {
+            filter: none;
+            opacity: 1;
+            scale: 1;
+            translate: 0 0;
+        }
+    }
+     @media (max-width: 768px) {
+        .imageReveal {
+            animation: imageReveal both;
+            animation-timeline: view(90% 5%);
+        }
+        @keyframes imageReveal {
+            from {
+                filter: saturate(0) contrast(4) brightness(1) blur(1px);
+                opacity: 0;
+                scale: 0.95;
+                translate: 0 4rem;
+            }
+            to {
+                filter: none;
+                opacity: 1;
+                scale: 1;
+                translate: 0 0;
+            }
+    }
+     }
+    </style>
+</head>
+<body>
+    <nav class='navbar navbar-expand-lg navbar-dark' style='background: #000428;'>
+        <div class='container'>
+            <a class='navbar-brand d-flex align-items-center' href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='logo_avvisi.svg') }}" alt='Avissi Audio Logo' style='height: 40px; width: auto; margin-right: 10px;' class="fade-in">
+                <span class='highlight fade-in'>Avissi Audio</span>
+            </a>
+            <button class='navbar-toggler' type='button' data-bs-toggle='collapse' data-bs-target='#navbarNav'>
+                <span class='navbar-toggler-icon'></span>
+            </button>
+            <div class='collapse navbar-collapse' id='navbarNav'>
+                <ul class='navbar-nav ms-auto'>
+                    <li class='nav-item'><a class='nav-link highlight' href="{{ url_for('home') }}">Inicio</a></li>
+                    <li class='nav-item'><a class='nav-link' href='/eventos'>Eventos</a></li>
+                    <li class='nav-item'><a class='nav-link highlight' href='/testimonios'>Testimonios</a></li>
+                    <li class='nav-item'><a class='nav-link' href='/contacto'>Contacto</a></li>
+                </ul>
+                <a href="{{ url_for('login_get') }}" class="btn btn-orange ms-3">Iniciar Sesión</a>
+            </div>
+        </div>
+    </nav>
+    <!-- <section class="hero">
+        <video class="hero-video"
+                autoplay
+                muted
+                loop
+                playsinline
+                preload="metadata"
+                poster="../static/boda.jpg">
+            <source src="../static/boda.jpg" type="video/webm">
+            <source src="../static/home.mp4"  type="video/mp4">
+            Tu navegador no soporta video HTML5.
+        </video>
+
+        <div class="hero-overlay"></div>
+
+        <div class="overlay">
+            <h1 class="fade-in">El <span class="highlight">Sonido</span> de Tus Momentos Especiales</h1>
+            <p class="fade-in">Haz de tu evento una experiencia inolvidable con Avissi Audio.</p>
+            <a href="/contacto" class="btn btn-orange btn-lg fade-in">Cotiza tu evento</a>
+        </div>
+        </section> -->
+
+    <section class='hero'>
+        <div class='overlay'>
+            <h1 class="fade-in">El <span class='highlight'>Sonido</span> de Tus Momentos Especiales</h1>
+            <p class="fade-in">Haz de tu evento una experiencia inolvidable con Avissi Audio.</p>
+            <a href='/contacto' class='btn btn-orange btn-lg fade-in'>Cotiza tu evento</a>
+        </div>
+    </section>
+
+    <!-- <section class='container my-5'>
+        <div class='row justify-content-center text-center'>
+            <div class='col-md-3 d-flex flex-column align-items-center zoom-in'>
+                <img src="{{ url_for('static', filename='dj.jpg') }}" class='img-fluid rounded'>
+                <h3 class='mt-3'><span class='highlight'>DJ</span> Profesionales</h3>
+                <p>Los mejores DJs para animar tu evento con música personalizada.</p>
+            </div>
+            <div class='col-md-3 d-flex flex-column align-items-center zoom-in'>
+                <img src="{{ url_for('static', filename='dj.jpg') }}" class='img-fluid rounded'>
+                <h3 class='mt-3'>Iluminación <span class='highlight'>Premium</span></h3>
+                <p>Ambienta tu evento con luces espectaculares para cada ocasión.</p>
+            </div>
+            <div class='col-md-3 d-flex flex-column align-items-center zoom-in'>
+                <img src="{{ url_for('static', filename='dj.jpg') }}" class='img-fluid rounded'>
+                <h3 class='mt-3'>Audio <span class='highlight'>Profesional</span></h3>
+                <p>Equipos de alta calidad para garantizar el mejor sonido en tu evento.</p>
+            </div>
+        </div>
+    </section> -->
+
+    <section class="container my-5">
+        <h2 class="text-center autoShow"><span class="highlight">Servicios</span> Disponibles</h2>
+        <div class="body_card">
+            <div class="card-grid imageReveal">
+                <!-- Card 1 -->
+                <div class="card">
+                    <div class="card-inner">
+                    <div class="card-face card-front one">
+                        <div>
+                            <h2>Eventos Sociales</h2>
+                            <p>Producción integral de bodas, aniversarios y celebraciones privadas con montaje de alto nivel.</p>
+                        </div>
+                        <span class="cta">
+                            <span>Click me</span>
+                            <svg width="13px" height="10px" viewBox="0 0 13 10">
+                                <path d="M1,5 L11,5"></path>
+                                <polyline points="8 1 12 5 8 9"></polyline>
+                            </svg>
+                        </span>
+                    </div>
+                    <div class="card-face card-back">
+                        <div>
+                        <h3>Incluye</h3>
+                            <ul class="features">
+                                <li>Audio profesional según invitados</li>
+                                <li>Pantallas y DJ Booth LED</li>
+                                <li>Pista personalizada o LED</li>
+                                <li>Pirotecnia fría y máquinas de humo</li>
+                            </ul>
+                        </div>
+                        <div class="cta-buttons">
+                            <a href="/catalogo-social" class="primary">Ver Catálogo</a>
+                            <a href="#" class="secondary">Cotizar</a>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="card">
+                    <div class="card-inner">
+                        <div class="card-face card-front two">
+                            <div>
+                                <h2>Eventos Corporativos</h2>
+                                <p>Soluciones audiovisuales para conferencias, lanzamientos, ferias y activaciones de marca.</p>
+                            </div>
+                            <span class="cta">
+                                <span>Click me</span>
+                                <svg width="13px" height="10px" viewBox="0 0 13 10">
+                                    <path d="M1,5 L11,5"></path>
+                                    <polyline points="8 1 12 5 8 9"></polyline>
+                                </svg>
+                            </span>
+                        </div>
+                        <div class="card-face card-back">
+                            <div>
+                                <h3>Servicios</h3>
+                                <ul class="features">
+                                    <li>Montaje de escenarios y tarimas</li>
+                                    <li>Audio y microfonía profesional</li>
+                                    <li>Pantallas LED de gran formato</li>
+                                </ul>
+                            </div>
+                            <div class="cta-buttons">
+                                <a href="/catalogo-coorporativos" class="primary">Ver Catálogo</a>
+                                <a href="#" class="secondary">Cotizar</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="card">
+                    <div class="card-inner">
+                    <div class="card-face card-front three">
+                        <div>
+                            <h2>BTL y Activaciones</h2>
+                            <p>Diseño, logística y montaje para campañas BTL, branding en punto de venta y eventos promocionales.</p>
+                        </div>
+                        <span class="cta">
+                            <span>Click me</span>
+                            <svg width="13px" height="10px" viewBox="0 0 13 10">
+                                <path d="M1,5 L11,5"></path>
+                                <polyline points="8 1 12 5 8 9"></polyline>
+                            </svg>
+                        </span>
+                    </div>
+                    <div class="card-face card-back">
+                        <div>
+                            <h3>Ventajas</h3>
+                            <ul class="features">
+                                <li>Producción creativa y personalizada</li>
+                                <li>Audio, video y luces sincronizados</li>
+                                <li>Instalaciones rápidas y seguras</li>
+                            </ul>
+                        </div>
+                        <div class="cta-buttons">
+                            <a href="/catalogo-btl" class="primary">Solicitar Propuesta</a>
+                            <a href="#" class="secondary">Galería</a>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="card">
+                    <div class="card-inner">
+                        <div class="card-face card-front four">
+                            <div>
+                                <h2>Otros servicios</h2>
+                                <p>Transporte y montaje profesional de equipos, estructuras y escenografía para todo tipo de eventos.</p>
+                            </div>
+                            <span class="cta">
+                                <span>Click me</span>
+                                <svg width="13px" height="10px" viewBox="0 0 13 10">
+                                    <path d="M1,5 L11,5"></path>
+                                    <polyline points="8 1 12 5 8 9"></polyline>
+                                </svg>
+                            </span>
+                        </div>
+                        <div class="card-face card-back">
+                        <div>
+                            <h3>Características</h3>
+                            <ul class="features">
+                                <li>Fletes locales y nacionales</li>
+                                <li>Montaje técnico especializado</li>
+                                <li>Supervisión y desmontaje completo</li>
+                            </ul>
+                        </div>
+                        <div class="cta-buttons">
+                            <a href="#" class="primary">Solicitar Flete</a>
+                            <a href="#" class="secondary">Ver Servicios</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </section>
+
+    <!-- MARCAS -->
+    <section class="container my-5">
+        <div class="container2 h-100">
+            <div class="row align-items-center h-100">
+                <div class="container rounded">
+                <h1 class="text-center">Nuestros Clientes:</h1>
+                <div class="slider">
+                    <div class="logos">
+                        <i class="fab fa-4x">
+                            <img src="../static/logo-1.png" alt="" width="auto" height="auto" loading="lazy">
+                        </i>
+                        <i class="fab fa-4x">
+                            <img src="../static/logo-2.svg" alt="" width="50" height="50" loading="lazy">
+                        </i>
+                        <i class="fab fa-4x">
+                            <img src="../static/logo-3.png" alt="" width="150" height="80" loading="lazy">
+                        </i>
+                        <i class="fab fa-4x">
+                            <img src="../static/logo-4.svg" alt="" width="50" height="50" loading="lazy">
+                        </i>
+                        <i class="fab fa-4x">
+                            <img src="../static/logo-5.svg" alt="" width="120" height="120" loading="lazy">
+                        </i>
+                    </div>
+                    <div class="logos">
+                    <i class="fab fa-4x">
+                        <img src="../static/logo-1.png" alt="" width="auto" height="auto" loading="lazy">
+                    </i>
+                    <i class="fab  fa-4x">
+                        <img src="../static/logo-2.svg" alt="" width="50" height="50" loading="lazy">
+                    </i>
+                    <i class="fab fa-4x">
+                        <img src="../static/logo-3.png" alt="" width="150" height="80" loading="lazy">
+                    </i>
+                    <i class="fabm fa-4x">
+                        <img src="../static/logo-4.svg" alt="" width="50" height="50" loading="lazy">
+                    </i>
+                    <i class="fabm fa-4x">
+                        <img src="../static/logo-5.svg" alt="" width="120" height="120" loading="lazy">
+                    </i>
+                    
+                    </div>
+                </div>
+                <!-- <div class="logos">
+                        <img src="../static/logo-1.png" alt="" width="50" height="50" loading="lazy">
+                        <img src="../static/logo-2.png" alt="" width="50" height="50" loading="lazy">
+                        <img src="../static/logo-3.png" alt="" width="50" height="50" loading="lazy">
+                        <img src="../static/logo-4.png" alt="" width="50" height="50" loading="lazy">
+                    </div>
+                    <div class="logos">
+                        <img src="../static/logo-1.png" alt="" width="50" height="50" loading="lazy">
+                        <img src="../static/logo-2.png" alt="" width="50" height="50" loading="lazy">
+                        <img src="../static/logo-3.png" alt="" width="50" height="50" loading="lazy">
+                        <img src="../static/logo-4.png" alt="" width="50" height="50" loading="lazy">
+                    </div> -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container my-5 autoShow">
+        <h2 class="text-center autoShow"><span class="highlight">Galería</span> de Eventos</h2>
+        
+        <div id="eventosCarousel" class="carousel slide mt-2 imageReveal" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="0" class="active"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="1"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="2"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="3"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="4"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="5"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="6"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="7"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="8"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="9"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="10"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="11"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="12"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="13"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="14"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="15"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="16"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="17"></button>
+                <button type="button" data-bs-target="#eventosCarousel" data-bs-slide-to="18"></button>
+            </div>
+    
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <img src="../static/bodas/1.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Eventos con DJs Profesionales</h5>
+                        <p>La mejor música para hacer de tu fiesta<p></p> una experiencia inolvidable.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="../static/bodas/4.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Iluminación Espectacular</h5>
+                        <p>Ambienta tu evento con luces de última tecnología.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="../static/bodas/3.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Audio de Alta Calidad</h5>
+                        <p>Equipos profesionales para un sonido potente y claro.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="../static/bodas/4.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Iluminación Espectacular</h5>
+                        <p>Ambienta tu evento con luces de última tecnología.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="../static/bodas/5.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Audio de Alta Calidad</h5>
+                        <p>Equipos profesionales para un sonido potente y claro.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="../static/bodas/6.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Audio de Alta Calidad</h5>
+                        <p>Equipos profesionales para un sonido potente y claro.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="../static/bodas/7.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Audio de Alta Calidad</h5>
+                        <p>Equipos profesionales para un sonido potente y claro.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="../static/bodas/8.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Audio de Alta Calidad</h5>
+                        <p>Equipos profesionales para un sonido potente y claro.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="../static/bodas/9.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Audio de Alta Calidad</h5>
+                        <p>Equipos profesionales para un sonido potente y claro.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="../static/bodas/10.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Audio de Alta Calidad</h5>
+                        <p>Equipos profesionales para un sonido potente y claro.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="../static/bodas/11.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Audio de Alta Calidad</h5>
+                        <p>Equipos profesionales para un sonido potente y claro.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="../static/bodas/12.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Audio de Alta Calidad</h5>
+                        <p>Equipos profesionales para un sonido potente y claro.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="../static/bodas/13.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Audio de Alta Calidad</h5>
+                        <p>Equipos profesionales para un sonido potente y claro.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="../static/bodas/14.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Audio de Alta Calidad</h5>
+                        <p>Equipos profesionales para un sonido potente y claro.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="../static/bodas/15.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Audio de Alta Calidad</h5>
+                        <p>Equipos profesionales para un sonido potente y claro.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="../static/bodas/16.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Audio de Alta Calidad</h5>
+                        <p>Equipos profesionales para un sonido potente y claro.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="../static/bodas/17.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Audio de Alta Calidad</h5>
+                        <p>Equipos profesionales para un sonido potente y claro.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="../static/bodas/18.png" class="d-block w-20 rounded">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Audio de Alta Calidad</h5>
+                        <p>Equipos profesionales para un sonido potente y claro.</p>
+                    </div>
+                </div>
+            </div>
+    
+            <button class="carousel-control-prev" type="button" data-bs-target="#eventosCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#eventosCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </button>
+        </div>
+    </section>
+    
+
+    <section class='bg-orange text-white py-5 autoShow'>
+        <div class='container text-center autoShow'>
+            <h2>Nuestros <span class='colorBlue'>Eventos</span></h2>
+            <div class='row mt-4'>
+                <div class='col-md-3 fade-in'><h3 class="bounce">+500</h3><p>Bodas realizadas</p></div>
+                <div class='col-md-3 fade-in'><h3 class="bounce">+1,000</h3><p>Eventos exitosos</p></div>
+                <div class='col-md-3 fade-in'><h3 class="bounce">+20</h3><p>Años de experiencia</p></div>
+                <div class='col-md-3 fade-in'><h3 class="bounce">100%</h3><p>Clientes satisfechos</p></div>
+            </div>
+        </div>
+    </section>
+
+    <footer class='bg-dark text-white text-center py-4 mt-5'>
+        <p>&copy; 2025 Avissi Audio. Todos los derechos reservados.</p>
+        <p>Síguenos en nuestras redes sociales:</p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-facebook" viewBox="0 0 16 16">
+  <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951"/>
+</svg><a href='#' class='text-warning mx-2 '>Facebook </a> |
+        <a href='#' class='text-warning mx-2'>Instagram</a> |
+        <a href='#' class='text-warning mx-2'>TikTok</a>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            gsap.to(".fade-in", { opacity: 1, y: 0, duration: 1, stagger: 0.3 });
+            gsap.to(".zoom-in", { opacity: 1, scale: 1, duration: 1, stagger: 0.3 });
+            gsap.from(".bounce", { y: -10, opacity: 0, duration: 1.5, ease: "bounce.out", stagger: 0.2 });
+        });
+    </script>
+
+    <script>
+        /*
+        JS to toggle scroll axis styles
+        */
+        const control = document.getElementById("direction-toggle");
+        const marquees = document.querySelectorAll(".marquee");
+        const wrapper = document.querySelector(".wrapper");
+
+        control.addEventListener("click", () => {
+        control.classList.toggle("toggle--vertical");
+        wrapper.classList.toggle("wrapper--vertical");
+        [...marquees].forEach((marquee) =>
+            marquee.classList.toggle("marquee--vertical")
+        );
+        });
+
+    </script>
+
+    <!-- CARD INTERCATIVAS -->
+    <script>
+        const isTouch = "ontouchstart" in window;
+
+        document.querySelectorAll(".card").forEach((card) => {
+        const inner = card.querySelector(".card-inner");
+
+        // Tap/click flip met subtiele scale-bounce
+        card.addEventListener("click", () => {
+            const baseRotate = card.classList.contains("flipped") ? 0 : 180;
+
+            inner.style.transition = "transform 0.15s ease-out";
+            inner.style.transform = `rotateY(${baseRotate}deg) scale(1.05)`;
+
+            setTimeout(() => {
+            inner.style.transition = "transform 0.7s cubic-bezier(.4,.2,.2,1)";
+            inner.style.transform = `rotateY(${baseRotate}deg) scale(1)`;
+            card.classList.toggle("flipped");
+            }, 150);
+        });
+
+        if (!isTouch) {
+            card.addEventListener("mousemove", (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const rotateX = ((y - centerY) / centerY) * -10;
+            const rotateY = ((x - centerX) / centerX) * 10;
+            const baseRotate = card.classList.contains("flipped") ? 180 : 0;
+            inner.style.transform = `rotateY(${baseRotate}deg) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1)`;
+            });
+
+            card.addEventListener("mouseleave", () => {
+            const baseRotate = card.classList.contains("flipped") ? 180 : 0;
+            inner.style.transform = `rotateY(${baseRotate}deg) rotateX(0deg) rotateY(0deg) scale(1)`;
+            });
+        }
+        });
+
+    </script>
+
+    <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'></script>
+</body>
+</html>

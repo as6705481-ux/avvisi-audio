@@ -1,0 +1,95 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+  form { max-width: 720px; margin:0 auto; background:#fff5e6; border:1px solid #ffc107; padding:20px; border-radius:8px; }
+  h1 { text-align:center; color:#ff8c00; font-family:'Poppins',sans-serif; margin-bottom:20px; }
+  .btn-orange { background:#ff8c00; border-color:#ff8c00; color:#fff; }
+  .btn-orange:hover { background:#e67e00; border-color:#e67e00; color:#fff; }
+</style>
+
+<div class="container mt-4">
+  <h1>Crear Evento desde Cotización</h1>
+
+  <div class="alert alert-info">
+    <div><strong>Cotización:</strong> {{ quotation.quote_number }}</div>
+    <div><strong>Cliente:</strong> {{ client.name }}</div>
+  </div>
+
+  <form method="POST" class="mt-3">
+    <div class="mb-3">
+      <label class="form-label">Nombre del evento</label>
+      <input type="text" name="name" class="form-control" required
+             value="{{ suggested_name }}">
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Contacto</label>
+        <select name="contact_id" class="form-select">
+          <option value="">—</option>
+          {% for k in contacts %}
+            <option value="{{ k.id }}" {{ 'selected' if quotation.contact_id==k.id else '' }}>
+              {{ k.name }}
+            </option>
+          {% endfor %}
+        </select>
+        <small class="text-muted">Sólo se muestran contactos del cliente de la cotización.</small>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Venue</label>
+        <input type="text" name="venue" class="form-control" placeholder="Hotel / Salón / Dirección">
+      </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+      <div class="col-md-6">
+        <label class="form-label">Inicio</label>
+        <input type="datetime-local" name="start_at" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Fin</label>
+        <input type="datetime-local" name="end_at" class="form-control" required>
+      </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+      <div class="col-md-6">
+        <label class="form-label">Inicio de montaje (opcional)</label>
+        <input type="datetime-local" name="build_start_at" class="form-control">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Fin desmontaje (opcional)</label>
+        <input type="datetime-local" name="strike_end_at" class="form-control">
+      </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+      <div class="col-md-6">
+        <label class="form-label">Zona horaria</label>
+        <input type="text" name="timezone" value="{{ tz_default }}" class="form-control">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Creado por</label>
+        <select name="created_by" class="form-select">
+          <option value="">—</option>
+          {% for o in owners %}
+            <option value="{{ o.id }}">{{ o.full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="mb-3 mt-2">
+      <label class="form-label">Notas</label>
+      <textarea name="notes" class="form-control" rows="2"></textarea>
+    </div>
+
+    <div class="d-flex justify-content-between mt-3">
+      <a href="{{ url_for('quotation_edit', quotation_id=quotation.id) }}" class="btn btn-secondary">
+        Cancelar
+      </a>
+      <button class="btn btn-orange">Crear y vincular</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

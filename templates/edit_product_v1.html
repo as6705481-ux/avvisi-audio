@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+    <style>
+        form {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #fff5e6;
+            border: 1px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #ff8c00;
+            font-family: 'Poppins', sans-serif;
+            margin-bottom: 20px;
+        }
+        .btn-success {
+            background-color: #ff8c00;
+            border-color: #ff8c00;
+        }
+        .btn-success:hover {
+            background-color: #e67e00;
+            border-color: #e67e00;
+        }
+    </style>
+
+    <div class="container mt-5">
+        <h1>Editar Producto</h1>
+        <form method="POST" class="mt-4">
+            <div class="mb-3">
+                <label for="name" class="form-label">Nombre</label>
+                <input type="text" id="name" name="name" value="{{ product.name }}" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Descripción</label>
+                <textarea id="description" name="description" class="form-control" rows="3" required>{{ product.description }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label for="up_price" class="form-label">Precio Alto</label>
+                <input type="number" id="up_price" name="up_price" value="{{ product.up_price }}" class="form-control" step="0.01" required>
+            </div>
+            <div class="mb-3">
+                <label for="down_price" class="form-label">Precio Bajo</label>
+                <input type="number" id="down_price" name="down_price" value="{{ product.down_price }}" class="form-control" step="0.01" required>
+            </div>
+            <div class="mb-3">
+                <label for="stock" class="form-label">Stock</label>
+                <input type="number" id="stock" name="stock" value="{{ product.stock }}" class="form-control" required>
+            </div>
+
+            <select class="form-select" id="category" name="category" style="border-radius: 10px;" required>
+                <option value="Pantalla Led" {% if product.category == "Pantalla Led" %}selected{% endif %}>Pantalla Led</option>
+                <option value="Microfonía" {% if product.category == "Microfonía" %}selected{% endif %}>Microfonía</option>
+                <option value="Efectos e Iluminacion" {% if product.category == "Efectos e Iluminacion" %}selected{% endif %}>Efectos e Iluminacion</option>
+                <option value="Audio" {% if product.category == "Audio" %}selected{% endif %}>Audio</option>
+                <option value="Pantallas Tv" {% if product.category == "Pantallas Tv" %}selected{% endif %}>Pantallas Tv</option>
+                <option value="Otros servicios" {% if product.category == "Otros servicios" %}selected{% endif %}>Otros servicios</option>
+            </select>
+            
+            <div class="mb-3">
+                <label for="supplier" class="form-label">Proveedor</label>
+                <select id="supplier" name="supplier" class="form-select" required>
+                    {% for s in suppliers %}
+                        <option value="{{ s.id }}" {% if s.id == supplier.id %}selected{% endif %}>
+                            {{ s.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>            
+            
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                
+            </div>
+        </form>
+    </div>
+
+{% endblock %}

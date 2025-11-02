@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+    <style>
+        form {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #fff5e6;
+            border: 1px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #ff8c00;
+            font-family: 'Poppins', sans-serif;
+            margin-bottom: 20px;
+        }
+        .btn-success {
+            background-color: #ff8c00;
+            border-color: #ff8c00;
+        }
+        .btn-success:hover {
+            background-color: #e67e00;
+            border-color: #e67e00;
+        }
+    </style>
+
+    <div class="container mt-5">
+        <h1>Editar Cliente</h1>
+        <form method="POST" class="mt-4">
+            <div class="mb-3">
+                <label for="name" class="form-label">Nombre</label>
+                <input type="text" id="name" name="name" value="{{ customer.name }}" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Correo Electrónico</label>
+                <input type="email" id="email" name="email" value="{{ customer.email }}" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="phone" class="form-label">Teléfono</label>
+                <input type="text" id="phone" name="phone" value="{{ customer.phone }}" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="address" class="form-label">Dirección</label>
+                <input type="text" id="address" name="address" value="{{ customer.address }}" class="form-control" required>
+            </div>
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                <a href="{{ url_for('list_customers') }}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+
+{% endblock %}

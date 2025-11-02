@@ -1,0 +1,304 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+    .card-dashboard {
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        padding: 20px;
+        height: 100%;
+    }
+    .dashboard-title {
+        color: #FF7F11;
+        font-weight: bold;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+</style>
+
+<div class="container py-5">
+    <h1 class="dashboard-title">Dashboard de Cotizaciones</h1>
+
+    <!-- Sección de Estadísticas -->
+    <div class="row g-4 mb-5">
+        <!-- Histórico de Ingresos -->
+        <div class="col-md-6">
+            <div class="card-dashboard">
+                <h5 class="text-center mb-3" style="color:#FF7F11;">Histórico de Ingresos</h5>
+                <canvas id="incomeChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Cotizaciones por Estado -->
+        <div class="col-md-6">
+            <div class="card-dashboard">
+                <h5 class="text-center mb-3" style="color:#FF7F11;">Cotizaciones por Estado</h5>
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Mejores Clientes -->
+        <div class="col-md-6">
+            <div class="card-dashboard">
+                <h5 class="text-center mb-3" style="color:#FF7F11;">Mejores Clientes</h5>
+                <canvas id="customersChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Mejores Usuarios -->
+        <div class="col-md-6">
+            <div class="card-dashboard">
+                <h5 class="text-center mb-3" style="color:#FF7F11;">Mejores Usuarios</h5>
+                <canvas id="usersChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Productos con Mayor Demanda -->
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card-dashboard">
+                <h5 class="text-center mb-3" style="color:#FF7F11;">Productos con Mayor Demanda</h5>
+                <canvas id="topProductsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+        <!-- Tabla de Cotizaciones -->
+        <!-- 
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>N° Cotización</th>
+                    <th>Cliente</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                    <th>Total</th>
+                    <th>Encargado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for quotation in quotations %}
+                    <tr>
+                        <td>{{ quotation.id }}</td>
+                        <td>{{ quotation.customer.name }}</td>
+                        <td>{{ quotation.created_at }}</td>
+                        <td>{{ quotation.status }}</td>
+                        <td>${{ quotation.total }}</td>
+                        <td>{{ quotation.assigned_user.name if quotation.assigned_user else "No asignado" }}</td>
+                        <td>
+                            
+                            <form method="POST" class="d-inline-block">
+                                <input type="hidden" name="quotation_id" value="{{ quotation.id }}">
+                                <select name="new_status" class="form-select form-select-sm">
+                                    <option value="pending" {% if quotation.status == 'pending' %}selected{% endif %}>Pendiente</option>
+                                    <option value="approved" {% if quotation.status == 'approved' %}selected{% endif %}>Aprobada</option>
+                                    <option value="rejected" {% if quotation.status == 'rejected' %}selected{% endif %}>Rechazada</option>
+                                    <option value="finalized" {% if quotation.status == 'finalized' %}selected{% endif %}>Finalizada</option>
+                                </select>
+                                <button type="submit" name="action" value="change_status" class="btn btn-sm btn-primary mt-1">Actualizar Estado</button>
+                            </form>
+    
+                            
+                            <form method="POST" class="d-inline-block">
+                                <input type="hidden" name="quotation_id" value="{{ quotation.id }}">
+                                <select name="assigned_user_id" class="form-select form-select-sm">
+                                    <option value="">No asignado</option>
+                                    {% for user in users %}
+                                        <option value="{{ user.id }}" {% if quotation.assigned_user_id == user.id %}selected{% endif %}>{{ user.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" name="action" value="assign_user" class="btn btn-sm btn-secondary mt-1">Asignar Encargado</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>-->
+
+<script>
+    // Obtener los datos pasados desde Flask
+    const months = JSON.parse('{{ months | safe }}');
+    const incomes = JSON.parse('{{ incomes | safe }}');
+    const statuses = JSON.parse('{{ statuses | safe }}');
+    const statusCounts = JSON.parse('{{ status_counts | safe }}');
+    const customerNames = JSON.parse('{{ customer_names | safe }}');
+    const customerTotals = JSON.parse('{{ customer_totals | safe }}');
+    const userNames = JSON.parse('{{ user_names | safe }}');
+    const userTotals = JSON.parse('{{ user_totals | safe }}');
+
+    // Gráfico de líneas para el histórico de ingresos mensuales
+    const ctxIncome = document.getElementById('incomeChart').getContext('2d');
+    const incomeChart = new Chart(ctxIncome, {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [{
+                label: 'Ingresos Totales (L)',
+                data: incomes,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                fill: true,
+                tension: 0.1
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Mes'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Ingresos Totales (L)'
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Gráfico de pastel para las cotizaciones por estado
+    const ctxStatus = document.getElementById('statusChart').getContext('2d');
+    const statusChart = new Chart(ctxStatus, {
+        type: 'pie',
+        data: {
+            labels: statuses,
+            datasets: [{
+                data: statusCounts,
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.6)', // Pendiente
+                    'rgba(75, 192, 192, 0.6)', // Aprobada
+                    'rgba(255, 99, 132, 0.6)', // Rechazada
+                    'rgba(153, 102, 255, 0.6)' // Finalizada
+                ],
+                borderColor: [
+                    'rgba(54, 162, 235, 1)', // Pendiente
+                    'rgba(75, 192, 192, 1)', // Aprobada
+                    'rgba(255, 99, 132, 1)', // Rechazada
+                    'rgba(153, 102, 255, 1)' // Finalizada
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+            }
+        }
+    });
+
+    // Gráfico de barras horizontal para los mejores clientes
+    const ctxCustomers = document.getElementById('customersChart').getContext('2d');
+    const customersChart = new Chart(ctxCustomers, {
+        type: 'bar',
+        data: {
+            labels: customerNames,
+            datasets: [{
+                label: 'Total Gastado (L)',
+                data: customerTotals,
+                backgroundColor: 'rgba(255, 206, 86, 0.6)',
+                borderColor: 'rgba(255, 206, 86, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y', // Esto hace que las barras sean horizontales
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Total Gastado (L)'
+                    },
+                    beginAtZero: true
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Clientes'
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfico de barras horizontal para los mejores usuarios
+    const ctxUsers = document.getElementById('usersChart').getContext('2d');
+    const usersChart = new Chart(ctxUsers, {
+        type: 'bar',
+        data: {
+            labels: userNames,
+            datasets: [{
+                label: 'Total Generado (L)',
+                data: userTotals,
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y', // Barras horizontales
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Total Generado (L)'
+                    },
+                    beginAtZero: true
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Usuarios'
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfico de barras para productos más demandados
+    const productNames = JSON.parse('{{ product_names | safe }}');
+    const productQuantities = JSON.parse('{{ product_quantities | safe }}');
+
+    const ctxTopProducts = document.getElementById('topProductsChart').getContext('2d');
+    new Chart(ctxTopProducts, {
+        type: 'bar',
+        data: {
+            labels: productNames,
+            datasets: [{
+                label: 'Cantidad Vendida',
+                data: productQuantities,
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Productos'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Cantidad Vendida'
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

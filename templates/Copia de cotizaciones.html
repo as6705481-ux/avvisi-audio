@@ -1,0 +1,132 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="mb-4 text-center">Crear una Cotización90</h1>
+
+        <!-- Filtros -->
+        <div class="filter-section">
+            <h3>Filtros</h3>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="filter_category" class="form-label">Filtrar por Categoría:</label>
+                    <select id="filter_category" class="form-select">
+                        <option value="">Todas las Categorías</option>
+                        {% for category in categories %}
+                            <option value="{{ category|lower }}">{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="filter_name" class="form-label">Buscar por Nombre:</label>
+                    <input type="text" id="filter_name" class="form-control" placeholder="Ingrese el nombre del producto">
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulario -->
+        <form action="/create_quotation" method="POST">
+            <!-- Cliente -->
+            <div class="mb-3">
+                <label for="customer" class="form-label">Seleccionar Cliente:</label>
+                <select name="customer" class="form-select" required>
+                    <option value="">Seleccione un cliente</option>
+                    {% for customer in customers %}
+                        <option value="{{ customer.id }}">{{ customer.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Detalles del Evento -->
+            <h3 class="mt-4">Detalles del Evento</h3>
+            <div class="mb-3">
+                <label for="event_location" class="form-label">Ubicación del Evento:</label>
+                <input type="text" name="event_location" class="form-control" placeholder="Ingrese la ubicación del evento" required>
+            </div>
+            <div class="mb-3">
+                <label for="event_type" class="form-label">Tipo de Evento:</label>
+                <input type="text" name="event_type" class="form-control" placeholder="Ingrese el tipo de evento" required>
+            </div>
+            <div class="mb-3">
+                <label for="guest_count" class="form-label">Número de Invitados:</label>
+                <input type="number" name="guest_count" class="form-control" min="1" placeholder="Ingrese el número de invitados" required>
+            </div>
+
+            <!-- Lista de Productos -->
+            <h3 class="mt-4">Productos</h3>
+            <div id="products">
+                {% for product in products %}
+                    <div class="card mb-3 product-item" data-category="{{ product.category|lower }}" data-name="{{ product.name | lower }}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ product.name }}</h5>
+                            <p class="card-text">
+                                <strong>Categoría:</strong> {{ product.category }}<br>
+                                <strong>Proveedor:</strong> {{ product.supplier.name }}<br>
+                                <strong>Precio Base:</strong> ${{ product.unit_price }}<br>
+                                <strong>Stock:</strong> {{ product.stock }}
+                            </p>
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input" id="product_{{ product.id }}" name="product_{{ product.id }}" value="{{ product.id }}">
+                                <label class="form-check-label" for="product_{{ product.id }}">Seleccionar Producto</label>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <label for="quantity_{{ product.id }}" class="form-label">Cantidad:</label>
+                                    <input type="number" name="quantity_{{ product.id }}" class="form-control" min="1" max="{{ product.stock }}" placeholder="Ingrese la cantidad">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="days_{{ product.id }}" class="form-label">Días:</label>
+                                    <input type="number" name="days_{{ product.id }}" class="form-control" min="1" placeholder="Ingrese los días">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="price_{{ product.id }}" class="form-label">Precio Personalizado:</label>
+                                    <input type="number" name="price_{{ product.id }}" class="form-control" min="0" step="0.01" placeholder="Ingrese el precio personalizado">
+                                </div>
+                            </div>
+                            <div class="mt-2 form-check">
+                                <input type="checkbox" class="form-check-input" id="tax_{{ product.id }}" name="tax_{{ product.id }}" value="yes">
+                                <label class="form-check-label" for="tax_{{ product.id }}">Aplicar 15% de Impuesto</label>
+                            </div>
+                            <div class="mb-3">
+                                <label for="comment_{{ product.id }}" class="form-label">Comentario:</label>
+                                <textarea name="comment_{{ product.id }}" class="form-control" rows="2" placeholder="Agregue un comentario sobre este producto"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Botón de Envío -->
+            <button type="submit" class="btn btn-success w-100 mt-4">Generar Cotización</button>
+        </form>
+    </div>
+
+    <script>
+        // Filtrado de productos
+        const filterCategory = document.getElementById('filter_category');
+        const filterName = document.getElementById('filter_name');
+        const productItems = document.querySelectorAll('.product-item');
+
+        function filterProducts() {
+            const category = filterCategory.value.toLowerCase();
+            const name = filterName.value.toLowerCase();
+
+            productItems.forEach(item => {
+                const itemCategory = item.getAttribute('data-category').toLowerCase();
+                const itemName = item.getAttribute('data-name').toLowerCase();
+
+                const matchesCategory = !category || itemCategory === category;
+                const matchesName = !name || itemName.includes(name);
+
+                if (matchesCategory && matchesName) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        filterCategory.addEventListener('change', filterProducts);
+        filterName.addEventListener('input', filterProducts);
+    </script>
+{% endblock %}

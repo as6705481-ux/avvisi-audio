@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Agregar Nuevo Cliente</h1>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="name" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="name" name="name" placeholder="Ingrese el nombre del cliente" required>
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">Correo Electrónico</label>
+            <input type="email" class="form-control" id="email" name="email" placeholder="Ingrese el correo electrónico del cliente" required>
+        </div>
+        <div class="mb-3">
+            <label for="phone" class="form-label">Teléfono</label>
+            <input type="text" class="form-control" id="phone" name="phone" placeholder="Ingrese el teléfono del cliente" required>
+        </div>
+        <div class="mb-3">
+            <label for="address" class="form-label">Dirección</label>
+            <input type="text" class="form-control" id="address" name="address" placeholder="Ingrese la dirección del cliente" required>
+        </div>
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-success">Agregar Cliente</button>
+            <a href="{{ url_for('list_customers') }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

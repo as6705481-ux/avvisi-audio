@@ -1,0 +1,205 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<style>
+  form {
+    max-width: 500px;
+    margin: 0 auto;
+    background-color: #fff5e6;
+    border: 1px solid #ffc107;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  h1 {
+    text-align: center;
+    color: #ff8c00;
+    font-family: 'Poppins', sans-serif;
+    margin-bottom: 20px;
+  }
+  .btn-success {
+    background-color: #ff8c00;
+    border-color: #ff8c00;
+  }
+  .btn-success:hover {
+    background-color: #e67e00;
+    border-color: #e67e00;
+  }
+</style>
+
+<div class="container mt-5">
+  <h1>Editar Producto</h1>
+
+  {# Asegura defaults por si algo viene vacío #}
+  {% set product = product or {} %}
+  {% set suppliers = suppliers or [] %}
+  {% set categories = categories or [] %}
+  {% set on_hand = on_hand if on_hand is not none else '' %}
+
+  <form method="POST" class="mt-4">
+    <!-- SKU -->
+    <div class="mb-3">
+      <label for="sku" class="form-label">SKU <span class="text-danger">*</span></label>
+      <input type="text" id="sku" name="sku" value="{{ product.sku or '' }}" class="form-control">
+      <!-- <small class="text-muted">Puedes editar el SKU si lo necesitas.</small> -->
+    </div>
+
+    <!-- Nombre -->
+    <div class="mb-3">
+      <label for="name" class="form-label">Nombre <span class="text-danger">*</span></label>
+      <input type="text" id="name" name="name" value="{{ product.name or '' }}" class="form-control" required>
+    </div>
+
+    <!-- Descripción -->
+    <div class="mb-3">
+      <label for="description" class="form-label">Descripción <span class="text-danger">*</span></label>
+      <textarea id="description" name="description" class="form-control" rows="3" required>{{ product.description or '' }}</textarea>
+    </div>
+
+    <!-- Tipo de Ítem -->
+    <div class="mb-3">
+      <label for="item_type" class="form-label">Tipo de producto <span class="text-danger">*</span></label>
+      <select class="form-select" id="item_type" name="item_type" required>
+        <option value="consumable">Consumible</option>
+        <option value="rentable">Rentable</option>
+        <option value="service">Servicio</option>
+        <option value="bundle">Bundle</option>
+      </select>
+    </div>
+
+    <!-- Unidad -->
+    <div class="mb-3">
+      <label for="unit" class="form-label">Unidad <span class="text-danger">*</span></label>
+      <select class="form-select" id="unit" name="unit" required>
+        <option value="EA"  data-types="consumable">Unidad</option>
+        <option value="BOX" data-types="consumable">Caja</option>
+        <option value="PK"  data-types="consumable">Paquete</option>
+        <option value="SET" data-types="consumable,bundle">Set</option>
+        <option value="M"   data-types="consumable">Metro</option>
+        <option value="L"   data-types="consumable">Litro</option>
+        <option value="KG"  data-types="consumable">Kilogramo</option>
+        
+        <option value="EA"  data-types="rentable">Unidad / Equipo</option>
+        <option value="DAY" data-types="rentable">Día</option>
+        <option value="WK"  data-types="rentable">Semana</option>
+        <option value="MON" data-types="rentable">Mes</option>
+        
+        <option value="HR"  data-types="service">Hora</option>
+        <option value="DAY" data-types="service">Día</option>
+        <option value="EVT" data-types="service,bundle">Evento</option>
+        <option value="JOB" data-types="service">Trabajo</option>
+        <option value="KM"  data-types="service">Kilómetro</option>
+        
+        <option value="SET" data-types="bundle,consumable">Set</option>
+        <option value="PKG" data-types="bundle">Paquete</option>
+        <option value="EVT" data-types="bundle,service">Por evento</option>
+      </select>
+    </div>
+
+    <script>
+      (function () {
+        const typeSel = document.getElementById('item_type');
+        const unitSel = document.getElementById('unit');
+
+        function filterUnits() {
+          const t = (typeSel.value || '').toLowerCase();
+          let firstVisible = null;
+
+          // mostrar/ocultar opciones según data-types
+          Array.from(unitSel.options).forEach(opt => {
+            const list = (opt.getAttribute('data-types') || '').toLowerCase().split(',').map(s=>s.trim()).filter(Boolean);
+            const show = list.length === 0 ? true : list.includes(t);
+            opt.hidden = !show;
+            if (show && !firstVisible && opt.value) firstVisible = opt.value;
+          });
+
+          // si la opción seleccionada quedó oculta, selecciona la primera visible
+          if (unitSel.selectedOptions.length && unitSel.selectedOptions[0].hidden && firstVisible) {
+            unitSel.value = firstVisible;
+          } else if (!unitSel.value && firstVisible) {
+            unitSel.value = firstVisible;
+          }
+        }
+
+        typeSel.addEventListener('change', filterUnits);
+        document.addEventListener('DOMContentLoaded', filterUnits);
+        filterUnits(); // inicial
+      })();
+    </script>
+
+    <!-- Precio e Impuesto -->
+    <div class="mb-3">
+      <label for="default_rate" class="form-label">Precio Unitario <span class="text-danger">*</span></label>
+      <input type="number" step="0.01" id="default_rate" name="default_rate" value="{{ product.default_rate or 0 }}" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label for="tax_rate" class="form-label">Impuesto sobre venta (0 - 100)% <span class="text-danger">*</span></label>
+      <input type="number" step="0.01" id="tax_rate" name="tax_rate" value="{{ product.tax_rate or 0 }}" class="form-control" required>
+    </div>
+
+    <!-- Proveedor (si existe suppliers) -->
+    <div class="mb-3">
+      <label for="supplier" class="form-label">Proveedor <span class="text-danger">*</span></label>
+      <select id="supplier" name="supplier_id" class="form-select">
+        <option value="">— Sin proveedor —</option>
+        {% for s in suppliers %}
+          <option value="{{ s.id }}" {{ 'selected' if product.supplier_id==s.id else '' }}>
+            {{ s.name }}{% if s.email %} — {{ s.email }}{% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Categoría + nueva categoría -->
+    <div class="mb-3">
+      <label for="category" class="form-label">Categoría <span class="text-danger">*</span></label>
+      <select id="category" name="category" class="form-select">
+        <option value="">— Sin categoría —</option>
+        {% for c in categories %}
+          <option value="{{ c }}" {{ 'selected' if product.category==c else '' }}>{{ c }}</option>
+        {% endfor %}
+      </select>
+      <small class="form-text text-muted">O define una nueva categoría:</small>
+      <input type="text" class="form-control mt-2" id="new_category" name="new_category" placeholder="Nueva categoría">
+    </div>
+
+    <!-- Tags -->
+    <div class="mb-3">
+      <label for="tags" class="form-label">Tags (separados por coma)</label>
+      {% set tags_val = (product.tags | join(', ')) if product.tags else '' %}
+      <input type="text" id="tags" name="tags" value="{{ tags_val }}" class="form-control" placeholder="audio, iluminacion, cableado">
+      <!-- <small class="text-muted">Se guardan como <code>text[]</code> en la BD.</small> -->
+    </div>
+
+    <!-- Stock (solo si consumible) -->
+    <div class="mb-3" id="stock_block" style="display: {{ 'block' if t=='consumable' else 'none' }};">
+      <label for="stock" class="form-label">Stock inicial</label>
+      <input type="number" id="stock" name="stock" value="{{ on_hand }}" class="form-control">
+      <!-- <small class="text-muted">Se almacena en <code>inventory_balances</code>.</small> -->
+    </div>
+
+    <!-- Activo -->
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" value="1" id="active" name="active" {{ 'checked' if product.active else '' }}>
+      <label class="form-check-label" for="active">Activo</label>
+    </div>
+
+    <div class="d-flex justify-content-between">
+      <a href="{{ url_for('items') }}" class="btn btn-secondary">Cancelar</a>
+      <button type="submit" class="btn btn-success">Guardar Cambios</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  (function(){
+    const typeSel = document.getElementById('item_type');
+    const stockBlock = document.getElementById('stock_block');
+    function toggleBlocks(){
+      stockBlock.style.display = (typeSel.value === 'consumable') ? 'block' : 'none';
+    }
+    typeSel.addEventListener('change', toggleBlocks);
+  })();
+</script>
+
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+  form { max-width: 720px; margin:0 auto; background:#fff5e6; border:1px solid #ffc107; padding:20px; border-radius:8px; }
+  h1 { text-align:center; color:#ff8c00; font-family:'Poppins',sans-serif; margin-bottom:20px; }
+  .btn-orange { background:#ff8c00; border-color:#ff8c00; color:#fff; }
+  .btn-orange:hover { background:#e67e00; border-color:#e67e00; color:#fff; }
+</style>
+
+<div class="container mt-4">
+  <h1>Editar Evento</h1>
+  <form method="POST" class="mt-3">
+    <div class="mb-3">
+      <label class="form-label">Nombre del evento</label>
+      <input type="text" name="name" class="form-control" required value="{{ event.name }}">
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Cliente</label>
+        <select name="client_id" id="clientSel" class="form-select" required>
+          {% for c in clients %}
+            <option value="{{ c.id }}" {{ 'selected' if c.id==event.client_id else '' }}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Contacto</label>
+        <select name="contact_id" id="contactSel" class="form-select">
+          <option value="">—</option>
+          {% for k in contacts %}
+            <option value="{{ k.id }}" data-client="{{ k.client_id }}"
+              {{ 'selected' if event.contact_id==k.id else '' }}>
+              {{ k.name }}
+            </option>
+          {% endfor %}
+        </select>
+        <small class="text-muted">Se filtra por cliente.</small>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Venue</label>
+      <input type="text" name="venue" class="form-control" value="{{ event.venue or '' }}">
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Inicio</label>
+        <input type="datetime-local" name="start_at" class="form-control" required value="{{ start_local }}">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Fin</label>
+        <input type="datetime-local" name="end_at" class="form-control" required value="{{ end_local }}">
+      </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+      <div class="col-md-6">
+        <label class="form-label">Inicio de montaje (opcional)</label>
+        <input type="datetime-local" name="build_start_at" class="form-control" value="{{ build_local }}">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Fin desmontaje (opcional)</label>
+        <input type="datetime-local" name="strike_end_at" class="form-control" value="{{ strike_local }}">
+      </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+      <div class="col-md-6">
+        <label class="form-label">Zona horaria</label>
+        <input type="text" name="timezone" value="{{ tz_default }}" class="form-control">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Notas</label>
+        <textarea name="notes" class="form-control" rows="2">{{ event.notes or '' }}</textarea>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between mt-3">
+      <a href="{{ url_for('events') }}" class="btn btn-secondary">Cancelar</a>
+      <button class="btn btn-orange">Guardar cambios</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  (function(){
+    const clientSel  = document.getElementById('clientSel');
+    const contactSel = document.getElementById('contactSel');
+    function filterContacts(){
+      const cid = clientSel.value;
+      [...contactSel.options].forEach(opt => {
+        if(!opt.value) { opt.hidden = false; return; }
+        opt.hidden = (opt.dataset.client !== cid);
+      });
+      if (contactSel.selectedOptions.length && contactSel.selectedOptions[0].hidden) {
+        contactSel.value = "";
+      }
+    }
+    clientSel.addEventListener('change', filterContacts);
+    filterContacts();
+  })();
+</script>
+{% endblock %}

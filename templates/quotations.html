@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% block title %}Cotizaciones{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">Cotizaciones</h1>
+    <a href="{{ url_for('quotation_add') }}" class="btn btn-success">
+      <i class="fas fa-plus"></i> Nueva Cotización
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered align-middle">
+      <thead>
+        <tr>
+          <th>#</th><th>Cliente</th><th>Evento</th><th>Estado</th><th>Total</th><th>Creada</th><th class="text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for q in quotations %}
+        <tr>
+          <td>{{ q.quote_number }}</td>
+          <td>{{ names.clients.get(q.client_id, q.client_id) }}</td>
+          <td>{{ names.events.get(q.event_id, '—') }}</td>
+          <td><span class="badge bg-info text-dark">{{ q.status }}</span></td>
+          <td>{{ 'L ' if q.currency=='HNL' else '' }}{{ '%.2f'|format(q.total or 0) }}</td>
+          <td>{{ (q.created_at.split('T')[0] if q.created_at is string else q.created_at.strftime('%Y-%m-%d')) }}</td>
+          <td class="text-center">
+            <div class="btn-group">
+              <a class="btn btn-sm btn-outline-primary" href="{{ url_for('quotation_edit', quotation_id=q.id) }}"><i class="fas fa-edit"></i></a>
+              <form action="{{ url_for('quotation_delete', quotation_id=q.id) }}" method="POST" class="d-inline">
+                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar cotización?');"><i class="fas fa-trash-alt"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-4">No hay cotizaciones.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

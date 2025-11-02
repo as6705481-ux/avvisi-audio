@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="container mt-5 py-4" style="background: #fff; border-radius: 15px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); max-width: 600px; margin: 0 auto;">
+    <h2 class="text-center mb-4" style="color: #e65a00; font-weight: bold;">Registro de Usuario</h2>
+    <form action="/register" method="POST">
+        <div class="mb-3">
+            <label for="name" class="form-label" style="color: #333; font-weight: 500;">Nombre</label>
+            <input type="text" class="form-control" id="name" name="name" style="border-radius: 10px;" required>
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label" style="color: #333; font-weight: 500;">Correo Electrónico</label>
+            <input type="email" class="form-control" id="email" name="email" style="border-radius: 10px;" required>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label" style="color: #333; font-weight: 500;">Contraseña</label>
+            <input type="password" class="form-control" id="password" name="password" style="border-radius: 10px;" required>
+        </div>
+        <div class="mb-3">
+            <label for="role" class="form-label" style="color: #333; font-weight: 500;">Rol</label>
+            <select class="form-select" id="role" name="role" style="border-radius: 10px;" required>
+                <option value="admin">Administrador</option>
+                <option value="seller">Usuario</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary w-100" style="background: linear-gradient(90deg, #e65a00, #f39c12); border: none; font-weight: bold;">Registrarse</button>
+    </form>
+</div>
+
+{% endblock %}

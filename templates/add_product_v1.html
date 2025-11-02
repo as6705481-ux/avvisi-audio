@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Agregar Nuevo Producto</h1>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="name" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="name" name="name" placeholder="Ingrese el nombre del producto" required>
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Descripción</label>
+            <textarea class="form-control" id="description" name="description" placeholder="Ingrese la descripción del producto" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="up_price" class="form-label">Precio Alto</label>
+            <input type="number" step="0.01" class="form-control" id="up_price" name="up_price" placeholder="Ingrese el precio unitario" required>
+        </div>
+        <div class="mb-3">
+            <label for="down_price" class="form-label">Precio Bajo</label>
+            <input type="number" step="0.01" class="form-control" id="down_price" name="down_price" placeholder="Ingrese el precio unitario" required>
+        </div>
+        <div class="mb-3">
+            <label for="stock" class="form-label">Stock</label>
+            <input type="number" class="form-control" id="stock" name="stock" placeholder="Ingrese la cantidad en stock" required>
+        </div>
+        <div class="mb-3">
+            <label for="supplier" class="form-label">Proveedor</label>
+            <select class="form-select border border-secondary" id="supplier" name="supplier" required>
+                {% for supplier in suppliers %}
+                    <option value="{{ supplier.id }}">{{ supplier.name }} - {{ supplier.email }}</option>
+                {% endfor %}
+            </select>    
+        </div>
+        
+        <!-- Sección de Categoría -->
+        <div class="mb-3">
+            <label for="category" class="form-label">Categoría</label>
+            {% set unique_categories = [] %}
+            {% for product in products %}
+                {% if product.category not in unique_categories %}
+                    {% set _ = unique_categories.append(product.category) %}
+                {% endif %}
+            {% endfor %}
+            
+            <select class="form-select" id="category" name="category" style="border-radius: 10px;" required>
+                {% for category in unique_categories %}
+                    <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
+            <small class="form-text text-muted">Seleccione una categoría existente o ingrese una nueva:</small>
+            <input type="text" class="form-control mt-2" id="new_category" name="new_category" placeholder="Ingrese nueva categoría">
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-success">Agregar Producto</button>
+            
+        </div>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}
+
+<!--<a href="{{ url_for('products') }}" class="btn btn-secondary">Cancelar</a> -->

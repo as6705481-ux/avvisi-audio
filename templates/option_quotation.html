@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #FFF3E0;
+    margin: 0;
+    padding: 0;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    max-width: 800px;
+    text-align: center;
+}
+.btn {
+    padding: 15px 30px;
+    font-size: 20px;
+    text-decoration: none;
+    color: white;
+    background-color: #FF7300;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    font-weight: bold;
+    display: block;
+}
+.btn:hover {
+    background-color: #CC5C00;
+    transform: translateY(-3px);
+    box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.2);
+}
+.header {
+    text-align: center;
+    color: #FF7300;
+    font-size: 55px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    margin-top: 100px;
+}
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    text-align: center;
+}
+</style>
+<div class="header">Gestión de Cotizaciones</div>
+<div class="container">
+    <div class="card">
+        <a href="{{ url_for('create_quotation') }}" class="btn">Realizar Cotización</a>
+    </div>
+    <div class="card">
+        <a href="{{ url_for('quotations') }}" class="btn">Editar Cotización</a>
+    </div>
+</div>
+{% endblock %}

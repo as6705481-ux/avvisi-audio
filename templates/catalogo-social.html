@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang='es'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>Avissi Audio - Eventos Sociales</title>
+    <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            font-family: "Montserrat", sans-serif;
+        }
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            will-change: transform;
+        }
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            padding: 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 2;
+        }
+        nav p,
+        footer p {
+            /* color: #fff; */
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .nav-items {
+            display: flex;
+            gap: 2rem;
+        }
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            padding: 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 2;
+        }
+        .slider-counter {
+            display: flex;
+        }
+        .slider-counter p,
+        .slider-counter > div {
+            width: 1.5rem;
+            display: flex;
+            justify-content: center;
+        }
+        .slider-counter p {
+			color: #fff;
+            /* opacity: 0.35; */
+        }
+        .count {
+            position: relative;
+            height: 1.125rem;
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+        }
+        .count p {
+			color: #fff;
+            position: absolute;
+            transform: translateY(0px);
+            font-size: 1rem;
+            line-height: 1;
+            will-change: transform;
+            opacity: 1;
+        }
+        .slider {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .slide-bg-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+            will-change: clip-path;
+        }
+        .slide-bg-img::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .slide-main-img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 35%;
+            height: 50%;
+            z-index: 2;
+            box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,
+                rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
+        }
+        .slide-main-img-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+            will-change: clip-path;
+        }
+        .slide-copy {
+            position: absolute;
+            top: 50%;
+            left: 15%;
+            transform: translate(-15%, -50%);
+            color: #fff;
+            z-index: 2;
+            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        .slide-title {
+            position: relative;
+            width: 500px;
+            height: 50px;
+            margin-bottom: 0.75rem;
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+        }
+        .slide-title h1 {
+            position: absolute;
+            color: #fff;
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1;
+            transform: translateY(0px);
+            will-change: transform;
+        }
+        .slide-description {
+            position: relative;
+            width: 500px;
+            height: 20px;
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+        }
+        .slide-description p {
+            position: absolute;
+            color: #fff;
+            font-size: 1.125rem;
+            font-weight: 600;
+            line-height: 1;
+            transform: translateY(0px);
+            will-change: transform;
+        }
+
+        @media (max-width: 900px) {
+            .slide-main-img {
+                width: 85%;
+            }
+            .slide-copy {
+                width: 75%;
+                top: 70%;
+                left: 50%;
+                transform: translate(-50%, -70%);
+            }
+            .slide-title,
+            .slide-description {
+                width: 100%;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <nav class='navbar navbar-expand-lg navbar-dark' style='background: transparent; position: absolute;'>
+        <div class='container'>
+            <a class='navbar-brand d-flex align-items-center' href="{{ url_for('home') }}">
+                <img src="../static/logo_avvisi.svg" alt='Avissi Audio Logo' style='height: 40px; width: auto; margin-right: 10px;' class="fade-in">
+                <span class='highlight fade-in'>Avissi Audio</span>
+            </a>
+            <button class='navbar-toggler' type='button' data-bs-toggle='collapse' data-bs-target='#navbarNav'>
+                <span class='navbar-toggler-icon'></span>
+            </button>
+            <div class='collapse navbar-collapse' id='navbarNav'>
+                <ul class='navbar-nav ms-auto'>
+                    <li class='nav-item'><a class='nav-link highlight' href="{{ url_for('home') }}">Inicio</a></li>
+                    <li class='nav-item'><a class='nav-link' href='/eventos'>Eventos</a></li>
+                    <li class='nav-item'><a class='nav-link highlight' href='/testimonios'>Testimonios</a></li>
+                    <li class='nav-item'><a class='nav-link' href='/contacto'>Contacto</a></li>
+                </ul>
+                <a href="{{ url_for('login_get') }}" class="btn btn-orange ms-3">Iniciar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+<footer>
+	<p>All Projects</p>
+	<div class="slider-counter">
+		<div class="count">
+			<p>1</p>
+		</div>
+		<p>/</p>
+		<p>15</p>
+	</div>
+</footer>
+
+<div class="slider">
+	<div class="slide">
+		<div class="slide-bg-img">
+			<img src="../static/bodas/4.png" alt="" />
+		</div>
+	</div>
+
+	<div class="slide-main-img">
+		<div class="slide-main-img-wrapper">
+			<img src="../static/bodas/4.png" alt="" />
+		</div>
+	</div>
+
+	<div class="slide-copy">
+		<div class="slide-title">
+			<h1>Paquete 1</h1>
+		</div>
+		<div class="slide-description">
+			<p>MONTAJE DE ALTO NIVEL RECOMENDADO PARA EVENTOS GRANDES</p>
+            <!-- <br>
+            <ul>
+                <li>Incluye audio según la cantidad de invitados</li>
+                <li>Pantalla LED</li>
+                <li>DJ Booth LED</li>
+                <li>Diseño con paneles 3D</li>
+                <li>Seis luces robóticas</li>
+                <li>Pista personalizada</li>
+                <li>Cuatro pirotecnias frías</li>
+                <li>Máquinas de humo</li>
+                <li>Iluminación arquitectónica</li>
+                <li>Tarima para stage</li>
+                <li>DJ profesional</li>
+            </ul> -->
+	</div>
+</div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/CustomEase.min.js"></script>
+
+<script>document.addEventListener("DOMContentLoaded", () => {
+	const slideTitles = [
+		"Paquete 1",
+		"Paquete 2",
+        "Paquete 3",
+        "Paquete 4",        
+        "Paquete 5",
+        "Paquete 6",
+        "Paquete 7",
+        "Paquete 8",
+        "Paquete 9",
+        "Paquete 10",
+        "Paquete 11",
+        "Paquete 12",
+        "Paquete 13",
+        "Paquete 14",
+        "Paquete 15"
+	];
+
+	const slideDescriptions = [
+		"MONTAJE DE ALTO NIVEL RECOMENDADO PARA GRANDES EVENTOS",
+		"MONTAJE PARA EVENTOS MEDIOS",
+		"MONTAJE IDEAL PARA EVENTOS MEDIANOS",
+		"MONTAJE IDEAL PARA EVENTOS MEDIANOS",
+        "MONTAJE IDEAL PARA EVENTOS GRANDES",
+        "MONTAJE IDEAL PARA EVENTOS GRANDES",
+        "MONTAJE IDEAL PARA EVENTOS GRANDES",
+        "MONTAJE IDEAL PARA EVENTOS GRANDES",
+        "MONTAJE IDEAL PARA EVENTOS GRANDES",
+        "MONTAJE IDEAL PARA EVENTOS GRANDES",
+        "MONTAJE IDEAL PARA EVENTOS GRANDES",
+        "MONTAJE IDEAL PARA EVENTOS GRANDES",
+        "MONTAJE IDEAL PARA EVENTOS GRANDES",
+        "MONTAJE IDEAL PARA EVENTOS GRANDES",
+        "MONTAJE IDEAL PARA EVENTOS GRANDES"
+	];
+
+	const imageUrls = [
+		"../static/bodas/4.png",
+		"../static/bodas/8.png",
+        "../static/bodas/10.png",
+        "../static/bodas/11.png",
+        "../static/bodas/15.png",
+        "../static/bodas/18.png",
+        "../static/bodas/19.png",
+        "../static/bodas/20.png",
+        "../static/bodas/21.png",
+        "../static/bodas/22.png",
+        "../static/bodas/25.png",
+        "../static/bodas/26.png",
+        "../static/bodas/27.png",
+        "../static/bodas/17.png",
+        "../static/bodas/3.png"
+	];
+
+	const totalSlides = imageUrls.length;
+	let currentSlide = 1;
+	let isAnimating = false;
+	let scrollAllowed = true;
+	let lastScrollTime = 0;
+
+	function createSlide(slideNumber, direction) {
+		const slide = document.createElement("div");
+		slide.className = "slide";
+
+		const slideBgImg = document.createElement("div");
+		slideBgImg.className = "slide-bg-img";
+
+		const img = document.createElement("img");
+		img.src = imageUrls[slideNumber - 1];
+		img.alt = slideDescriptions[slideNumber];
+
+		slideBgImg.appendChild(img);
+		slide.appendChild(slideBgImg);
+
+		if (direction === "down") {
+			slideBgImg.style.clipPath =
+				"polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%)";
+		} else {
+			slideBgImg.style.clipPath = "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)";
+		}
+		return slide;
+	}
+
+	function createMainImageWrapper(slideNumber, direction) {
+		const wrapper = document.createElement("div");
+		wrapper.className = "slide-main-img-wrapper";
+
+		const img = document.createElement("img");
+		img.src = imageUrls[slideNumber - 1];
+		img.alt = slideDescriptions[slideNumber];
+
+		wrapper.appendChild(img);
+
+		if (direction === "down") {
+			wrapper.style.clipPath = "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)";
+		} else {
+			wrapper.style.clipPath = "polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%)";
+		}
+		return wrapper;
+	}
+
+	function createTextElements(slideNumber, direction) {
+		const newTitle = document.createElement("h1");
+		newTitle.textContent = slideTitles[slideNumber - 1];
+		gsap.set(newTitle, {
+			y: direction === "down" ? 50 : -50
+		});
+
+		const newDesc = document.createElement("p");
+		newDesc.textContent = slideDescriptions[slideNumber - 1];
+		gsap.set(newDesc, {
+			y: direction === "down" ? 20 : -20
+		});
+
+		const newCounter = document.createElement("p");
+		newCounter.textContent = slideNumber;
+		gsap.set(newCounter, {
+			y: direction === "down" ? 18 : -18
+		});
+
+		return { newTitle, newDesc, newCounter };
+	}
+
+	function animateSlide(direction) {
+		if (isAnimating || !scrollAllowed) return;
+
+		isAnimating = true;
+		scrollAllowed = false;
+
+		const slider = document.querySelector(".slider");
+		const currentSlideElement = slider.querySelector(".slide");
+		const mainImageContainer = document.querySelector(".slide-main-img");
+		const currentMainWrapper = mainImageContainer.querySelector(
+			".slide-main-img-wrapper"
+		);
+
+		const titleContainer = document.querySelector(".slide-title");
+		const descContainer = document.querySelector(".slide-description");
+		const counterContainer = document.querySelector(".count");
+
+		const currentTitle = titleContainer.querySelector("h1");
+		const currentDesc = descContainer.querySelector("p");
+		const currentCounter = counterContainer.querySelector("p");
+
+		if (direction === "down") {
+			currentSlide = currentSlide === totalSlides ? 1 : currentSlide + 1;
+		} else {
+			currentSlide = currentSlide === 1 ? totalSlides : currentSlide - 1;
+		}
+
+		const newSlide = createSlide(currentSlide, direction);
+		const newMainWrapper = createMainImageWrapper(currentSlide, direction);
+		const { newTitle, newDesc, newCounter } = createTextElements(
+			currentSlide,
+			direction
+		);
+
+		slider.appendChild(newSlide);
+		mainImageContainer.appendChild(newMainWrapper);
+		titleContainer.appendChild(newTitle);
+		descContainer.appendChild(newDesc);
+		counterContainer.appendChild(newCounter);
+
+		gsap.set(newMainWrapper.querySelector("img"), {
+			y: direction === "down" ? "-50%" : "50%"
+		});
+
+		const tl = gsap.timeline({
+			onComplete: () => {
+				[
+					currentSlideElement,
+					currentMainWrapper,
+					currentTitle,
+					currentDesc,
+					currentCounter
+				].forEach((el) => el?.remove());
+
+				isAnimating = false;
+
+				setTimeout(() => {
+					scrollAllowed = true;
+					lastScrollTime = Date.now();
+				}, 100);
+			}
+		});
+
+		tl
+			.to(
+				newSlide.querySelector(".slide-bg-img"),
+				{
+					clipPath:
+						direction === "down"
+							? "polygon(0% 100%, 100% 100%, 100% 0%, 0% 0%)"
+							: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+					duration: 1.25,
+					ease: CustomEase.create("", ".87, 0, .13, 1")
+				},
+				0
+			)
+			.to(
+				currentSlideElement.querySelector("img"),
+				{
+					scale: 1.5,
+					duration: 1.25,
+					ease: CustomEase.create("", ".87, 0, .13, 1")
+				},
+				0
+			)
+			.to(
+				newMainWrapper,
+				{
+					clipPath:
+						direction === "down"
+							? "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+							: "polygon(0% 100%, 100% 100%, 100% 0%, 0% 0%)",
+					duration: 1.25,
+					ease: CustomEase.create("", ".87, 0, .13, 1")
+				},
+				0
+			)
+			.to(
+				currentMainWrapper.querySelector("img"),
+				{
+					y: direction === "down" ? "50%" : "-50%",
+					duration: 1.25,
+					ease: CustomEase.create("", ".87, 0, .13, 1")
+				},
+				0
+			)
+			.to(
+				newMainWrapper.querySelector("img"),
+				{
+					y: 0,
+					duration: 1.25,
+					ease: CustomEase.create("", ".87, 0, .13, 1")
+				},
+				0
+			)
+			.to(
+				currentTitle,
+				{
+					y: direction === "down" ? -50 : 50,
+					duration: 1.25,
+					ease: CustomEase.create("", ".87, 0, .13, 1")
+				},
+				0
+			)
+			.to(
+				newTitle,
+				{
+					y: 0,
+					duration: 1.25,
+					ease: CustomEase.create("", ".87, 0, .13, 1")
+				},
+				0
+			)
+			.to(
+				currentDesc,
+				{
+					y: direction === "down" ? -20 : 20,
+					duration: 1.25,
+					ease: CustomEase.create("", ".87, 0, .13, 1")
+				},
+				0
+			)
+			.to(
+				newDesc,
+				{
+					y: 0,
+					duration: 1.25,
+					ease: CustomEase.create("", ".87, 0, .13, 1")
+				},
+				0
+			)
+			.to(
+				currentCounter,
+				{
+					y: direction === "down" ? -18 : 18,
+					duration: 1.25,
+					ease: CustomEase.create("", ".87, 0, .13, 1")
+				},
+				0
+			)
+			.to(
+				newCounter,
+				{
+					y: 0,
+					duration: 1.25,
+					ease: CustomEase.create("", ".87, 0, .13, 1")
+				},
+				0
+			);
+	}
+
+	function handleScroll(direction) {
+		const now = Date.now();
+		if (isAnimating || !scrollAllowed) return;
+		if (now - lastScrollTime < 1000) return;
+		lastScrollTime = now;
+		animateSlide(direction);
+	}
+
+	window.addEventListener(
+		"wheel",
+		(e) => {
+			e.preventDefault();
+			const direction = e.deltaY > 0 ? "down" : "up";
+			handleScroll(direction);
+		},
+		{ passive: false }
+	);
+
+	let touchStartY = 0;
+	let isTouchActive = false;
+
+	window.addEventListener(
+		"touchstart",
+		(e) => {
+			touchStartY = e.touches[0].clientY;
+			isTouchActive = true;
+		},
+		{ passive: false }
+	);
+
+	window.addEventListener(
+		"touchmove",
+		(e) => {
+			e.preventDefault();
+			if (!isTouchActive || isAnimating || !scrollAllowed) return;
+			const touchCurrentY = e.touches[0].clientY;
+			const difference = touchStartY - touchCurrentY;
+			if (Math.abs(difference) > 10) {
+				isTouchActive = false;
+				const direction = difference > 0 ? "down" : "up";
+				handleScroll(direction);
+			}
+		},
+		{ passive: false }
+	);
+
+	window.addEventListener("touchend", () => {
+		isTouchActive = false;
+	});
+});
+</script>
+
+</html>

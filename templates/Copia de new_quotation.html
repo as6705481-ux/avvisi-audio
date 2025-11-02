@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1>Create New Quotation</h1>
+        <form method="POST" action="{{ url_for('new_quotation') }}">
+            <div class="mb-3">
+                <label for="user_id" class="form-label">Select User</label>
+                <select class="form-select" id="user_id" name="user_id" required>
+                    {% for user in users %}
+                        <option value="{{ user.id }}">{{ user.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="customer_id" class="form-label">Select Customer</label>
+                <select class="form-select" id="customer_id" name="customer_id" required>
+                    {% for customer in customers %}
+                        <option value="{{ customer.id }}">{{ customer.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div id="product-list">
+                <div class="product-group mb-3">
+                    <label for="product_1" class="form-label">Select Product</label>
+                    <select class="form-select" id="product_1" name="products[]" required>
+                        {% for product in products %}
+                            <option value="{{ product.id }}">{{ product.name }} (Stock: {{ product.stock }})</option>
+                        {% endfor %}
+                    </select>
+                    <label for="quantity_1" class="form-label mt-3">Quantity</label>
+                    <input type="number" class="form-control" id="quantity_1" name="quantities[]" min="1" required>
+                    <label for="days_1" class="form-label mt-3">Days</label>
+                    <input type="number" class="form-control" id="days_1" name="days[]" min="1" required>
+                </div>
+            </div>
+            <button type="button" class="btn btn-secondary" onclick="addProduct()">Add Another Product</button>
+            <button type="submit" class="btn btn-success mt-3">Create Quotation</button>
+        </form>
+    </div>
+    <script>
+        let productCount = 1;
+
+        function addProduct() {
+            productCount++;
+            const productList = document.getElementById('product-list');
+            const productGroup = document.createElement('div');
+            productGroup.classList.add('product-group', 'mb-3');
+            productGroup.innerHTML = `
+                <label for="product_${productCount}" class="form-label">Select Product</label>
+                <select class="form-select" id="product_${productCount}" name="products[]" required>
+                    {% for product in products %}
+                        <option value="{{ product.id }}">{{ product.name }} (Stock: {{ product.stock }})</option>
+                    {% endfor %}
+                </select>
+                <label for="quantity_${productCount}" class="form-label mt-3">Quantity</label>
+                <input type="number" class="form-control" id="quantity_${productCount}" name="quantities[]" min="1" required>
+                <label for="days_${productCount}" class="form-label mt-3">Days</label>
+                <input type="number" class="form-control" id="days_${productCount}" name="days[]" min="1" required>
+            `;
+            productList.appendChild(productGroup);
+        }
+    </script>
+{% endblock %}

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crear cuenta - Avissi</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+      <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet"/>
+
+   
+
+    <style>
+        body{
+        font-family:'Quicksand',sans-serif;
+        background:linear-gradient(135deg,#e65a00,#ffe6a7);
+        display:flex;flex-direction:column;align-items:center;
+        min-height:100vh;margin:0;color:#333;
+        }
+        .navbar{width:100%;background:#000428;padding:10px 0;margin-bottom:20px;}
+        .login-container{
+        background:#fff;border-radius:20px;padding:30px;
+        box-shadow:0 8px 20px rgba(0,0,0,.2);
+        width:100%;max-width:420px;margin-top:50px;
+        }
+        .login-header{text-align:center;margin-bottom:20px;}
+        .login-header h1{font-size:2rem;color:#e65a00;}
+        .login-header p{color:#7f8c8d;}
+        .btn-primary{
+        width:100%;background:linear-gradient(90deg,#e65a00,#f39c12);
+        border:none;padding:10px;font-weight:bold;transition:background .3s ease;
+        }
+        .btn-primary:hover{background:linear-gradient(90deg,#f39c12,#e65a00);}
+        .btn-ghost{
+        width:100%;background:#fff;border:2px solid #e65a00;color:#e65a00;
+        padding:10px;font-weight:700;
+        }
+        .btn-ghost:hover{background:#fff3e0;border-color:#f39c12;color:#d35400;}
+        .register-link a{color:#e65a00;text-decoration:none;font-weight:500;}
+        .register-link a:hover{text-decoration:underline;}
+        .form-control{border-radius:10px;padding:10px;border:1px solid #ddd;}
+        .form-label{font-weight:500;color:#e65a00;}
+    </style>
+  </head>
+  <body>
+    <nav
+        class="navbar navbar-expand-lg navbar-dark"
+        style="background: #000428"
+      >
+        <div class="container">
+          <a
+            class="navbar-brand d-flex align-items-center"
+            href="{{ url_for('home') }}"
+          >
+            <img
+              src="{{ url_for('static', filename='logo_avvisi.svg') }}"
+              alt="Avissi Audio Logo"
+              style="height: 40px; width: auto; margin-right: 10px"
+              class="fade-in"
+            />
+            <span class="highlight fade-in">Avissi Audio</span>
+          </a>
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNav"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+              <li class="nav-item">
+                <a class="nav-link highlight" href="{{ url_for('home') }}"
+                  >Inicio</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/eventos">Eventos</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link highlight" href="/testimonios"
+                  >Testimonios</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/contacto">Contacto</a>
+              </li>
+            </ul>
+            <a href="{{ url_for('login_get') }}" class="btn btn-orange ms-3"
+              >Iniciar Sesión</a
+            >
+          </div>
+        </div>
+    </nav>
+
+    <section class="container my-5">
+      <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-5">
+          {% with messages = get_flashed_messages(with_categories=true) %} {% if
+          messages %} {% for cat, msg in messages %}
+          <div
+            class="alert alert-{{ 'danger' if cat=='error' else cat }}"
+            role="alert"
+          >
+            {{ msg }}
+          </div>
+          {% endfor %} {% endif %} {% endwith %}
+
+          <div class="card p-4">
+            <h1 class="h4 text-center mb-3">Crear cuenta</h1>
+            <form method="post" action="/register">
+              <div class="mb-3">
+                <label class="form-label">Nombre completo</label>
+                <input
+                  class="form-control"
+                  name="full_name"
+                  required
+                  placeholder="Tu nombre"
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Correo electrónico</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  name="email"
+                  required
+                  placeholder="tucorreo@avvisi.com"
+                  autocomplete="email"
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Contraseña</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  name="password"
+                  required
+                  minlength="8"
+                  autocomplete="new-password"
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Confirmar contraseña</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  name="password2"
+                  required
+                  minlength="8"
+                  autocomplete="new-password"
+                />
+              </div>
+
+              <button class="btn btn-orange w-100">Crear cuenta</button>
+            </form>
+            <hr class="my-4" />
+            <p class="text-center mb-0">
+              ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

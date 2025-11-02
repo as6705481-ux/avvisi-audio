@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+{% block title %}Clientes{% endblock %}
+{% block content %}
+<div class="container mt-4" style="width: 98%;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-center m-0">Clientes</h1>
+    <a href="{{ url_for('client_add') }}" class="btn btn-success">
+      <i class="fas fa-plus"></i> Agregar Cliente
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered table-hover align-middle">
+      <thead class="thead-dark">
+        <tr>
+          <th>Nombre</th>
+          <th>RTN</th>
+          <th>Correo</th>
+          <th>Teléfono</th>
+          <th>Dirección</th>
+          <th>Eventual</th>
+          <th>Creado</th>
+          <th class="text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in clients %}
+        <tr>
+          <td>
+            {{ c.name }}
+            {% if primary and primary.get(c.id) %}
+              <div class="text-muted small">
+                Contacto: {{ primary[c.id].name }}
+                {% if primary[c.id].email %} ({{ primary[c.id].email }}){% endif %}
+              </div>
+            {% endif %}
+          </td>
+          <td>{{ c.tax_id or '—' }}</td>
+          <td>{{ c.email or '—' }}</td>
+          <td>{{ c.phone or '—' }}</td>
+          <td class="text-truncate" style="max-width:320px;">
+            {% if c.billing_address %}
+              {% set a = c.billing_address %}
+              {{ a.street or '' }}{% if a.street and (a.city or a.state or a.zip) %}, {% endif %}
+              {{ a.city or '' }}{% if a.city and a.state %}, {% endif %}
+              {{ a.state or '' }} {% if a.zip %}{{ a.zip }}{% endif %}
+              {% if a.country %} — {{ a.country }}{% endif %}
+            {% else %} — {% endif %}
+          </td>
+          <td>
+            <span class="badge {{ 'bg-warning text-dark' if c.is_eventual else 'bg-secondary' }}">
+              {{ 'Eventual' if c.is_eventual else '—' }}
+            </span>
+          </td>
+          <td>
+            {% if c.created_at is string %}
+              {{ c.created_at.split('T')[0] }}
+            {% else %}
+              {{ (c.created_at.strftime('%Y-%m-%d') if c.created_at else '—') }}
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <div class="btn-group" role="group">
+              <a href="{{ url_for('client_edit', client_id=c.id) }}"
+                 class="btn btn-sm btn-outline-primary" title="Editar">
+                <i class="fas fa-edit"></i>
+              </a>
+              <form action="{{ url_for('client_delete', client_id=c.id) }}" method="POST" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar"
+                        onclick="return confirm('¿Eliminar cliente? Esta acción no se puede deshacer.');">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted py-4">No hay clientes.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sistema Inventario</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    body{font-family:Arial,sans-serif;background:#f9f9f9}
+    .sidebar{width:200px;height:100vh;position:fixed;background:#000428ff;color:#fff;padding:20px 10px;transition:all .3s}
+    .sidebar h2{text-align:center;color:#fff;font-weight:bold}
+    .sidebar a{color:#fff;text-decoration:none;display:block;padding:10px;border-radius:5px;transition:background .3s}
+    .sidebar a:hover{background:#e65a00}
+    .main-content{margin-left:250px;padding:65px 20px;transition:margin-left .3s}
+    .navbar{margin-left:200px;position:fixed;width:calc(100% - 200px);background:#000;color:#fff;padding:10px 20px;z-index:1000;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 6px rgba(0,0,0,.1)}
+    .navbar .user-info img{border:2px solid #ff6600}
+    .card{margin-bottom:20px;border:none;box-shadow:0 4px 6px rgba(0,0,0,.1);align-items:center}
+    .card .card-title{color:#ff6600}
+    .button-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:20px;margin-top:20px}
+    .button-grid .btn{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100px;background:#ff6600;color:#fff;border:none;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,.1);transition:transform .2s,background .3s}
+    .button-grid .btn:hover{background:#e65a00;transform:translateY(-5px)}
+    .button-grid .btn i{font-size:24px;margin-bottom:5px}
+    .metrics{display:flex;gap:16px;flex-wrap:wrap}
+    .chart-container{display:flex;gap:16px;flex-wrap:wrap}
+    .historico-ingresos{width:100%;max-width:620px}
+    .mayor-demanda{width:100%;max-width:620px}
+    .mobile-sidebar,.menu-toggle{display:none}
+    @media (max-width:768px){
+      .sidebar{display:none}
+      .span-bienvenida{margin-left:22px}
+      .mobile-sidebar{display:block;width:250px;height:100vh;position:fixed;left:0;top:0;background:#9E9E9E;transition:transform .3s;transform:translateX(-100%)}
+      .mobile-sidebar.active{transform:translateX(0)}
+      .mobile-sidebar a{color:#fff;text-decoration:none;display:block;padding:10px;border-radius:5px;transition:background .3s}
+      .mobile-sidebar a:hover{background:#e65a00}
+      .menu-toggle{display:block;position:absolute;left:0;background:#ff6600;color:#fff;padding:10px;border:none;border-radius:5px}
+      .navbar{margin-left:0;width:100%}
+      .main-content{margin-left:0;padding:20px}
+      .metrics{flex-direction:column;align-items:center;margin-top:55px}
+      .chart-container{flex-direction:column}
+      .card .card-title{text-align:center}
+      .mayor-demanda{width:auto}
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <button class="btn" onclick="location.href='/dashboard'">
+      <img src="{{ url_for('static', filename='logo_avvisi.svg') }}" width="50%"/>
+    </button>
+    <a href="/dashboard"><i class="bi bi-info-circle"></i> Inicio</a>
+    <a href="/users"><i class="bi bi-people"></i> Cuentas y Privilegios</a>
+    <a href="/backup"><i class="bi bi-cloud-arrow-down"></i> Crear Respaldo</a>
+    <a href="/ratings"><i class="bi bi-star"></i> Calificación Promedio</a>
+  </div>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <button class="menu-toggle" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+    <div class="mobile-sidebar" id="mobileSidebar">
+      <a href="/dashboard"><i class="bi bi-info-circle"></i> Inicio</a>
+      <a href="/users"><i class="bi bi-people"></i> Cuentas</a>
+      <a href="/backup"><i class="bi bi-cloud-arrow-down"></i> Respaldo</a>
+      <a href="/ratings"><i class="bi bi-star"></i> Calificaciones</a>
+    </div>
+    <div class="span-bienvenida">
+      <span>Bienvenid@, <strong>{{ (user.name if user else 'Usuario') }}</strong></span>
+    </div>
+    <div class="user-info">
+      <div class="dropdown">
+        <img src="{{ url_for('static', filename='avatar_generico.jpg') }}" alt="Avatar" class="rounded-circle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 2rem;">
+        <ul class="dropdown-menu" aria-labelledby="userDropdown">
+          <li><a class="dropdown-item" href="/profile/{{ user.id if user else '' }}">Perfil</a></li>
+          <li><a class="dropdown-item" href="/settings">Configuración</a></li>
+          <li><a class="dropdown-item text-danger" href="/logout">Cerrar sesión</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main-content">
+    <div class="metrics">
+      <div class="card text-center" style="width:18rem;">
+        <div class="card-body">
+          <h5 class="card-title">$2,873,942</h5>
+          <p class="card-text">Total Inventario Valorizado</p>
+        </div>
+      </div>
+      <div class="card text-center" style="width:18rem;">
+        <div class="card-body">
+          <h5 class="card-title">$3,181,700</h5>
+          <p class="card-text">Total Recepciones Valorizado</p>
+        </div>
+      </div>
+      <div class="card text-center" style="width:18rem;">
+        <div class="card-body">
+          <h5 class="card-title">$307,758</h5>
+          <p class="card-text">Total Salidas Valorizado</p>
+        </div>
+      </div>
+      <div class="card text-center" style="width:18rem;">
+        <div class="card-body">
+          <h5 class="card-title">$254,500</h5>
+          <p class="card-text">Total Pedidos Internos Valorizado</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-container mt-3">
+      <div class="card" style="flex:1;">
+        <div class="card-body">
+          <h5 class="card-title">Histórico de Ingresos</h5>
+          <div class="historico-ingresos">
+            <canvas id="incomeChart" width="400" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="flex:1;">
+        <div class="card-body mayor-demanda">
+          <h5 class="card-title">Productos con Mayor Demanda</h5>
+          <canvas id="topProductsChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="button-grid">
+      <button class="btn" onclick="location.href='/quotations'">
+        <i class="bi bi-clipboard-check"></i> Cotizaciones
+      </button>
+      <button class="btn" onclick="location.href='/events'">
+        <i class="bi bi-calendar-event"></i> Eventos
+      </button>
+      <button class="btn" onclick="location.href='/items'">
+        <i class="bi bi-box"></i> Productos
+      </button>
+      <button class="btn" onclick="location.href='/clients'">
+        <i class="bi bi-person"></i> Clientes
+      </button>
+      <button class="btn" onclick="location.href='/suppliers'">
+        <i class="bi bi-people"></i> Proveedores
+      </button>
+      <button class="btn" onclick="location.href='/contacts'">
+        <i class="bi bi-person-lines-fill"></i> Contactos
+      </button>
+
+      <button class="btn" onclick="location.href='/settings'">
+        <i class="bi bi-gear"></i> Configuración
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    function toggleSidebar(){ document.getElementById('mobileSidebar').classList.toggle('active'); }
+
+    // Datos inyectados desde Flask (ya en JSON válido)
+    const months            = {{ months | tojson }};
+    const incomes           = {{ incomes | tojson }};
+    const productNames      = {{ product_names | tojson }};
+    const productQuantities = {{ product_quantities | tojson }};
+
+    // Chart: Ingresos
+    const ctxIncome = document.getElementById('incomeChart').getContext('2d');
+    new Chart(ctxIncome, {
+      type: 'line',
+      data: {
+        labels: months,
+        datasets: [{
+          label: 'Ingresos Totales (HNL)',
+          data: incomes,
+          borderColor: 'rgba(75,192,192,1)',
+          backgroundColor: 'rgba(75,192,192,0.2)',
+          fill: true,
+          tension: 0.1
+        }]
+      },
+      options: {
+        plugins:{legend:{display:true}},
+        scales: {
+          x: { title: { display: true, text: 'Mes' } },
+          y: { title: { display: true, text: 'Ingresos Totales (HNL)' }, beginAtZero: true }
+        }
+      }
+    });
+
+    // Chart: Top productos
+    const ctxTop = document.getElementById('topProductsChart').getContext('2d');
+    new Chart(ctxTop, {
+      type: 'bar',
+      data: {
+        labels: productNames,
+        datasets: [{
+          label: 'Cantidad Vendida',
+          data: productQuantities,
+          backgroundColor: 'rgba(75,192,192,0.6)',
+          borderColor: 'rgba(75,192,192,1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        plugins:{legend:{display:true}},
+        scales: {
+          x: { title: { display: true, text: 'Productos' } },
+          y: { title: { display: true, text: 'Cantidad Vendida' }, beginAtZero: true }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

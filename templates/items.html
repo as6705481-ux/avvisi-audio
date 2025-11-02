@@ -1,0 +1,144 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="container mt-4" style="width: 98%;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-center m-0">Inventario de Productos</h1>
+    <a href="{{ url_for('product_add') }}" class="btn btn-success">
+      <i class="fas fa-plus"></i> Agregar Nuevo Producto
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered table-hover align-middle">
+      <thead class="thead-dark">
+        <tr>
+          <th>SKU</th>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th>Tipo</th>
+          <th>Precio Unitario</th>
+          <th>Impuesto %</th>
+          <th>Unidad</th>
+          <th>Stock</th>
+          <th>Proveedor</th>
+          <!-- <th>Creado En</th> -->
+          <th class="text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in products %}
+        <tr>
+          <td>{{ product.sku or '—' }}</td>
+          <td style="display: flex; justify-content: space-between;">
+            {{ product.name }}
+            {% if product.active is not none %}
+              <span class="badge {{ 'bg-success' if product.active else 'bg-secondary' }} ms-2">
+                {{ 'Activo' if product.active else 'Inactivo' }}
+              </span>
+            {% endif %}
+          </td>
+          <td class="text-truncate" style="max-width: 280px;">
+            {{ product.description or '—' }}
+          </td>
+          <td>
+            {% set t = product.item_type or '—' %}
+            <span class="badge 
+              {% if t == 'rentable' %}bg-primary
+              {% elif t == 'consumable' %}bg-info text-dark
+              {% elif t == 'service' %}bg-warning text-dark
+              {% elif t == 'bundle' %}bg-dark
+              {% else %}bg-secondary{% endif %}">
+              {{ t }}
+            </span>
+          </td>
+
+          <!-- Precio Unitario (si hay tiers up/down los muestra, sino default_rate) -->
+          <td>
+            {% if product.up_price is defined or product.down_price is defined %}
+              <select name="unit_price" class="form-select form-select-sm w-auto d-inline-block">
+                {% if product.up_price is defined %}
+                  <option value="{{ product.up_price }}">↑ {{ '%.2f'|format(product.up_price) }}</option>
+                {% endif %}
+                {% if product.down_price is defined %}
+                  <option value="{{ product.down_price }}">↓ {{ '%.2f'|format(product.down_price) }}</option>
+                {% endif %}
+                {% if product.default_rate is defined %}
+                  <option value="{{ product.default_rate }}" selected>STD {{ '%.2f'|format(product.default_rate) }}</option>
+                {% endif %}
+              </select>
+            {% else %}
+              {{ '%.2f'|format(product.default_rate or 0) }}
+            {% endif %}
+          </td>
+
+          <td>{{ '%.2f'|format(product.tax_rate or 0) }}</td>
+          <td>{{ product.unit or 'unit' }}</td>
+
+          <!-- Stock: usa product.stock si viene; si no, usa product.on_hand; si no, '—' -->
+          <td class="text-center">
+            {% if product.on_hand is not none %}
+              {{ product.on_hand }}
+            {% else %}
+              0
+            {% endif %}
+          </td>
+
+          
+          <!-- Proveedor: si traes join como supplier_name, muéstralo; si no, supplier_id; si no, '—' -->
+          <td>
+            {% if product.supplier_name is defined and product.supplier_name %}
+              {{ product.supplier_name }}
+            {% elif product.supplier_id is defined and product.supplier_id %}
+              {{ product.supplier_id }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+
+          <!-- Fecha creación: soporta datetime y string ISO -->
+          <!-- <td>
+            {% if product.created_at is string %}
+              {{ product.created_at.split('T')[0] }}
+            {% else %}
+              {{ (product.created_at.strftime('%Y-%m-%d') if product.created_at else '—') }}
+            {% endif %}
+          </td> -->
+
+          <td class="text-center">
+            <div class="btn-group" role="group">
+              <a href="{{ url_for('product_edit', product_id=product.id) }}" class="btn btn-sm btn-outline-primary" title="Editar">
+                <i class="fas fa-edit"></i>
+              </a>
+              <form action="{{ url_for('product_delete', product_id=product.id) }}" method="POST" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar"
+                        onclick="return confirm('¿Estás seguro de que deseas eliminar este producto?');">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </form>
+              {% if product.active %}
+                <form action="{{ url_for('product_set_status', product_id=product.id) }}?action=deactivate" method="POST" class="d-inline">
+                  <button class="btn btn-sm btn-outline-secondary">Desactivar</button>
+                </form>
+              {% else %}
+                <form action="{{ url_for('product_set_status', product_id=product.id) }}?action=activate" method="POST" class="d-inline">
+                  <button class="btn btn-sm btn-outline-success">Activar</button>
+                </form>
+              {% endif %}
+
+            </div>
+          </td>
+
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="11" class="text-center text-muted py-4">No hay productos para mostrar.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

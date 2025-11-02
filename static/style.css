@@ -1,0 +1,273 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    color: #333;
+    background-color: #f4f8fd;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #00224e;
+    color: #fff;
+    padding: 10px 20px;
+}
+
+.header-top .logo h1 {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.contact-info p {
+    font-size: 12px;
+}
+
+.appointment button {
+    background-color: #007bff;
+    color: #fff;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.navbar {
+    display: flex;
+    justify-content: center;
+    background-color: #f1f1f1;
+    padding: 15px 0;
+}
+
+.navbar a {
+    color: #333;
+    text-decoration: none;
+    margin: 0 15px;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.navbar a:hover {
+    color: #007bff;
+}
+
+.main-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 60px 20px;
+    background-color: #e8f1ff;
+}
+
+.main-content {
+    max-width: 50%;
+}
+
+.main-content h2 {
+    color: #007bff;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.main-content h1 {
+    font-size: 48px;
+    margin-bottom: 20px;
+    font-weight: bold;
+    color: #333;
+}
+
+.main-content p {
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    color: #555;
+}
+
+.buttons .primary-btn {
+    background-color: #007bff;
+    color: #fff;
+    padding: 12px 24px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.buttons .primary-btn:hover {
+    background-color: #005bb5;
+}
+
+.buttons .secondary-btn {
+    background-color: transparent;
+    color: #007bff;
+    padding: 12px 24px;
+    border: 2px solid #007bff;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.buttons .secondary-btn:hover {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.main-image img {
+    width: 450px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.about-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 60px 20px;
+    background-color: #fff;
+}
+
+.about-image img {
+    width: 350px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.about-content {
+    max-width: 50%;
+}
+
+.about-content h3 {
+    color: #007bff;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.about-content h2 {
+    font-size: 36px;
+    margin-bottom: 20px;
+    font-weight: bold;
+    color: #333;
+}
+
+.about-content p {
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    color: #555;
+}
+
+.services-icons {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+
+.service {
+    text-align: center;
+}
+
+.service img {
+    margin-bottom: 10px;
+}
+
+.primary-btn {
+    background-color: #007bff;
+    color: #fff;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.primary-btn:hover {
+    background-color: #005bb5;
+}
+/* Estilos para el modal de login */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    max-width: 80%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    position: relative;
+}
+
+.modal-content h2 {
+    margin-bottom: 20px;
+}
+
+.modal-content form label {
+    display: block;
+    margin: 10px 0 5px;
+    text-align: left;
+}
+
+.modal-content form input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.modal-content .close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.login-btn {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+    margin-left: auto;
+}
+
+.login-btn:hover {
+    color: #0056b3;
+}
+.navbar {
+    margin-left: 250px; /* Mantiene la barra principal */
+    position: fixed;
+    width: calc(100% - 250px);
+    background: #34495e;
+    color: white;
+    padding: 10px 20px;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-info {
+    /* Alinea el avatar a la izquierda dentro de la barra */
+    margin-left: 20px;
+}

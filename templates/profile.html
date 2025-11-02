@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg p-4 border-0" style="background-color: #fff3e0;">
+        <h1 class="text-center mb-4 text-orange">Perfil de Usuario</h1>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong class="text-orange">Nombre:</strong> {{ user.name }}</p>
+                <p><strong class="text-orange">Email:</strong> {{ user.email }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong class="text-orange">Rol:</strong> {{ user.role }}</p>
+                <p><strong class="text-orange">Activo:</strong> 
+                    <span class=" {{ 'badge-warning' if user.active else 'badge-secondary' }}">
+                        {{ "Sí" if user.active else "No" }}
+                    </span>
+                </p>
+            </div>
+        </div>
+        <hr style="border-top: 2px solid #ff9800;">
+        <p class="text-muted text-center">Creado en: {{ user.created_at }}</p>
+    </div>
+</div>
+
+<style>
+    .text-orange {
+        color: #ec7f3b;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}

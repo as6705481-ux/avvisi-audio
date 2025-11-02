@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="mb-4 text-center">Configuraciones</h1>
+
+        <!-- Pestañas -->
+        <ul class="nav nav-tabs justify-content-center" id="settingsTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab" aria-controls="inventory" aria-selected="true">Inventario</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab" aria-controls="users" aria-selected="false">Usuarios</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="suppliers-tab" data-bs-toggle="tab" data-bs-target="#suppliers" type="button" role="tab" aria-controls="suppliers" aria-selected="false">Proveedores</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="customers-tab" data-bs-toggle="tab" data-bs-target="#customers" type="button" role="tab" aria-controls="customers" aria-selected="false">Clientes</button>
+            </li>
+        </ul>
+
+        <!-- Contenido de las pestañas -->
+        <div class="tab-content">
+            <!-- Configuración de Inventario -->
+            <div class="tab-pane fade show active" id="inventory" role="tabpanel" aria-labelledby="inventory-tab">
+                <h3>Configuración de Inventario</h3>
+                <p>Configura ajustes relacionados con el inventario, como umbrales de stock, categorías y unidades de medida.</p>
+                <button class="btn btn-primary">Editar Configuración de Inventario</button>
+            </div>
+
+            <!-- Gestión de Usuarios -->
+            <div class="tab-pane fade" id="users" role="tabpanel" aria-labelledby="users-tab">
+                <h3>Gestión de Usuarios</h3>
+                <p>Administra cuentas de usuario, roles y permisos aquí.</p>
+                <button class="btn btn-primary">Agregar Nuevo Usuario</button>
+                <button class="btn btn-secondary">Ver Todos los Usuarios</button>
+            </div>
+
+            <!-- Configuración de Proveedores -->
+            <div class="tab-pane fade" id="suppliers" role="tabpanel" aria-labelledby="suppliers-tab">
+                <h3>Configuración de Proveedores</h3>
+                <p>Administra detalles de proveedores y configuraciones relacionadas.</p>
+                <button class="btn btn-primary">Agregar Nuevo Proveedor</button>
+                <button class="btn btn-secondary">Ver Todos los Proveedores</button>
+            </div>
+
+            <!-- Configuración de Clientes -->
+            <div class="tab-pane fade" id="customers" role="tabpanel" aria-labelledby="customers-tab">
+                <h3>Configuración de Clientes</h3>
+                <p>Administra la información de los clientes y configuraciones relacionadas.</p>
+                <button class="btn btn-primary">Agregar Nuevo Cliente</button>
+                <button class="btn btn-secondary">Ver Todos los Clientes</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

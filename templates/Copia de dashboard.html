@@ -1,0 +1,107 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <!-- Barra lateral -->
+    <div class="sidebar">
+        <button class="btn" onclick="location.href='/dashboard'">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFQtsG_lS0XMW1GgX2PEXYJfXUsswOpAO-Ug&s" />
+        </button>               
+        <a href="/dashboard"><i class="bi bi-info-circle"></i> Inicio</a>
+        <a href="/users"><i class="bi bi-people"></i> Cuentas y Privilegios</a>
+        <a href="/backup"><i class="bi bi-cloud-arrow-down"></i> Crear Respaldo</a>
+        <a href="/ratings"><i class="bi bi-star"></i> Calificación Promedio</a>
+    </div>
+
+    <!-- Barra superior -->
+    <div class="navbar">
+        <span>Bienvenid@, <strong>{{ user.name }}</strong></span>
+        <div class="user-info">
+            <!-- Dropdown con el avatar -->
+            <div class="dropdown">
+                <img src="https://via.placeholder.com/30" alt="Avatar" class="rounded-circle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                    <li><a class="dropdown-item" href="/profile">Perfil</a></li>
+                    <li><a class="dropdown-item" href="/settings">Configuración</a></li>
+                    <li><a class="dropdown-item text-danger" href="/logout">Cerrar sesión</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="metrics">
+            <div class="card text-center" style="width: 18rem;">
+                <div class="card-body">
+                    <h5 class="card-title">$2,873,942</h5>
+                    <p class="card-text">Total Inventario Valorizado</p>
+                </div>
+            </div>
+            <div class="card text-center" style="width: 18rem;">
+                <div class="card-body">
+                    <h5 class="card-title">$3,181,700</h5>
+                    <p class="card-text">Total Recepciones Valorizado</p>
+                </div>
+            </div>
+            <div class="card text-center" style="width: 18rem;">
+                <div class="card-body">
+                    <h5 class="card-title">$307,758</h5>
+                    <p class="card-text">Total Salidas Valorizado</p>
+                </div>
+            </div>
+            <div class="card text-center" style="width: 18rem;">
+                <div class="card-body">
+                    <h5 class="card-title">$254,500</h5>
+                    <p class="card-text">Total Pedidos Internos Valorizado</p>
+                </div>
+            </div>
+        </div>
+        <div class="chart-container">
+            <div class="card" style="flex: 1;">
+                <div class="card-body">
+                    <h5 class="card-title">Top Productos Inventario</h5>
+                    <img src="https://via.placeholder.com/400x200" alt="Gráfico de barras" class="img-fluid">
+                </div>
+            </div>
+            <div class="card" style="flex: 1;">
+                <div class="card-body">
+                    <h5 class="card-title">Top Entradas</h5>
+                    <img src="https://via.placeholder.com/200x200" alt="Gráfico circular" class="img-fluid">
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones con íconos -->
+        <div class="button-grid">
+            <button class="btn" onclick="location.href='/suppliers'">
+                <i class="bi bi-people"></i>
+                Proveedores
+            </button>
+            <button class="btn" onclick="location.href='/products'">
+                <i class="bi bi-box"></i>
+                Productos
+            </button>
+            <button class="btn" onclick="location.href='/create_quotation'">
+                <i class="bi bi-clipboard-check"></i>
+                Cotizaciones
+            </button>
+            <button class="btn" onclick="location.href='/customers'">
+                <i class="bi bi-person"></i>
+                Clientes
+            </button>
+            <button class="btn" onclick="location.href='/orders'">
+                <i class="bi bi-cart-check"></i>
+                Pedidos
+            </button>
+            <button class="btn" onclick="location.href='/reports'">
+                <i class="bi bi-bar-chart"></i>
+                Reportes
+            </button>
+            <button class="btn" onclick="location.href='/settings'">
+                <i class="bi bi-gear"></i>
+                Configuración
+            </button>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

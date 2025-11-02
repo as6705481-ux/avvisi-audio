@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 1000px; background: #fff; padding: 40px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);">
+    <h2 class="text-center mb-4" style="color: #FF7F11; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Listado de Cotizaciones</h2>
+
+    <table class="table table-hover text-center">
+        <thead style="background-color: #FF6F00; color: white;">
+            <tr>
+                <th>ID</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for quotation in quotations %}
+            <tr>
+                <td><strong>{{ quotation.id }}</strong></td>
+                <td>{{ quotation.quotation_date }}</td>
+                <td>{{ quotation.customer_name }}</td>
+                <td style="font-weight: bold; color: #FF7F11;">L {{ "{:,.2f}".format(quotation.total) }}</td>
+                <td>
+                    <span class="badge px-3 py-2 fs-6"
+                        style="background-color: 
+                        {% if quotation.status == 'pending' %} #FFE0B2; color: #FF6F00;
+                        {% elif quotation.status == 'approved' %} #C8E6C9; color: #388E3C;
+                        {% elif quotation.status == 'rejected' %} #FFCCBC; color: #D84315;
+                        {% elif quotation.status == 'finalized' %} #BBDEFB; color: #1976D2; {% endif %}">
+                        {% if quotation.status == 'pending' %} Pendiente
+                        {% elif quotation.status == 'approved' %} Aprobada
+                        {% elif quotation.status == 'rejected' %} Rechazada
+                        {% elif quotation.status == 'finalized' %} Finalizada {% endif %}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('edit_quotation', quotation_id=quotation.id) }}" class="btn btn-outline-warning btn-sm px-3 py-2">
+                        ✏️ Editar
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

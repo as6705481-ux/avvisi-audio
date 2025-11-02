@@ -1,0 +1,230 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<style>
+  form {
+    max-width: 500px;
+    margin: 0 auto;
+    background-color: #fff5e6;
+    border: 1px solid #ffc107;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  h1 {
+    text-align: center;
+    color: #ff8c00;
+    font-family: 'Poppins', sans-serif;
+    margin-bottom: 20px;
+  }
+  .btn-success {
+    background-color: #ff8c00;
+    border-color: #ff8c00;
+  }
+  .btn-success:hover {
+    background-color: #e67e00;
+    border-color: #e67e00;
+  }
+</style>
+
+<div class="container mt-5">
+  <h1>Agregar Nuevo Producto</h1>
+
+  {% set suppliers = suppliers or [] %}
+  {% set categories = categories or [] %}
+
+  <form method="POST">
+    <!-- Nombre -->
+    <div class="mb-3">
+      <label for="name" class="form-label">Nombre <span class="text-danger">*</span></label>
+      <input type="text" class="form-control" id="name" name="name"
+             placeholder="Ingrese el nombre del producto" required>
+    </div>
+
+    <!-- Descripción -->
+    <div class="mb-3">
+      <label for="description" class="form-label">Descripción <span class="text-danger">*</span></label>
+      <textarea class="form-control" id="description" name="description"
+                placeholder="Ingrese la descripción del producto" required></textarea>
+    </div>
+
+    <!-- Tipo de Ítem -->
+    <div class="mb-3">
+      <label for="item_type" class="form-label">Tipo de producto <span class="text-danger">*</span></label>
+      <select class="form-select" id="item_type" name="item_type" required>
+        <option value="consumable">Consumible</option>
+        <option value="rentable">Rentable</option>
+        <option value="service">Servicio</option>
+        <option value="bundle">Bundle</option>
+      </select>
+    </div>
+
+    <!-- Unidad -->
+    <div class="mb-3">
+      <label for="unit" class="form-label">Unidad <span class="text-danger">*</span></label>
+      <select class="form-select" id="unit" name="unit" required>
+        <option value="EA"  data-types="consumable">Unidad</option>
+        <option value="BOX" data-types="consumable">Caja</option>
+        <option value="PK"  data-types="consumable">Paquete</option>
+        <option value="SET" data-types="consumable,bundle">Set</option>
+        <option value="M"   data-types="consumable">Metro</option>
+        <option value="L"   data-types="consumable">Litro</option>
+        <option value="KG"  data-types="consumable">Kilogramo</option>
+        
+        <option value="EA"  data-types="rentable">Unidad / Equipo</option>
+        <option value="DAY" data-types="rentable">Día</option>
+        <option value="WK"  data-types="rentable">Semana</option>
+        <option value="MON" data-types="rentable">Mes</option>
+        
+        <option value="HR"  data-types="service">Hora</option>
+        <option value="DAY" data-types="service">Día</option>
+        <option value="EVT" data-types="service,bundle">Evento</option>
+        <option value="JOB" data-types="service">Trabajo</option>
+        <option value="KM"  data-types="service">Kilómetro</option>
+        
+        <option value="SET" data-types="bundle,consumable">Set</option>
+        <option value="PKG" data-types="bundle">Paquete</option>
+        <option value="EVT" data-types="bundle,service">Por evento</option>
+      </select>
+    </div>
+
+    <script>
+      (function () {
+        const typeSel = document.getElementById('item_type');
+        const unitSel = document.getElementById('unit');
+
+        function filterUnits() {
+          const t = (typeSel.value || '').toLowerCase();
+          let firstVisible = null;
+
+          // mostrar/ocultar opciones según data-types
+          Array.from(unitSel.options).forEach(opt => {
+            const list = (opt.getAttribute('data-types') || '').toLowerCase().split(',').map(s=>s.trim()).filter(Boolean);
+            const show = list.length === 0 ? true : list.includes(t);
+            opt.hidden = !show;
+            if (show && !firstVisible && opt.value) firstVisible = opt.value;
+          });
+
+          // si la opción seleccionada quedó oculta, selecciona la primera visible
+          if (unitSel.selectedOptions.length && unitSel.selectedOptions[0].hidden && firstVisible) {
+            unitSel.value = firstVisible;
+          } else if (!unitSel.value && firstVisible) {
+            unitSel.value = firstVisible;
+          }
+        }
+
+        typeSel.addEventListener('change', filterUnits);
+        document.addEventListener('DOMContentLoaded', filterUnits);
+        filterUnits(); // inicial
+      })();
+    </script>
+
+
+    <!-- Precio e Impuesto -->
+    <div class="mb-3">
+      <label for="default_rate" class="form-label">Precio Unitario <span class="text-danger">*</span></label>
+      <input type="number" step="1" class="form-control" id="default_rate" name="default_rate"
+             placeholder="0.00" required>
+    </div>
+    <div class="mb-3">
+      <label for="tax_rate" class="form-label">Impuesto sobre venta % (0 – 100) <span class="text-danger">*</span></label>
+      <input type="number" step="1" class="form-control" id="tax_rate" name="tax_rate"
+             placeholder="0.00" value="0.00" required min="0" max="100">
+    </div>
+
+    <!-- SKU -->
+    <div class="mb-3">
+      <label for="sku" class="form-label">SKU</label>
+      <input type="text" class="form-control" id="sku" name="sku" placeholder="Ej: ITM-ABC12345">
+      <small class="text-muted">Si lo dejas vacío, se autogenera.</small>
+    </div>
+
+    <!-- Proveedor -->
+    <div class="mb-3">
+      <label for="supplier" class="form-label">Proveedor <span class="text-danger">*</span></label>
+      <select class="form-select" id="supplier" name="supplier_id">
+        <option value="">— Sin proveedor —</option>
+        {% for s in suppliers %}
+          <option value="{{ s.id }}">{{ s.name }}{% if s.email %} — {{ s.email }}{% endif %}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Categoría + nueva categoría -->
+    <div class="mb-3">
+      <label for="category" class="form-label">Categoría <span class="text-danger">*</span></label>
+      <select class="form-select" id="category" name="category" style="border-radius:10px;">
+        <option value="">— Sin categoría —</option>
+        {% for c in categories %}
+          <option value="{{ c }}">{{ c }}</option>
+        {% endfor %}
+      </select>
+      <small class="form-text text-muted">Seleccione una existente o ingrese una nueva:</small>
+      <input type="text" class="form-control mt-2" id="new_category" name="new_category" placeholder="Nueva categoría (opcional)">
+    </div>
+
+    <!-- Stock (visible sólo para consumibles) -->
+    <div class="mb-3" id="stock_block">
+      <label for="stock" class="form-label">Stock inicial <span class="text-danger">*</span></label>
+      <input type="number" class="form-control" id="stock" name="stock" placeholder="0" value="0" min="0">
+      <!-- <small class="text-muted">
+        Se guarda en <code>inventory_balances.on_hand</code>.
+      </small> -->
+    </div>
+
+    <!-- Activos seriados (visible sólo para rentables) -->
+    <div class="mb-3" id="assets_block" style="display:none;">
+      <label class="form-label">Activos seriados</label>
+      <div class="row g-2">
+        <div class="col-sm-6">
+          <input type="number" min="0" class="form-control" id="asset_count" name="asset_count"
+                 placeholder="# activos a crear (ej. 3)">
+        </div>
+        <div class="col-sm-6">
+          <input type="text" class="form-control" id="serial_prefix" name="serial_prefix"
+                 placeholder="Prefijo de serie (ej. SER)">
+        </div>
+      </div>
+      <small class="text-muted">
+        Por ejemplo: <code>SER-SKU-001</code>, <code>SER-SKU-002</code>…
+      </small>
+    </div>
+
+    <!-- TAG -->
+  <div class="mb-3">
+      <label for="tags" class="form-label">Tags (separados por coma)</label>
+      <input type="text" id="tags" name="tags" class="form-control" placeholder="audio, iluminacion, cableado">
+    </div>
+
+    <!-- Activo -->
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" value="1" id="active" name="active" checked>
+      <label class="form-check-label" for="active">Activo</label>
+    </div>
+
+    
+
+
+    <div class="d-flex justify-content-between">
+      <a href="{{ url_for('items') }}" class="btn btn-secondary">Cancelar</a>
+      <button type="submit" class="btn btn-success">Agregar Producto</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  (function(){
+    const typeSel = document.getElementById('item_type');
+    const stockBlock = document.getElementById('stock_block');
+    const assetsBlock = document.getElementById('assets_block');
+
+    function toggleBlocks(){
+      const t = typeSel.value;
+      stockBlock.style.display = (t === 'consumable') ? 'block' : 'none';
+      assetsBlock.style.display = (t === 'rentable') ? 'block' : 'none';
+    }
+    typeSel.addEventListener('change', toggleBlocks);
+    toggleBlocks();
+  })();
+</script>
+{% endblock %}
