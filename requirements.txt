@@ -1,0 +1,5 @@
+Flask==3.0.3
+gunicorn==23.0.0
+pytz==2024.2
+supabase==2.6.0          # cliente oficial (auth/admin/postgrest/storage)
+python-dotenv==1.0.1     # opcional, para cargar .env en local
