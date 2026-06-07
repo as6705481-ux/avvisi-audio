@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Cotización creada</h1>
+<p><strong>Número:</strong> {{ quote_number }}</p>
+<p><strong>Total:</strong> {{ '%.2f'|format(total) }}</p>
+<p><strong>IDs internos:</strong> quote={{ quote_id }} · event={{ event_id }}</p>
+<p><a href="{{ url_for('items') }}">Volver al catálogo</a></p>
+{% endblock %}

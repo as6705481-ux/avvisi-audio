@@ -1,0 +1,156 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 900px; background: #fff; padding: 60px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);">
+    <h2 class="text-center mb-4" style="color: #FF7F11; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Editar Cotización #{{ quotation.id }}</h2>
+
+    <form action="{{ url_for('update_quotation', quotation_id=quotation.id) }}" method="POST">
+        <div class="mb-4">
+            <label for="quotation_date" class="form-label" style="font-weight: 600;">Fecha de Cotización</label>
+            <input type="date" id="quotation_date" name="quotation_date" class="form-control" style="border-radius: 8px; border: 1px solid #FF7F11; padding: 10px;" required value="{{ quotation.quotation_date }}">
+        </div>
+
+        <div class="mb-4">
+            <label for="status" class="form-label" style="font-weight: 600;">Estado</label>
+            <select class="form-select" id="status" name="status" style="border-radius: 8px; border: 1px solid #FF7F11; padding: 10px;">
+                <option value="pending" {% if quotation.status == 'pending' %} selected {% endif %}>Pendiente</option>
+                <option value="approved" {% if quotation.status == 'approved' %} selected {% endif %}>Aprobada</option>
+                <option value="rejected" {% if quotation.status == 'rejected' %} selected {% endif %}>Rechazada</option>
+                <option value="finalized" {% if quotation.status == 'finalized' %} selected {% endif %}>Finalizada</option>
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label for="event_location" class="form-label" style="font-weight: 600;">Lugar del Evento</label>
+            <input type="text" id="event_location" name="event_location" class="form-control" placeholder="Ingrese el lugar del evento" style="border-radius: 8px; border: 1px solid #FF7F11; padding: 10px;" value="{{ quotation.event_location }}">
+        </div>
+
+        <div class="mb-4">
+            <label for="event_type" class="form-label" style="font-weight: 600;">Tipo de Evento</label>
+            <input type="text" id="event_type" name="event_type" class="form-control" placeholder="Ingrese el tipo de evento" style="border-radius: 8px; border: 1px solid #FF7F11; padding: 10px;" value="{{ quotation.event_type }}">
+        </div>
+
+        <div class="mb-4">
+            <label for="customer_id" class="form-label" style="font-weight: 600;">Cliente</label>
+            <select class="form-select" id="customer_id" name="customer_id" style="border-radius: 8px; border: 1px solid #FF7F11; padding: 10px;">
+                {% for customer in all_customers %}
+                    <option value="{{ customer.id }}" {% if customer.id == quotation.customer_id %}selected{% endif %}>
+                        {{ customer.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-4">
+            <label for="new_product" class="form-label" style="font-weight: 600;">Agregar Producto a la Cotización</label>
+            <div class="input-group">
+                <select id="new_product" class="form-select" style="border-radius: 8px; border: 1px solid #FF7F11;">
+                    <option value="">Seleccione un producto</option>
+                    {% for product in all_products %}
+                        <option value="{{ product.id }}">{{ product.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" class="btn btn-success" style="background-color: #28a745; border: none;" onclick="addProduct()">➕ Agregar</button>
+            </div>
+        </div>
+        
+        <h4 class="mt-4" style="color: #FF7F11; font-weight: bold;">Productos en la Cotización</h4>
+        <div id="products-list">
+            {% for item in quotation_details %}
+                <div class="card mb-3 product-item" id="product_card_{{ item.product_id }}" style="border-radius: 10px; border: 2px solid #FF7F11;">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ item.product_name }}</h5>
+                        <label for="quantity_{{ item.product_id }}">Cantidad:</label>
+                        <input type="number" name="quantity_{{ item.product_id }}" class="form-control" min="1" value="{{ item.quantity }}">
+
+                        <label for="price_{{ item.product_id }}">Precio Unitario:</label>
+                        <input type="number" name="price_{{ item.product_id }}" class="form-control" min="0" step="0.01" value="{{ item.unit_price }}">
+
+                        <label for="days_{{ item.product_id }}">Días:</label>
+                        <input type="number" name="days_{{ item.product_id }}" class="form-control" min="1" value="{{ item.days }}">
+
+                        <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeProduct({{ item.product_id }})">❌ Eliminar</button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <button id="generatePdfBtn" class="btn btn-primary w-100 mt-4"
+            style="background: #FF7F11; border: none; font-size: 18px; padding: 12px;">
+            Actualizar Cotización
+        </button>
+
+    </form>
+</div>
+
+<script id="quotationData" type="application/json">
+    {{ quotation | tojson | safe }}
+</script>
+
+<script id="quotationDetailsData" type="application/json">
+    {{ quotation_details | tojson | safe }}
+</script>
+
+<script>
+    var quotation = JSON.parse(document.getElementById("quotationData").textContent);
+    var quotationDetails = JSON.parse(document.getElementById("quotationDetailsData").textContent);
+
+    function removeProduct(productId) {
+        document.getElementById("product_card_" + productId).remove();
+    }
+
+    function addProduct() {
+        let productSelect = document.getElementById("new_product");
+        let selectedProductId = productSelect.value;
+        let selectedProductText = productSelect.options[productSelect.selectedIndex].text;
+    
+        if (!selectedProductId) {
+            alert("Seleccione un producto válido.");
+            return;
+        }
+    
+        let productCard = `
+            <div class="card mb-3 product-item" id="product_card_${selectedProductId}" style="border-radius: 10px; border: 2px solid #FF7F11;">
+                <div class="card-body">
+                    <h5 class="card-title">${selectedProductText}</h5>
+    
+                    <label for="quantity_${selectedProductId}">Cantidad:</label>
+                    <input type="number" name="quantity_${selectedProductId}" class="form-control" min="1" value="1" required>
+    
+                    <label for="price_${selectedProductId}">Precio Unitario:</label>
+                    <input type="number" name="price_${selectedProductId}" class="form-control" min="0" step="0.01" value="0" required>
+    
+                    <label for="days_${selectedProductId}">Días:</label>
+                    <input type="number" name="days_${selectedProductId}" class="form-control" min="1" value="1" required>
+    
+                    <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeProduct(${selectedProductId})">❌ Eliminar</button>
+                </div>
+            </div>`;
+    
+        document.getElementById("products-list").insertAdjacentHTML("beforeend", productCard);
+    }    
+
+    document.getElementById("generatePdfBtn").addEventListener("click", function() {
+        fetch('/generate-pdf', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                quotation: quotation,
+                quotation_details: quotationDetails
+            })
+        })
+        .then(response => response.blob()) // Recibir el PDF como archivo
+        .then(blob => {
+            let url = window.URL.createObjectURL(blob);
+            let a = document.createElement("a");
+            a.href = url;
+            a.download = "cotizacion.pdf";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        })
+        .catch(error => console.error('Error:', error));
+    });
+</script>
+{% endblock %}

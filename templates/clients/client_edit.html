@@ -1,0 +1,128 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container mt-5">
+  {% set c = client %}
+  {% set a = c.billing_address or {} %}
+
+  <form method="POST" class="ios-form" id="clientForm">
+    <h1 class="ios-title">Editar Cliente</h1>
+
+    <div class="ios-group">
+      <!-- Nombre -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-person"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Nombre del cliente <span class="text-danger">*</span></div>
+          <input name="name" class="ios-input" value="{{ c.name or '' }}" required>
+        </div>
+      </div>
+
+      <!-- RTN -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-card-text"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">RTN <span class="text-danger">*</span></div>
+          <input name="tax_id" class="ios-input" value="{{ c.tax_id or '' }}" required>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-envelope"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Correo electrónico <span class="text-danger">*</span></div>
+          <input name="email" type="email" class="ios-input" value="{{ c.email or '' }}" required>
+        </div>
+      </div>
+
+      <!-- Teléfono -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-telephone"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Teléfono <span class="text-danger">*</span></div>
+          <input name="phone" class="ios-input" value="{{ c.phone or '' }}" required>
+        </div>
+      </div>
+
+      <!-- Organización -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-diagram-3"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Organización</div>
+          <input name="organization_id" class="ios-input" value="{{ c.organization_id or '' }}" placeholder="Opcional">
+        </div>
+      </div>
+
+      <!-- Cliente eventual (switch) -->
+      <div class="ios-row">
+        <div class="ios-switch">
+          <div class="ios-switch-label">
+            <div class="ios-ico"><i class="bi bi-lightning-charge"></i></div>
+            <span>Cliente eventual</span>
+          </div>
+
+          <label class="ios-toggle-wrap">
+            <input class="ios-toggle-input" type="checkbox" name="is_eventual" id="is_eventual" value="1"
+              {{ 'checked' if c.is_eventual else '' }}>
+            <span class="ios-toggle"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dirección -->
+    <div class="ios-group mt-4">
+      <div class="px-2 pb-2" style="color:#6c757d; font-weight:600;">
+        Dirección <span class="text-danger">*</span>
+      </div>
+
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-geo-alt"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Calle</div>
+          <input name="street" class="ios-input" placeholder="Calle" value="{{ a.street or '' }}">
+        </div>
+      </div>
+
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-building"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Ciudad</div>
+          <input name="city" class="ios-input" placeholder="Ciudad" value="{{ a.city or '' }}">
+        </div>
+      </div>
+
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-map"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Estado / Depto</div>
+          <input name="state" class="ios-input" placeholder="Estado/Depto" value="{{ a.state or '' }}">
+        </div>
+      </div>
+
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-mailbox"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">ZIP</div>
+          <input name="zip" class="ios-input" placeholder="ZIP" value="{{ a.zip or '' }}">
+        </div>
+      </div>
+
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-globe"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">País</div>
+          <input name="country" class="ios-input" placeholder="País" value="{{ a.country or '' }}">
+        </div>
+      </div>
+    </div>
+
+    <div class="ios-actions mt-4">
+      <a href="{{ url_for('clients.clients') }}" class="btn btn-secondary ios-btn">Cancelar</a>
+      <button class="btn btn-success ios-btn">Guardar</button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

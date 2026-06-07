@@ -1,0 +1,323 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container mt-5">
+  <form method="POST" class="ios-form" id="itemForm">
+    <h1 class="ios-title">Agregar Nuevo Producto</h1>
+
+    {% set suppliers = suppliers or [] %}
+    {% set categories = categories or [] %}
+
+    <!-- ===== Datos principales ===== -->
+    <div class="ios-group">
+      <!-- Nombre -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-box-seam"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Nombre <span class="text-danger">*</span></div>
+          <input type="text" name="name" class="ios-input" placeholder="Ingrese el nombre del producto" required>
+        </div>
+      </div>
+
+      <!-- Descripción -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-card-text"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Descripción <span class="text-danger">*</span></div>
+          <textarea name="description" class="ios-input" rows="3" placeholder="Ingrese la descripción del producto" required></textarea>
+        </div>
+      </div>
+
+      <!-- Tipo de producto -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-tag"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Tipo de producto <span class="text-danger">*</span></div>
+          <select id="item_type" name="item_type" class="ios-select js-ios-select" required>
+            <option value="consumable">Consumible</option>
+            <option value="rentable">Alquiler</option>
+            <option value="service">Servicio</option>
+            <option value="bundle">Paquete</option>
+          </select>
+        </div>
+        <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+      </div>
+
+      <!-- Unidad -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-rulers"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Unidad <span class="text-danger">*</span></div>
+
+          <!-- NOTA: este select se filtra por JS, por eso NO uses TomSelect aquí -->
+          <select id="unit" name="unit" class="ios-select js-ios-select" required>
+            <option value="EA"  data-types="consumable">Unidad</option>
+            <option value="BOX" data-types="consumable">Caja</option>
+            <option value="PK"  data-types="consumable">Paquete</option>
+            <option value="SET" data-types="consumable,bundle">Set</option>
+            <option value="M"   data-types="consumable">Metro</option>
+            <option value="L"   data-types="consumable">Litro</option>
+            <option value="KG"  data-types="consumable">Kilogramo</option>
+
+            <option value="EA"  data-types="rentable">Unidad / Equipo</option>
+            <option value="DAY" data-types="rentable">Día</option>
+            <option value="WK"  data-types="rentable">Semana</option>
+            <option value="MON" data-types="rentable">Mes</option>
+
+            <option value="HR"  data-types="service">Hora</option>
+            <option value="DAY" data-types="service">Día</option>
+            <option value="EVT" data-types="service,bundle">Evento</option>
+            <option value="JOB" data-types="service">Trabajo</option>
+            <option value="KM"  data-types="service">Kilómetro</option>
+
+            <option value="SET" data-types="bundle,consumable">Set</option>
+            <option value="PKG" data-types="bundle">Paquete</option>
+            <option value="EVT" data-types="bundle,service">Por evento</option>
+          </select>
+        </div>
+        <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+      </div>
+    </div>
+
+    <!-- ===== Precios ===== -->
+    <div class="mt-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-weight:800;color:var(--ios-text);">Precios</div>
+      <small style="color:var(--ios-muted);">Tarifas</small>
+    </div>
+
+    <div class="ios-group">
+      <!-- Precio Unitario -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-cash-coin"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Precio Unitario <span class="text-danger">*</span></div>
+          <input type="number" step="1" name="default_rate" class="ios-input" placeholder="1.00" value="1.00" required min="1">
+        </div>
+      </div>
+
+      <!-- Precio bajo -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-tags"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Precio bajo <span class="text-danger">*</span></div>
+          <input type="number" step="1" name="low_rate" class="ios-input" placeholder="1.00" value="1.00" required min="1">
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Identificación / clasificación ===== -->
+    <div class="mt-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-weight:800;color:var(--ios-text);">Identificación</div>
+      <small style="color:var(--ios-muted);">SKU / Proveedor / Categoría</small>
+    </div>
+
+    <div class="ios-group">
+      <!-- SKU -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-upc-scan"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">SKU</div>
+          <input type="text" name="sku" class="ios-input" placeholder="Ej: ITM-ABC12345">
+          <div style="font-size:12px;color:var(--ios-muted);margin-top:2px;">Si lo dejas vacío, se autogenera.</div>
+        </div>
+      </div>
+
+      <!-- Proveedor -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-truck"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Proveedor <span class="text-danger">*</span></div>
+          <select id="supplier" name="supplier_id" class="ios-select js-ios-select" required>
+            <option value="">— Sin proveedor —</option>
+            {% for s in suppliers %}
+              <option value="{{ s.id }}">{{ s.name }}{% if s.email %} — {{ s.email }}{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+      </div>
+
+      <!-- Categoría -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-folder2-open"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Categoría <span class="text-danger">*</span></div>
+          <select id="category" name="category" class="ios-select js-ios-select" required>
+            <option value="">— Sin categoría —</option>
+            {% for c in categories %}
+              <option value="{{ c }}">{{ c }}</option>
+            {% endfor %}
+          </select>
+          <div style="font-size:12px;color:var(--ios-muted);margin-top:2px;">Seleccione una existente o ingrese una nueva:</div>
+        </div>
+        <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+      </div>
+
+      <!-- Nueva categoría -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-plus-circle"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Nueva categoría</div>
+          <input type="text" id="new_category" name="new_category" class="ios-input" placeholder="Nueva categoría">
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Inventario / activos ===== -->
+    <div class="mt-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-weight:800;color:var(--ios-text);">Inventario</div>
+      <small style="color:var(--ios-muted);">Stock / seriales</small>
+    </div>
+
+    <div class="ios-group">
+      <!-- Stock (solo consumible) -->
+      <div class="ios-row" id="stock_block">
+        <div class="ios-ico"><i class="bi bi-boxes"></i></div>
+        <div class="ios-body"> 
+          <div class="ios-label">Stock inicial <span class="text-danger">*</span></div>
+          <input type="number" id="stock" name="stock" class="ios-input" placeholder="0" value="0" min="0">
+        </div>
+      </div>
+
+      <!-- Activos seriados (solo rentable) -->
+      <div class="ios-row" id="assets_block" style="display:none;">
+        <div class="ios-ico"><i class="bi bi-hdd-stack"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Activos seriados</div>
+          <div class="row g-2" style="margin-top:6px;">
+            <div class="col-sm-6">
+              <input type="number" min="0" id="asset_count" name="asset_count" class="ios-input"
+                     placeholder="# activos (ej. 3)">
+            </div>
+            <!-- <div class="col-sm-6">
+              <input type="text" id="serial_prefix" name="serial_prefix" class="ios-input"
+                     placeholder="Prefijo (ej. SER)">
+            </div> -->
+          </div>
+          <!-- <div style="font-size:12px;color:var(--ios-muted);margin-top:6px;">
+            Ej: <code>SER-SKU-001</code>, <code>SER-SKU-002</code>…
+          </div> -->
+        </div>
+      </div>
+
+      <!-- Tags -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-hash"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Tags (separados por coma)</div>
+          <input type="text" id="tags" name="tags" class="ios-input" placeholder="audio, iluminacion, cableado">
+        </div>
+      </div>
+
+      <!-- Activo (switch) -->
+      <div class="ios-row">
+        <div class="ios-switch">
+          <div class="ios-switch-label">
+            <div class="ios-ico"><i class="bi bi-check2-circle"></i></div>
+            <span>Activo</span>
+          </div>
+
+          <label class="ios-toggle-wrap">
+            <input class="ios-toggle-input" type="checkbox" value="1" id="active" name="active" checked>
+            <span class="ios-toggle"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="ios-actions">
+      <a href="{{ url_for('items.items_list') }}" class="btn btn-secondary ios-btn">Cancelar</a>
+      <button type="submit" class="btn btn-success ios-btn">Agregar Producto</button>
+    </div>
+  </form>
+</div>
+
+<script>
+/* Unidad con TomSelect + filtro por tipo */
+document.addEventListener("DOMContentLoaded", () => {
+  const typeSel = document.getElementById("item_type");
+  const unitEl  = document.getElementById("unit");
+
+  // Captura todas las unidades desde el HTML (una sola vez)
+  const allUnits = [...unitEl.querySelectorAll("option")]
+    .map(o => ({
+      value: o.value,
+      text: o.textContent.trim(),
+      types: (o.getAttribute("data-types") || "")
+        .toLowerCase().split(",").map(s => s.trim()).filter(Boolean)
+    }))
+    // Evita duplicados por value+text si tu HTML repite EA/SET/EVT
+    .filter((u, i, arr) =>
+      arr.findIndex(x => x.value === u.value && x.text === u.text) === i
+    );
+
+  // Instancia TomSelect en unidad (igual que creado_por)
+  const tsUnit = new TomSelect(unitEl, {
+    create: false,
+    allowEmptyOption: false,   // requerido => no permitir vacío
+    openOnFocus: true,
+    placeholder: "Seleccionar…"
+  });
+
+  function rebuildUnitsForType(t){
+    t = String(t || "").toLowerCase();
+
+    const prev = tsUnit.getValue();
+
+    tsUnit.clear(true);
+    tsUnit.clearOptions();
+
+    // Filtra unidades permitidas para ese tipo
+    const allowed = allUnits.filter(u => u.types.length === 0 || u.types.includes(t));
+
+    // Agrega opciones
+    allowed.forEach(u => tsUnit.addOption({ value: u.value, text: u.text }));
+
+    tsUnit.refreshOptions(false);
+
+    // Mantener selección si aún existe; si no, poner primera opción
+    const stillExists = allowed.some(u => u.value === prev);
+    if (stillExists) {
+      tsUnit.setValue(prev, true);
+    } else {
+      const first = allowed[0]?.value || "";
+      if (first) tsUnit.setValue(first, true);
+    }
+  }
+
+  // Inicial + cambios
+  rebuildUnitsForType(typeSel.value);
+  typeSel.addEventListener("change", () => rebuildUnitsForType(typeSel.value));
+});
+
+/* Stock vs Activos seriados */
+(function(){
+  const typeSel = document.getElementById('item_type');
+  const stockBlock = document.getElementById('stock_block');
+  const assetsBlock = document.getElementById('assets_block');
+
+  function toggleBlocks(){
+    const t = (typeSel.value || '').toLowerCase();
+    stockBlock.style.display  = (t === 'consumable') ? '' : 'none';
+    assetsBlock.style.display = (t === 'rentable') ? '' : 'none';
+  }
+  typeSel.addEventListener('change', toggleBlocks);
+  toggleBlocks();
+})();
+
+/* TomSelect iOS-ish (solo en selects que NO se filtran por JS) */
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("select.js-ios-select").forEach((el) => {
+    if (el.tomselect) return;
+
+    new TomSelect(el, {
+      create: false,
+      allowEmptyOption: true,
+      openOnFocus: true,
+      placeholder: "Seleccionar…"
+    });
+  });
+});
+</script>
+
+{% endblock %}

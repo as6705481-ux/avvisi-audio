@@ -1,0 +1,757 @@
+{% extends "layout.html" %}
+{% block title %}Importar cotización{% endblock %}
+
+{% block content %}
+<style>
+/* ── Contenedor principal ───────────────────────────────────────── */
+.imp-wrap   { max-width: 860px; margin: 0 auto; }
+.imp-title  { font-size: 22px; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; }
+.imp-sub    { font-size: 13px; color: #6b7280; margin-bottom: 24px; }
+
+/* ── Zona de carga ──────────────────────────────────────────────── */
+.drop-zone {
+    border: 2px dashed #d1d5db;
+    border-radius: 18px;
+    background: #fafafa;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+    border-color: #e65a00;
+    background: #fff8f5;
+}
+.drop-zone i   { font-size: 48px; color: #e65a00; display: block; margin-bottom: 14px; }
+.drop-zone p   { font-size: 14px; color: #374151; margin: 0 0 8px; font-weight: 600; }
+.drop-zone small { font-size: 12px; color: #9ca3af; }
+
+/* ── Cards de sección ───────────────────────────────────────────── */
+.imp-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 1px 8px rgba(0,0,0,.06);
+    padding: 20px 22px;
+    margin-bottom: 18px;
+}
+.imp-card-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: #9ca3af;
+    margin-bottom: 14px;
+}
+
+/* ── Ficha de datos detectados ──────────────────────────────────── */
+.det-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 10px;
+}
+.det-item { display: flex; flex-direction: column; gap: 2px; }
+.det-lbl  { font-size: 11px; color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+.det-val  { font-size: 13px; color: #111; font-weight: 600; word-break: break-word; }
+.det-val.muted { color: #d1d5db; font-style: italic; font-weight: 400; }
+
+/* ── Tabla de ítems ─────────────────────────────────────────────── */
+.items-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.items-table th {
+    background: #f3f4f6;
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+.items-table th.text-end { text-align: right; }
+.items-table td { padding: 6px 6px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+.items-table tbody tr:last-child td { border-bottom: none; }
+.items-table input[type="text"],
+.items-table input[type="number"] {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 5px 8px;
+    font-size: 13px;
+    width: 100%;
+    background: #fafafa;
+    transition: border-color .15s;
+}
+.items-table input:focus {
+    outline: none;
+    border-color: #e65a00;
+    background: #fff;
+}
+.line-total { font-weight: 600; color: #111; text-align: right; white-space: nowrap; padding-right: 8px; }
+/* Fila con precio 0 — advertencia naranja */
+.row-no-price { background: #fff8f0 !important; }
+.row-no-price td { border-bottom-color: #fed7aa !important; }
+.row-no-price input[name="item_price[]"] { border-color: #fb923c !important; background: #fff7ed !important; }
+.price-warn { font-size: 10px; color: #c2410c; font-weight: 700; display: block; margin-top: 2px; }
+.btn-del-row {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ef4444;
+    font-size: 18px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: background .15s;
+}
+.btn-del-row:hover { background: #fee2e2; }
+
+/* ── Totales ────────────────────────────────────────────────────── */
+.totals-box {
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-top: 4px;
+}
+.totals-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; font-size: 14px; }
+.totals-row.grand { border-top: 2px solid #e5e7eb; margin-top: 4px; padding-top: 10px; font-size: 16px; font-weight: 800; }
+
+/* ── Botón agregar ítem ─────────────────────────────────────────── */
+.btn-add-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #e65a00;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 0 2px;
+    transition: color .15s;
+}
+.btn-add-item:hover { color: #c04800; }
+
+/* ── Toggle ISV ─────────────────────────────────────────────────── */
+.toggle-row { display: flex; align-items: center; gap: 14px; }
+.toggle-lbl { font-size: 14px; font-weight: 600; color: #374151; }
+.toggle-opt {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid #e5e7eb;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    transition: border-color .15s, color .15s, background .15s;
+}
+.toggle-opt input[type="radio"] { display: none; }
+.toggle-opt.selected {
+    border-color: #e65a00;
+    color: #e65a00;
+    background: #fff8f5;
+}
+
+/* ── Select estilo iOS ──────────────────────────────────────────── */
+.ios-select-wrap { position: relative; }
+.ios-select-wrap select {
+    width: 100%;
+    padding: 10px 36px 10px 12px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 14px;
+    background: #fff;
+    appearance: none;
+    color: #1a1a2e;
+    cursor: pointer;
+    transition: border-color .15s;
+}
+.ios-select-wrap select:focus { outline: none; border-color: #e65a00; }
+.ios-select-wrap::after {
+    content: '\F282';
+    font-family: 'bootstrap-icons';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    pointer-events: none;
+    font-size: 16px;
+}
+
+/* ── Campo de texto simple ──────────────────────────────────────── */
+.imp-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #1a1a2e;
+    transition: border-color .15s;
+}
+.imp-input:focus { outline: none; border-color: #e65a00; }
+
+/* ── Botón principal ────────────────────────────────────────────── */
+.btn-import {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #e65a00;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 14px 32px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .18s, transform .1s;
+}
+.btn-import:hover    { background: #c04800; }
+.btn-import:active   { transform: scale(.97); }
+.btn-import i        { font-size: 20px; }
+
+/* ── Badge "detectado" ──────────────────────────────────────────── */
+.badge-found {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #d1fae5;
+    color: #065f46;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: 8px;
+}
+.badge-miss {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #fee2e2;
+    color: #991b1b;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: 8px;
+}
+
+/* ── Sección nueva cliente ──────────────────────────────────────── */
+#newClientRow { display: none; margin-top: 10px; }
+</style>
+
+<div class="imp-wrap">
+  <div class="imp-title">
+    <i class="bi bi-cloud-arrow-up-fill" style="color:#e65a00;font-size:22px;vertical-align:-3px;margin-right:8px;"></i>
+    Importar cotización histórica
+  </div>
+  <p class="imp-sub">Sube un archivo Excel (.xlsx) o PDF de una cotización de Avvisi Audio para importarla automáticamente al sistema.</p>
+
+  {# ══════════════════════════════════════════════════════════════════════
+     PASO 1 – Sin archivo aún
+  ══════════════════════════════════════════════════════════════════════ #}
+  {% if not parsed %}
+  <div class="imp-card">
+    <form method="POST" action="{{ url_for('import_quotes.import_preview') }}" enctype="multipart/form-data" id="uploadForm">
+      <label for="fileInput" class="drop-zone" id="dropZone">
+        <i class="bi bi-file-earmark-arrow-up"></i>
+        <p>Arrastra aquí tu archivo o haz clic para seleccionarlo</p>
+        <small>Formatos soportados: .xlsx · .pdf · Máx. 20 MB</small>
+        <input type="file" id="fileInput" name="file" accept=".xlsx,.pdf" style="display:none" required>
+      </label>
+      <div id="fileInfo" style="margin-top:12px;font-size:13px;color:#374151;display:none;">
+        <i class="bi bi-check-circle-fill" style="color:#16a34a;"></i>
+        <span id="fileName"></span>
+        &nbsp;<a href="#" onclick="clearFile(event);" style="color:#ef4444;font-size:12px;">Quitar</a>
+      </div>
+      <div style="margin-top:20px;text-align:right;">
+        <button type="submit" class="btn-import">
+          <i class="bi bi-search"></i> Analizar archivo
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="imp-card" style="background:#f0f9ff;border:1.5px solid #bae6fd;">
+    <div class="imp-card-title" style="color:#0369a1;">¿Qué se crea automáticamente?</div>
+    <ul style="font-size:13px;color:#374151;margin:0;padding-left:18px;line-height:2;">
+      <li>Encabezado de la cotización (número, cliente, responsable)</li>
+      <li>Todas las líneas de productos con cantidades y precios</li>
+      <li>Cálculo automático de subtotal, ISV y total</li>
+      <li>Evento (opcional, si la fecha es válida)</li>
+      <li>Cliente nuevo si no existe en el sistema</li>
+    </ul>
+  </div>
+
+  {# ══════════════════════════════════════════════════════════════════════
+     PASO 2 – Preview editable
+  ══════════════════════════════════════════════════════════════════════ #}
+  {% else %}
+
+  {# ── Ficha de datos detectados ──────────────────────────────────── #}
+  <div class="imp-card">
+    <div class="imp-card-title">
+      Datos detectados
+      {% if parsed.quote_number %}
+      <span class="badge-found"><i class="bi bi-check-lg"></i> Cotización {{ parsed.quote_number }}</span>
+      {% endif %}
+    </div>
+    <div class="det-grid">
+      <div class="det-item">
+        <span class="det-lbl">Cliente en archivo</span>
+        {% if parsed.client_name %}
+        <span class="det-val">{{ parsed.client_name }}</span>
+        {% else %}
+        <span class="det-val muted">No detectado</span>
+        {% endif %}
+      </div>
+      <div class="det-item">
+        <span class="det-lbl">Ejecutivo</span>
+        {% if parsed.sales_rep %}
+        <span class="det-val">{{ parsed.sales_rep }}</span>
+        {% else %}
+        <span class="det-val muted">No detectado</span>
+        {% endif %}
+      </div>
+      <div class="det-item">
+        <span class="det-lbl">Lugar</span>
+        {% if parsed.venue %}
+        <span class="det-val">{{ parsed.venue }}</span>
+        {% else %}
+        <span class="det-val muted">No detectado</span>
+        {% endif %}
+      </div>
+      <div class="det-item">
+        <span class="det-lbl">Fecha del evento</span>
+        {% if parsed.event_date %}
+        <span class="det-val">{{ parsed.event_date }}</span>
+        {% else %}
+        <span class="det-val muted">No detectado</span>
+        {% endif %}
+      </div>
+      <div class="det-item">
+        <span class="det-lbl">Tipo de evento</span>
+        {% if parsed.event_type %}
+        <span class="det-val">{{ parsed.event_type }}</span>
+        {% else %}
+        <span class="det-val muted">No detectado</span>
+        {% endif %}
+      </div>
+      <div class="det-item">
+        <span class="det-lbl">Ítems detectados</span>
+        <span class="det-val">{{ parsed['items'] | length }}</span>
+      </div>
+      {% if parsed.subtotal %}
+      <div class="det-item">
+        <span class="det-lbl">SubTotal archivo</span>
+        <span class="det-val">L {{ "{:,.2f}".format(parsed.subtotal) }}</span>
+      </div>
+      {% endif %}
+      {% if parsed.tax %}
+      <div class="det-item">
+        <span class="det-lbl">ISV archivo</span>
+        <span class="det-val">L {{ "{:,.2f}".format(parsed.tax) }}</span>
+      </div>
+      {% endif %}
+      {% if parsed.total %}
+      <div class="det-item">
+        <span class="det-lbl">Total archivo</span>
+        <span class="det-val">L {{ "{:,.2f}".format(parsed.total) }}</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Formulario de confirmación ──────────────────────────────────── #}
+  <form method="POST" action="{{ url_for('import_quotes.import_create') }}" id="importForm"
+        onsubmit="return validateImportForm(event)">
+
+    {# ─ Cliente ─────────────────────────────────────────────────────── #}
+    <div class="imp-card">
+      <div class="imp-card-title">Cliente</div>
+      <div class="ios-select-wrap">
+        <select name="client_id" id="clientSelect" onchange="toggleNewClient(this)">
+          <option value="">— Nuevo cliente —</option>
+          {% for c in clients %}
+          <option value="{{ c.id }}"
+            {% if suggested_client == c.id %}selected{% endif %}>
+            {{ c.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div id="newClientRow">
+        <label style="font-size:12px;color:#6b7280;font-weight:600;display:block;margin-bottom:4px;margin-top:10px;">
+          Nombre del nuevo cliente
+        </label>
+        <input type="text" name="client_name_new" id="clientNameNew" class="imp-input"
+               placeholder="Cliente Eventual"
+               value="{{ parsed.client_name or 'Cliente Eventual' }}">
+      </div>
+      <div style="margin-top:10px;padding:10px 12px;background:#f0f9ff;border-radius:10px;font-size:12px;color:#0369a1;display:flex;align-items:center;gap:8px;">
+        <i class="bi bi-person-check-fill"></i>
+        Se vinculará automáticamente un <strong>Contacto Eventual</strong> al cliente seleccionado.
+      </div>
+    </div>
+
+    {# ─ Responsable ──────────────────────────────────────────────────── #}
+    <div class="imp-card">
+      <div class="imp-card-title">Responsable</div>
+      <div class="ios-select-wrap">
+        <select name="owner_id" required>
+          <option value="">— Seleccionar responsable —</option>
+          {% for p in profiles %}
+          <option value="{{ p.id }}"
+            {% if suggested_owner == p.id %}selected{% endif %}>
+            {{ p.full_name }}
+            {% if p.role %} · {{ USER_ROLE_ES.get(p.role, p.role) }}{% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    {# ─ Fecha emitida ────────────────────────────────────────────────── #}
+    <div class="imp-card">
+      <div class="imp-card-title">Fecha de la cotización</div>
+      <div>
+        <label style="font-size:12px;color:#6b7280;font-weight:600;display:block;margin-bottom:4px;">
+          Fecha emitida
+        </label>
+        {% set di_iso = parsed.date_issued if (parsed.date_issued and parsed.date_issued | length == 10 and parsed.date_issued[4:5] == '-') else '' %}
+        <input type="date" name="date_issued" class="imp-input" style="max-width:220px;"
+               value="{{ di_iso }}">
+        {% if parsed.date_issued and not di_iso %}
+        <small style="color:#e65a00;font-size:11px;display:block;margin-top:3px;">
+          <i class="bi bi-info-circle"></i> Archivo original: "{{ parsed.date_issued }}"
+        </small>
+        {% endif %}
+      </div>
+    </div>
+
+    {# ─ Evento ───────────────────────────────────────────────────────── #}
+    <div class="imp-card">
+      <div class="imp-card-title">Datos del evento</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div>
+          <label style="font-size:12px;color:#6b7280;font-weight:600;display:block;margin-bottom:4px;">Lugar</label>
+          <input type="text" name="venue" class="imp-input"
+                 placeholder="Lugar del evento"
+                 value="{{ parsed.venue or '' }}">
+        </div>
+        <div>
+          <label style="font-size:12px;color:#6b7280;font-weight:600;display:block;margin-bottom:4px;">Fecha del evento</label>
+          {# Siempre type="date". Valor solo si es ISO (yyyy-mm-dd). Si era texto raro, mostrar hint. #}
+          {% set ev_iso = parsed.event_date if (parsed.event_date and parsed.event_date | length == 10 and parsed.event_date[4:5] == '-') else '' %}
+          <input type="date" name="event_date" class="imp-input" value="{{ ev_iso }}">
+          {% if parsed.event_date and not ev_iso %}
+          <small style="color:#e65a00;font-size:11px;display:block;margin-top:3px;">
+            <i class="bi bi-info-circle"></i> Archivo original: "{{ parsed.event_date }}"
+          </small>
+          {% endif %}
+        </div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px;color:#6b7280;font-weight:600;display:block;margin-bottom:4px;">Tipo / Nombre del evento</label>
+        <input type="text" name="event_type" class="imp-input"
+               placeholder="Evento Eventual"
+               value="{{ parsed.event_type or 'Evento Eventual' }}">
+      </div>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:#374151;font-weight:600;">
+        <input type="checkbox" name="create_event" value="1" id="createEventChk"
+               checked
+               style="width:16px;height:16px;accent-color:#e65a00;">
+        Crear evento en el sistema
+        <span style="font-size:11px;color:#9ca3af;font-weight:400;">(si no hay fecha se usa hoy como referencia)</span>
+      </label>
+    </div>
+
+    {# ─ Proveedor (siempre fijo) ────────────────────────────────────── #}
+    <div class="imp-card" style="background:#f8fafc;border:1.5px solid #e2e8f0;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <i class="bi bi-building-fill-check" style="font-size:22px;color:#e65a00;flex-shrink:0;"></i>
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af;margin-bottom:2px;">Proveedor</div>
+          <div style="font-size:15px;font-weight:700;color:#1a1a2e;">Avvisi Audiovisuales</div>
+        </div>
+      </div>
+    </div>
+
+    {# ─ ISV ──────────────────────────────────────────────────────────── #}
+    <div class="imp-card">
+      <div class="imp-card-title">Impuesto sobre ventas (ISV 15%)</div>
+      <div class="toggle-row" id="taxToggle">
+        <span class="toggle-lbl">Aplicar ISV:</span>
+        <label class="toggle-opt {% if parsed.has_tax %}selected{% endif %}" id="taxYesLbl">
+          <input type="radio" name="apply_tax" value="yes" id="taxYes"
+                 {% if parsed.has_tax %}checked{% endif %}
+                 onchange="updateTaxToggle(true)">
+          <i class="bi bi-check-circle-fill"></i> Sí (15%)
+        </label>
+        <label class="toggle-opt {% if not parsed.has_tax %}selected{% endif %}" id="taxNoLbl">
+          <input type="radio" name="apply_tax" value="no" id="taxNo"
+                 {% if not parsed.has_tax %}checked{% endif %}
+                 onchange="updateTaxToggle(false)">
+          <i class="bi bi-x-circle-fill"></i> No
+        </label>
+      </div>
+    </div>
+
+    {# ─ Líneas de ítems ──────────────────────────────────────────────── #}
+    <div class="imp-card">
+      <div class="imp-card-title">Productos / Servicios</div>
+      <div style="overflow-x:auto;">
+        <table class="items-table" id="itemsTable">
+          <thead>
+            <tr>
+              <th style="width:40%;">Descripción</th>
+              <th style="width:9%;text-align:center;">Cant.</th>
+              <th style="width:9%;text-align:center;">Días</th>
+              <th style="width:18%;text-align:right;">Precio unit. (L)</th>
+              <th style="width:18%;" class="text-end">Total línea</th>
+              <th style="width:6%;"></th>
+            </tr>
+          </thead>
+          <tbody id="itemsBody">
+            {% for item in parsed['items'] %}
+            {% set no_price = item.unit_price is not defined or item.unit_price <= 0 %}
+            <tr class="{{ 'row-no-price' if no_price else '' }}">
+              <td><input type="text" name="item_name[]" value="{{ item.description }}" required></td>
+              <td style="text-align:center;"><input type="number" name="item_qty[]" value="{{ item.quantity | int }}" min="1" step="1" style="width:64px;text-align:center;" oninput="updateRow(this)"></td>
+              <td style="text-align:center;"><input type="number" name="item_days[]" value="{{ item.days }}" min="1" step="1" style="width:56px;text-align:center;" oninput="updateRow(this)"></td>
+              <td>
+                <input type="number" name="item_price[]" value="{{ "%.2f"|format(item.unit_price) }}" min="0" step="0.01" style="text-align:right;" oninput="updateRow(this)">
+                {% if no_price %}<span class="price-warn">⚠ Ingresa el precio</span>{% endif %}
+              </td>
+              <td class="line-total">L {{ "{:,.2f}".format(item.quantity * item.days * item.unit_price) }}</td>
+              <td style="text-align:center;"><button type="button" class="btn-del-row" onclick="deleteRow(this)" title="Eliminar"><i class="bi bi-trash3"></i></button></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <button type="button" class="btn-add-item" onclick="addItemRow()">
+        <i class="bi bi-plus-circle-fill"></i> Agregar línea
+      </button>
+
+      {# Cuadro de totales #}
+      <div class="totals-box" style="margin-top:16px;">
+        <div class="totals-row">
+          <span style="color:#6b7280;">Subtotal</span>
+          <span id="previewSubtotal" style="font-weight:600;">L 0.00</span>
+        </div>
+        <div class="totals-row" id="isvRow">
+          <span style="color:#6b7280;">ISV (15%)</span>
+          <span id="previewIsv">L 0.00</span>
+        </div>
+        <div class="totals-row grand">
+          <span>Total</span>
+          <span id="previewTotal">L 0.00</span>
+        </div>
+      </div>
+    </div>
+
+    {# ─ Botones finales ──────────────────────────────────────────────── #}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;margin-bottom:32px;">
+      <a href="{{ url_for('import_quotes.import_get') }}"
+         style="color:#6b7280;font-size:13px;text-decoration:none;display:flex;align-items:center;gap:6px;">
+        <i class="bi bi-arrow-left"></i> Subir otro archivo
+      </a>
+      <button type="submit" class="btn-import">
+        <i class="bi bi-cloud-arrow-up-fill"></i> Importar cotización
+      </button>
+    </div>
+
+  </form>
+  {% endif %}
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+// ── Drag & drop ──────────────────────────────────────────────────────────────
+(function () {
+  const zone  = document.getElementById('dropZone');
+  const input = document.getElementById('fileInput');
+  const info  = document.getElementById('fileInfo');
+  const fname = document.getElementById('fileName');
+  if (!zone) return;
+
+  function showFile(file) {
+    if (!file) return;
+    fname.textContent = file.name;
+    info.style.display = 'block';
+  }
+
+  input.addEventListener('change', () => showFile(input.files[0]));
+  zone.addEventListener('click', () => input.click());
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave',  () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const dt = e.dataTransfer;
+    if (dt.files.length) {
+      const transfer = new DataTransfer();
+      transfer.items.add(dt.files[0]);
+      input.files = transfer.files;
+      showFile(dt.files[0]);
+    }
+  });
+})();
+
+function clearFile(e) {
+  e.preventDefault();
+  const input = document.getElementById('fileInput');
+  const info  = document.getElementById('fileInfo');
+  input.value = '';
+  info.style.display = 'none';
+}
+
+// ── Toggle "nuevo cliente" ───────────────────────────────────────────────────
+function toggleNewClient(sel) {
+  const row   = document.getElementById('newClientRow');
+  const input = document.getElementById('clientNameNew');
+  if (!sel.value) {
+    row.style.display = 'block';
+    input.required = true;
+  } else {
+    row.style.display = 'none';
+    input.required = false;
+  }
+}
+// Inicializar
+(function () {
+  const sel = document.getElementById('clientSelect');
+  if (sel) toggleNewClient(sel);
+})();
+
+// ── ISV toggle visual ────────────────────────────────────────────────────────
+function updateTaxToggle(taxOn) {
+  const yLbl = document.getElementById('taxYesLbl');
+  const nLbl = document.getElementById('taxNoLbl');
+  if (!yLbl) return;
+  yLbl.classList.toggle('selected', taxOn);
+  nLbl.classList.toggle('selected', !taxOn);
+  updateTotals();
+}
+
+// ── Cálculo de totales en tiempo real ────────────────────────────────────────
+function fmtCurrency(n) {
+  return 'L ' + n.toLocaleString('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function getRowTotal(row) {
+  const qty   = parseFloat(row.querySelector('input[name="item_qty[]"]')?.value)   || 0;
+  const days  = parseFloat(row.querySelector('input[name="item_days[]"]')?.value)  || 1;
+  const price = parseFloat(row.querySelector('input[name="item_price[]"]')?.value) || 0;
+  return qty * days * price;
+}
+
+function updateRow(input) {
+  const row      = input.closest('tr');
+  const total    = getRowTotal(row);
+  const ltEl     = row.querySelector('.line-total');
+  if (ltEl) ltEl.textContent = fmtCurrency(total);
+  updateRowStyle(row);
+  updateTotals();
+}
+
+function updateTotals() {
+  const rows     = document.querySelectorAll('#itemsBody tr');
+  let subtotal   = 0;
+  rows.forEach(r => { subtotal += getRowTotal(r); });
+
+  const taxOn    = document.getElementById('taxYes')?.checked ?? false;
+  const isv      = taxOn ? subtotal * 0.15 : 0;
+  const total    = subtotal + isv;
+
+  const isvRow   = document.getElementById('isvRow');
+  if (isvRow) isvRow.style.opacity = taxOn ? '1' : '.35';
+
+  el('previewSubtotal').textContent = fmtCurrency(subtotal);
+  el('previewIsv').textContent      = fmtCurrency(isv);
+  el('previewTotal').textContent    = fmtCurrency(total);
+}
+
+function el(id) { return document.getElementById(id) || { textContent: '' }; }
+
+// ── Agregar fila ─────────────────────────────────────────────────────────────
+function addItemRow() {
+  const tbody = document.getElementById('itemsBody');
+  const tr    = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" name="item_name[]" placeholder="Descripción del servicio" required></td>
+    <td style="text-align:center;"><input type="number" name="item_qty[]" value="1" min="1" step="1" style="width:64px;text-align:center;" oninput="updateRow(this)"></td>
+    <td style="text-align:center;"><input type="number" name="item_days[]" value="1" min="1" step="1" style="width:56px;text-align:center;" oninput="updateRow(this)"></td>
+    <td><input type="number" name="item_price[]" value="0" min="0" step="0.01" style="text-align:right;" oninput="updateRow(this)"><span class="price-warn">⚠ Ingresa el precio</span></td>
+    <td class="line-total">L 0.00</td>
+    <td style="text-align:center;"><button type="button" class="btn-del-row" onclick="deleteRow(this)" title="Eliminar"><i class="bi bi-trash3"></i></button></td>
+  `;
+  tbody.appendChild(tr);
+  tr.classList.add('row-no-price');
+  tr.querySelector('input[name="item_name[]"]').focus();
+}
+
+// ── Eliminar fila ─────────────────────────────────────────────────────────────
+function deleteRow(btn) {
+  const row = btn.closest('tr');
+  if (document.querySelectorAll('#itemsBody tr').length <= 1) {
+    alert('Debe haber al menos una línea de producto.');
+    return;
+  }
+  row.remove();
+  updateTotals();
+}
+
+// ── Validación antes de enviar ───────────────────────────────────────────────
+function validateImportForm(e) {
+  const rows = document.querySelectorAll('#itemsBody tr');
+  let total = 0, zeroPrices = 0;
+  rows.forEach(r => {
+    const name  = r.querySelector('input[name="item_name[]"]')?.value.trim();
+    const price = parseFloat(r.querySelector('input[name="item_price[]"]')?.value) || 0;
+    const qty   = parseFloat(r.querySelector('input[name="item_qty[]"]')?.value)   || 0;
+    if (name && qty > 0) {
+      total++;
+      if (price <= 0) zeroPrices++;
+    }
+  });
+  if (total === 0) {
+    e.preventDefault();
+    alert('Agrega al menos un producto con cantidad antes de importar.');
+    return false;
+  }
+  if (zeroPrices > 0) {
+    const ok = confirm(
+      zeroPrices + ' producto(s) tienen precio L 0.00.\n' +
+      'Se guardarán igual — podrás corregir los precios en la edición.\n\n' +
+      '¿Continuar?'
+    );
+    if (!ok) { e.preventDefault(); return false; }
+  }
+  return true;
+}
+
+// ── Actualizar estilo de fila según precio ────────────────────────────────────
+function updateRowStyle(row) {
+  const price = parseFloat(row.querySelector('input[name="item_price[]"]')?.value) || 0;
+  row.classList.toggle('row-no-price', price <= 0);
+  const warn = row.querySelector('.price-warn');
+  if (warn) warn.style.display = price <= 0 ? 'block' : 'none';
+}
+
+// ── Inicializar totales al cargar ────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('#itemsBody tr').forEach(row => {
+    const total = getRowTotal(row);
+    const lt    = row.querySelector('.line-total');
+    if (lt) lt.textContent = fmtCurrency(total);
+    updateRowStyle(row);
+  });
+  updateTotals();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: avvisi-audio
+    runtime: docker          # usa el Dockerfile del repo
+    plan: free               # cambia a "starter" o "standard" si necesitás más RAM
+    region: oregon           # oregon | frankfurt | singapore | ohio
+
+    # Variables de entorno — los valores sensibles ponlos en el panel de Render
+    # (Environment > Add Environment Variable), no los escribas aquí.
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        sync: false          # Render pedirá el valor en el dashboard
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false

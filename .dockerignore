@@ -1,0 +1,25 @@
+# entornos virtuales
+venv/
+.venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# editor / sistema
+.git/
+.gitignore
+.env
+.env.*
+*.log
+
+# artefactos LaTeX locales
+templates_latex/*.aux
+templates_latex/*.log
+templates_latex/*.out
+templates_latex/*.synctex.gz
+templates_latex/*.pdf
+
+# node / front (si aplica)
+node_modules/
+dist/

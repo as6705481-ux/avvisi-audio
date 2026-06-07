@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-5 mb-5 p-4 rounded" 
+     style="background-color: #f9f9f9; 
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15); 
+            max-width: 600px; 
+            margin: auto;">
+    <h1 class="text-center mb-4" style="color: #ff6600;">Crear Nueva Cotización78</h1>
+    <form method="POST" action="{{ url_for('new_quotation') }}">
+        <!-- Selección de Usuario -->
+        <div class="mb-4">
+            <label for="user_id" class="form-label" style="color: #333;">Seleccionar Usuario</label>
+            <select class="form-select border border-secondary" id="user_id" name="user_id" required>
+                {% for user in users %}
+                    <option value="{{ user.id }}">{{ user.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Selección de Cliente -->
+        <div class="mb-4">
+            <label for="customer_id" class="form-label" style="color: #333;">Seleccionar Cliente</label>
+            <select class="form-select border border-secondary" id="customer_id" name="customer_id" required>
+                {% for customer in customers %}
+                    <option value="{{ customer.id }}">{{ customer.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Lista de Productos -->
+        <div id="product-list">
+            <div class="product-group mb-4 p-3 rounded" 
+                 style="background-color: #fff8e6; border: 1px solid #ff6600;">
+                <label for="product_1" class="form-label" style="color: #333;">Seleccionar Producto</label>
+                <select class="form-select border border-secondary" id="product_1" name="products[]" required>
+                    {% for product in products %}
+                        <option value="{{ product.id }}">
+                            {{ product.name }} - Categoría: {{ product.category }} - Proveedor: {{ product.supplier.name }} (Stock: {{ product.stock }})
+                        </option>
+                    {% endfor %}
+                </select>
+                <label for="quantity_1" class="form-label mt-3" style="color: #333;">Cantidad</label>
+                <input type="number" class="form-control border border-secondary" id="quantity_1" name="quantities[]" min="1" required>
+                <label for="days_1" class="form-label mt-3" style="color: #333;">Días</label>
+                <input type="number" class="form-control border border-secondary" id="days_1" name="days[]" min="1" required>
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="d-flex justify-content-between mt-4">
+            <button type="button" class="btn" style="background-color: #ff6600; color: white;" onclick="addProduct()">Agregar Otro Producto</button>
+            <button type="submit" class="btn" style="background-color: #4caf50; color: white;">Crear Cotización</button>
+        </div>
+    </form>
+</div>
+
+<!-- Script para Añadir Productos Dinámicamente -->
+<script>
+    let productCount = 1;
+
+    function addProduct() {
+        productCount++;
+        const productList = document.getElementById('product-list');
+        const productGroup = document.createElement('div');
+        productGroup.classList.add('product-group', 'mb-4', 'p-3', 'rounded');
+        productGroup.style.backgroundColor = '#fff8e6';
+        productGroup.style.border = '1px solid #ff6600';
+        productGroup.innerHTML = `
+            <label for="product_${productCount}" class="form-label" style="color: #333;">Seleccionar Producto</label>
+            <select class="form-select border border-secondary" id="product_${productCount}" name="products[]" required>
+                {% for product in products %}
+                    <option value="{{ product.id }}">
+                        {{ product.name }} - Categoría: {{ product.category }} - Proveedor: {{ product.supplier.name }} (Stock: {{ product.stock }})
+                    </option>
+                {% endfor %}
+            </select>
+            <label for="quantity_${productCount}" class="form-label mt-3" style="color: #333;">Cantidad</label>
+            <input type="number" class="form-control border border-secondary" id="quantity_${productCount}" name="quantities[]" min="1" required>
+            <label for="days_${productCount}" class="form-label mt-3" style="color: #333;">Días</label>
+            <input type="number" class="form-control border border-secondary" id="days_${productCount}" name="days[]" min="1" required>
+        `;
+        productList.appendChild(productGroup);
+    }
+</script>
+{% endblock %}

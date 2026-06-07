@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% from "components/av_table.html" import av_table %}
+{% block title %}Eventos{% endblock %}
+{% block content %}
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div></div>
+    <a href="{{ url_for('events.event_add_get') }}" class="btn btn-success">
+      <i class="fas fa-plus"></i> Nuevo Evento
+    </a>
+  </div>
+
+  {# true => muestra el select (lo usaremos para Contacto) #}
+  {% call av_table('events_table', 'Eventos', 'agenda y clientes', 'Buscar por cliente, evento, contacto, venue...', true) %}
+    <thead>
+      <tr>
+        <th data-type="text">Cliente <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Evento <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Contacto <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Venue <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="date">Inicio <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="date">Fin <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-nosort="1" style="text-align:center;width:160px;">Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for e in events %}
+        <tr data-role="{{ (e.contact_name or '')|lower }}">
+          <td>{{ e.clients.name }}</td>
+          <td>{{ e.name }}</td>
+          <td>{{ e.contacts.name or '—' }}</td>
+          <td>{{ e.venue or '—' }}</td>
+
+          <td data-sort="{{ e.start_at }}">{{ e.start_at }}</td>
+          <td data-sort="{{ e.end_at }}">{{ e.end_at }}</td>
+
+          <td class="av-actions" style="text-align:center;">
+            <div class="btn-group" role="group">
+              <a href="{{ url_for('events.event_edit_get', event_id=e.id) }}"
+                 class="btn btn-sm btn-outline-primary"
+                 style="border-radius:10px 0 0 10px;"
+                 title="Editar">
+                <i class="fas fa-edit"></i>
+              </a>
+
+              <form action="{{ url_for('events.event_delete', event_id=e.id) }}" method="POST" class="d-inline">
+                <button class="btn btn-sm btn-outline-danger" type="submit"
+                  data-av-confirm
+                  data-av-title="¿Eliminar usuario?"
+                  data-av-message="¿Eliminar usuario definitivamente?"
+                  style="border-radius:0 10px 10px 0;"><i class="fas fa-trash-alt"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-4">Sin resultados</td></tr>
+      {% endfor %}
+    </tbody>
+  {% endcall %}
+</div>
+
+{% endblock %}

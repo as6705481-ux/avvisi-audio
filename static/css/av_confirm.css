@@ -1,0 +1,73 @@
+@keyframes avConfirmFade {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(.92); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.av-confirm-backdrop{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  z-index: 99999;
+  display: none;
+}
+
+.av-confirm-backdrop.is-open{ display:block; }
+
+.av-confirm{
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(400px, 70vw);
+  background: #E2E2E2;
+  border-radius: 10px;
+  border-top: 1px solid #fff;
+  animation: avConfirmFade .25s ease forwards;
+  overflow: hidden;
+}
+
+.av-confirm h1{
+  text-align: center;
+  font-size: 1.1rem;
+  margin: 1rem 1rem .25rem;
+  font-weight: bold;
+}
+
+.av-confirm p{
+  text-align: center;
+  font-size: 1rem;
+  /* margin: 0 1.25rem 3.75rem; */
+  color: #111;
+}
+
+.av-confirm__actions{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid #B4B4B4;
+}
+
+.av-confirm__actions button{
+  background: transparent;
+  border: none;
+  color: #1678E5;
+  height: 3rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.av-confirm__actions button:first-child{
+  border-right: 1px solid #B4B4B4;
+}
+
+.av-confirm__actions button:hover{
+  font-weight: bold;
+  background: #EFEFEF;
+}
+
+.av-confirm__actions button:active{
+  background: #D6D6D6;
+}
+
+#avConfirmOk {
+  color: #D93025;
+} 

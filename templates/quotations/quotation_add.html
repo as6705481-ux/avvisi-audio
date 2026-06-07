@@ -1,0 +1,1787 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+  .ios-line-card{
+    padding: 12px;
+  }
+  .ios-line-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    padding: 8px 4px 0 4px;
+  }
+  .ios-mini-label{
+    font-size: 12px;
+    color: var(--ios-muted);
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .ios-line-actions{
+    display:flex;
+    justify-content:flex-end;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--ios-border);
+  }
+  @media (max-width: 768px){
+    .ios-line-grid{ grid-template-columns: 1fr 1fr; }
+  }
+</style>
+
+<div class="container mt-5">
+  <form method="POST" class="ios-form" id="quoteForm">
+    <h1 class="ios-title">Nueva Cotización</h1>
+
+    <!-- ===== CABECERA (iOS) ===== -->
+    <div class="ios-group">
+      <!-- Cliente -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-building"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Cliente <span class="text-danger">*</span></div>
+
+          <div class="d-flex gap-2 align-items-center">
+            <select name="client_id" class="ios-select js-ios-select" required id="clientSelect">
+              {% for c in clients %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+            </select>
+
+            <button type="button" class="btn btn-sm btn-outline-primary"
+                    data-bs-toggle="modal" data-bs-target="#modalClientNew"
+                    title="Crear cliente">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </div>
+        </div>
+        <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+      </div>
+
+      <!-- Contacto -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-person-lines-fill"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Contacto <span class="text-danger">*</span></div>
+
+          <div class="d-flex gap-2 align-items-center">
+            <select name="contact_id" class="ios-select js-ios-select" required id="contactSelect">
+              {% for c in contacts %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+            </select>
+
+            <button type="button" class="btn btn-sm btn-outline-primary"
+                    data-bs-toggle="modal" data-bs-target="#modalContactNew"
+                    title="Crear contacto">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </div>
+        </div>
+        <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+      </div>
+
+      <!-- Evento -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-calendar2-event"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Evento <span class="text-danger">*</span></div>
+
+          <div class="d-flex gap-2 align-items-center">
+            <select name="event_id" class="ios-select js-ios-select" required id="eventSelect">
+              {% for e in events %}<option value="{{ e.id }}">{{ e.name }}</option>{% endfor %}
+            </select>
+
+            <button type="button" class="btn btn-sm btn-outline-primary"
+                    data-bs-toggle="modal" data-bs-target="#modalEventNew"
+                    title="Crear evento">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </div>
+        </div>
+        <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+      </div>
+
+      <!-- Propietario -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-person-check"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Usuario <span class="text-danger">*</span></div>
+          <select name="owner_id" class="ios-select js-ios-select" required>
+            {% for o in owners %}<option value="{{ o.id }}">{{ o.full_name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+      </div>
+
+      <!-- Moneda -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-currency-exchange"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Moneda</div>
+          <input name="currency" value="{{ default_currency }}" class="ios-input" maxlength="3">
+        </div>
+      </div>
+
+      <!-- T.Cambio -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-arrow-left-right"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">T. Cambio</div>
+          <input name="exchange_rate" type="number" step="1" value="1.000000" class="ios-input">
+        </div>
+      </div>
+
+      <!-- Validez -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-calendar-check"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Validez hasta</div>
+          <input name="valid_until" type="date" class="ios-input">
+        </div>
+      </div>
+
+      <!-- Anticipo -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-cash-coin"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Anticipo (L)</div>
+          <input name="deposit_due" type="number" step="1" value="0.00" class="ios-input">
+        </div>
+      </div>
+
+      <!-- ISV -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-receipt"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">¿Cobrar ISV (15%)? <span class="text-danger">*</span></div>
+
+          <div class="d-flex gap-3 mt-1 flex-wrap">
+            <label class="form-check form-check-inline m-0">
+              <input class="form-check-input" type="radio" name="apply_tax" id="taxYes" value="yes" checked>
+              <span class="form-check-label">Sí (15%)</span>
+            </label>
+
+            <label class="form-check form-check-inline m-0">
+              <input class="form-check-input" type="radio" name="apply_tax" id="taxNo" value="no">
+              <span class="form-check-label">No</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Términos -->
+      <!-- <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-file-earmark-text"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Términos</div>
+          <textarea name="terms" class="ios-input" rows="2"></textarea>
+        </div>
+      </div> -->
+
+      <!-- Notas internas -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-shield-lock"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Notas internas</div>
+          <textarea name="notes_internal" class="ios-input" rows="2"></textarea>
+        </div>
+      </div>
+
+      <!-- Notas cliente -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-chat-left-text"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Notas para el cliente</div>
+          <textarea name="notes_client" class="ios-input" rows="2"></textarea>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== LÍNEAS / PRODUCTOS ===== -->
+    <div class="mt-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-weight:800;color:var(--ios-text);">Productos / Ítems</div>
+      <small style="color:var(--ios-muted);">Detalle</small>
+    </div>
+
+    <div class="ios-group" id="linesWrap">
+
+      <!-- 1 LINEA (card) -->
+      <div class="quote-line ios-line-card">
+        <!-- Item -->
+        <div class="ios-row" style="border-bottom:0;">
+          <div class="ios-ico"><i class="bi bi-box-seam"></i></div>
+          <div class="ios-body">
+            <!-- <div class="ios-label">Ítem</div> -->
+            <div class="ios-label d-flex align-items-center justify-content-between">
+              <span>Ítem</span>
+              <button type="button" class="btn btn-sm btn-outline-primary js-itemAddBtn"
+                      data-bs-toggle="modal" data-bs-target="#modalItemNew"
+                      title="Crear ítem">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </div>
+            <select name="item_id[]" class="ios-select js-item js-ts">
+              <option value="">- Selecciona ítem -</option>
+              {% for it in items %}
+                <option value="{{ it.id }}"
+                        data-sku="{{ it.sku or '' }}"
+                        data-name="{{ it.name or '' }}"
+                        data-type="{{ it.item_type or '' }}"
+                        data-unit="{{ it.unit or 'unit' }}"
+                        data-std="{{ it.default_rate or 0 }}"
+                        data-low="{{ it.low_rate or 0 }}"
+                        data-desc="{{ it.description or '' }}">
+                  {{ it.sku or '' }} - {{ it.name }}
+                </option>
+              {% endfor %}
+            </select>
+
+            <div class="mt-2 d-flex gap-2 align-items-center">
+              <button type="button" class="btn btn-sm btn-outline-secondary js-details" disabled>
+                Ver detalles
+              </button>
+              <small class="text-muted js-mini"></small>
+            </div>
+          </div>
+          <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+        </div>
+
+        <!-- Grid compacto -->
+        <div class="ios-line-grid">
+          <div class="ios-mini-field">
+            <div class="ios-mini-label">Días</div>
+            <input name="days[]" type="number" step="1" min="1" value="1" class="ios-input">
+          </div>
+
+          <div class="ios-mini-field">
+            <div class="ios-mini-label">Cantidad</div>
+            <input name="quantity[]" type="number" step="1" min="1" value="1" class="ios-input">
+          </div>
+
+          <div class="ios-mini-field">
+            <div class="ios-mini-label">Precio</div>
+            <select name="price_mode[]" class="ios-select js-priceMode js-ts">
+              <option value="std">Alto</option>
+              <option value="low">Bajo</option>
+              <option value="custom">Acordado</option>
+            </select>
+          </div>
+
+          <div class="ios-mini-field js-customPriceWrap" style="display:none;">
+            <div class="ios-mini-label">Precio acordado</div>
+            <input name="unit_price[]" type="number" step="0.01" min="0"
+                  class="ios-input js-unitPrice" placeholder="0.00">
+          </div>
+        </div>
+
+        <small class="text-muted d-block mt-1 js-priceHint"></small>
+
+        <!-- Descripción -->
+        <div class="ios-row" style="border-top:1px solid var(--ios-border); margin-top:10px;">
+          <div class="ios-ico"><i class="bi bi-card-text"></i></div>
+          <div class="ios-body">
+            <div class="ios-label">Descripción</div>
+            <textarea name="line_description[]" class="ios-input js-desc" rows="2"
+                      placeholder="Descripción del ítem" readonly></textarea>
+          </div>
+        </div>
+
+        <!-- Acciones de línea -->
+        <div class="ios-line-actions">
+          <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLine(this)">
+            Quitar
+          </button>
+        </div>
+      </div>
+
+    </div>
+    
+    <!-- Acciones iOS -->
+    <div class="ios-actions">
+      <button type="button" class="btn btn-outline-secondary ios-btn" onclick="addLine()">Agregar fila</button>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('quotations.quotations_list') }}" class="btn btn-secondary ios-btn">Cancelar</a>
+        <button class="btn btn-success ios-btn">Crear cotización</button>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+<script>
+/* =========================================================
+   Quotation UI (líneas, detalles, TomSelect) + Quick-Create
+   Requiere: Bootstrap (modal) + TomSelect
+   ========================================================= */
+
+/* =========================
+   Helpers generales
+   ========================= */
+async function postJSON(url, payload){
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(payload || {})
+  });
+
+  const data = await res.json().catch(()=> ({}));
+
+  // mostrar notificación si viene
+  if (data && data.message) {
+    pushFlash(data.category || "info", data.message);
+  }
+
+  if (!res.ok || data.ok === false) {
+    throw new Error(data.error || "Error");
+  }
+  return data;
+}
+
+function pushFlash(category, message){
+  const wrap = document.getElementById("flashWrap");
+  if (!wrap || !message) return;
+
+  let c = String(category || "info").toLowerCase();
+  if (c === "error") c = "danger";
+  if (c === "message") c = "info";
+
+  const title =
+    (c === "success") ? "Success!" :
+    (c === "warning") ? "Warning!" :
+    (c === "danger")  ? "Error!"   :
+                        "Help!";
+
+  const div = document.createElement("div");
+  div.className = `alert alert-${c} alert-dismissible fade show flash-card`;
+  div.setAttribute("role", "alert");
+  div.innerHTML = `
+    <div class="flash-inner">
+      <span class="flash-bar flash-bar-${c}"></span>
+
+      <div class="flash-body">
+        <div class="flash-title">${title}</div>
+        <div class="flash-text">${escapeHtml(message)}</div>
+      </div>
+    </div>
+
+    <button type="button" class="btn-close flash-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  `;
+
+  wrap.prepend(div);
+}
+
+function escapeHtml(s){
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+
+
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!msg) {
+    el.classList.add("d-none");
+    el.textContent = "";
+    return;
+  }
+  el.textContent = msg;
+  el.classList.remove("d-none");
+}
+
+function money(n) {
+  const x = Number(n);
+  if (!Number.isFinite(x)) return "0.00";
+  return x.toFixed(2);
+}
+
+function getTS(selectEl) {
+  return selectEl && selectEl.tomselect ? selectEl.tomselect : null;
+}
+
+/* =========================
+   Upsert opciones (select / TomSelect)
+   ========================= */
+function upsertOptionSmart(selectEl, id, label, extraData = null, selectNow = true) {
+  if (!selectEl) return;
+
+  const ts = getTS(selectEl);
+  if (ts) {
+    ts.addOption({ value: id, text: label, ...(extraData || {}) });
+    ts.refreshOptions(false);
+    if (selectNow) ts.setValue(id, true);
+    return;
+  }
+
+  let opt = selectEl.querySelector(`option[value="${CSS.escape(id)}"]`);
+  if (!opt) {
+    opt = document.createElement("option");
+    opt.value = id;
+    selectEl.appendChild(opt);
+  }
+  opt.textContent = label;
+
+  if (extraData) {
+    Object.entries(extraData).forEach(([k, v]) => {
+      opt.dataset[k] = String(v ?? "");
+    });
+  }
+
+  if (selectNow) {
+    selectEl.value = id;
+    selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+}
+
+function upsertItemOption(selectEl, it, selectNow = false) {
+  if (!selectEl) return;
+
+  const label = `${it.sku ? it.sku + " - " : ""}${it.name || ""}`.trim() || "Nuevo ítem";
+  const extra = {
+    sku: it.sku || "",
+    name: it.name || "",
+    type: it.item_type || "",
+    unit: it.unit || "",
+    std: Number(it.default_rate || 0),
+    low: Number(it.low_rate || 0),
+    desc: it.description || ""
+  };
+
+  // TomSelect: guardar también datos para readOptionData (vía dataset no aplica),
+  // por eso mantenemos dataset en <option> solo para selects normales.
+  const ts = getTS(selectEl);
+  if (ts) {
+    ts.addOption({
+      value: it.id,
+      text: label,
+      ...extra
+    });
+    ts.refreshOptions(false);
+    if (selectNow) ts.setValue(it.id, true);
+    return;
+  }
+
+  let opt = selectEl.querySelector(`option[value="${CSS.escape(it.id)}"]`);
+  if (!opt) {
+    opt = document.createElement("option");
+    opt.value = it.id;
+    selectEl.appendChild(opt);
+  }
+  opt.textContent = label;
+
+  opt.dataset.sku = extra.sku;
+  opt.dataset.name = extra.name;
+  opt.dataset.type = extra.type;
+  opt.dataset.unit = extra.unit;
+  opt.dataset.std = String(extra.std);
+  opt.dataset.low = String(extra.low);
+  opt.dataset.desc = extra.desc;
+
+  if (selectNow) {
+    selectEl.value = it.id;
+    selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+}
+
+/* =========================
+   Quotation líneas: TomSelect + UI
+   ========================= */
+function ensureTomSelect(selectEl, opts = {}) {
+  if (!selectEl) return null;
+  if (selectEl.tomselect) return selectEl.tomselect;
+
+  return new TomSelect(selectEl, {
+    create: false,
+    allowEmptyOption: true,
+    openOnFocus: true,
+    placeholder: "Seleccionar…",
+    ...opts
+  });
+}
+
+function initLineTomSelect(line) {
+  const itemSel = line.querySelector(".js-item");
+  ensureTomSelect(itemSel, {
+    allowEmptyOption: true,
+    placeholder: "Seleccionar ítem…"
+  });
+
+  const modeSel = line.querySelector(".js-priceMode");
+  ensureTomSelect(modeSel, {
+    allowEmptyOption: false,
+    placeholder: "Modo…",
+    controlInput: null
+  });
+}
+
+function destroyLineTomSelect(line) {
+  line.querySelectorAll("select.js-ts").forEach((sel) => {
+    if (sel.tomselect) sel.tomselect.destroy();
+  });
+}
+
+function readOptionData(selectEl) {
+  const val = selectEl?.value;
+  if (!selectEl || !val) return null;
+
+  // Si es TomSelect, el option original existe igual en el DOM (TomSelect no lo elimina),
+  // por eso seguimos leyendo dataset desde <option>.
+  const opt = selectEl.querySelector(`option[value="${CSS.escape(val)}"]`);
+  if (!opt) return null;
+
+  return {
+    sku: opt.dataset.sku || "",
+    name: opt.dataset.name || "",
+    type: opt.dataset.type || "",
+    unit: opt.dataset.unit || "",
+    std: Number(opt.dataset.std || 0),
+    low: Number(opt.dataset.low || 0),
+    desc: opt.dataset.desc || ""
+  };
+}
+
+function syncLineUI(line) {
+  const itemSel = line.querySelector(".js-item");
+  const btnDet = line.querySelector(".js-details");
+  const mini = line.querySelector(".js-mini");
+
+  const modeSel = line.querySelector(".js-priceMode");
+  const priceIn = line.querySelector(".js-unitPrice");
+  const hint = line.querySelector(".js-priceHint");
+  const descTa = line.querySelector(".js-desc");
+  const customWrap = line.querySelector(".js-customPriceWrap");
+
+  const d = readOptionData(itemSel);
+  const hasItem = !!d;
+
+  if (btnDet) btnDet.disabled = !hasItem;
+  if (mini) mini.textContent = hasItem ? `${d.type || "—"} · ${d.unit || "—"}` : "";
+
+  if (!hasItem) {
+    if (hint) hint.textContent = "";
+    if (descTa) descTa.value = "";
+    if (customWrap) customWrap.style.display = "none";
+    if (priceIn) {
+      priceIn.value = "";
+      priceIn.readOnly = false;
+    }
+    return;
+  }
+
+  if (descTa) descTa.value = d.desc || "";
+
+  const mode = (modeSel?.value || "std").toLowerCase();
+
+  if (mode === "custom") {
+    if (customWrap) customWrap.style.display = "";
+    if (priceIn) priceIn.readOnly = false;
+    if (hint) hint.textContent = "Ingresá el precio acordado.";
+    return;
+  }
+
+  if (customWrap) customWrap.style.display = "none";
+  if (priceIn) {
+    priceIn.value = "";
+    priceIn.readOnly = true;
+  }
+
+  if (hint) {
+    hint.textContent =
+      mode === "low" ? `Usando precio (${money(d.low)})` : `Usando STD (${money(d.std)})`;
+  }
+}
+
+function openDetailsModal(modal, line) {
+  if (!modal) return;
+
+  const d = readOptionData(line.querySelector(".js-item"));
+  if (!d) return;
+
+  document.getElementById("mSku").textContent = d.sku || "—";
+  document.getElementById("mName").textContent = d.name || "—";
+  document.getElementById("mType").textContent = d.type || "—";
+  document.getElementById("mUnit").textContent = d.unit || "—";
+  document.getElementById("mStd").textContent = money(d.std);
+  document.getElementById("mLow").textContent = money(d.low);
+  document.getElementById("mDesc").textContent = d.desc || "—";
+
+  document.getElementById("itemDetailsTitle").textContent =
+    `Detalle: ${d.sku ? d.sku + " — " : ""}${d.name || ""}`;
+
+  modal.show();
+}
+
+/* =========================
+   Add / remove líneas (clonado seguro con TomSelect)
+   ========================= */
+function resetLine(line) {
+  line.querySelectorAll("input").forEach((i) => {
+    if (i.name === "days[]" || i.name === "quantity[]") i.value = 1;
+    else i.value = "";
+    i.readOnly = false;
+  });
+
+  line.querySelectorAll("select").forEach((s) => {
+    if (s.name === "price_mode[]") s.value = "std";
+    else s.value = "";
+  });
+
+  const desc = line.querySelector(".js-desc");
+  if (desc) desc.value = "";
+
+  const customWrap = line.querySelector(".js-customPriceWrap");
+  if (customWrap) customWrap.style.display = "none";
+
+  const up = line.querySelector(".js-unitPrice");
+  if (up) {
+    up.value = "";
+    up.readOnly = false;
+  }
+
+  const mini = line.querySelector(".js-mini");
+  const hint = line.querySelector(".js-priceHint");
+  const det = line.querySelector(".js-details");
+  if (mini) mini.textContent = "";
+  if (hint) hint.textContent = "";
+  if (det) det.disabled = true;
+}
+
+window.addLine = function () {
+  const wrap = document.querySelector("#linesWrap");
+  const first = wrap?.querySelector(".quote-line");
+  if (!wrap || !first) return;
+
+  // guardar estado actual del template
+  const firstItemSel = first.querySelector(".js-item");
+  const firstModeSel = first.querySelector(".js-priceMode");
+  const firstDays = first.querySelector('input[name="days[]"]');
+  const firstQty = first.querySelector('input[name="quantity[]"]');
+  const firstUP = first.querySelector(".js-unitPrice");
+
+  const state = {
+    item: firstItemSel ? firstItemSel.value : "",
+    mode: firstModeSel ? firstModeSel.value : "std",
+    days: firstDays ? firstDays.value : "1",
+    qty: firstQty ? firstQty.value : "1",
+    up: firstUP ? firstUP.value : ""
+  };
+
+  // destruir TomSelect del template antes de clonar
+  destroyLineTomSelect(first);
+
+  // clonar
+  const clone = first.cloneNode(true);
+
+  // re-init TomSelect en template original
+  initLineTomSelect(first);
+
+  // restaurar valores del template original
+  if (firstItemSel) {
+    if (firstItemSel.tomselect) firstItemSel.tomselect.setValue(state.item, true);
+    else firstItemSel.value = state.item;
+  }
+  if (firstModeSel) {
+    if (firstModeSel.tomselect) firstModeSel.tomselect.setValue(state.mode, true);
+    else firstModeSel.value = state.mode;
+  }
+  if (firstDays) firstDays.value = state.days;
+  if (firstQty) firstQty.value = state.qty;
+  if (firstUP) firstUP.value = state.up;
+
+  // reset clone
+  resetLine(clone);
+
+  // append + init TomSelect en clone
+  wrap.appendChild(clone);
+  initLineTomSelect(clone);
+
+  // sync UI
+  syncLineUI(first);
+  syncLineUI(clone);
+};
+
+window.removeLine = function (btn) {
+  const wrap = document.querySelector("#linesWrap");
+  const line = btn.closest(".quote-line");
+  if (!wrap || !line) return;
+
+  const all = wrap.querySelectorAll(".quote-line");
+  if (all.length > 1) {
+    line.remove();
+    return;
+  }
+
+  resetLine(line);
+  syncLineUI(line);
+};
+
+/* =========================
+   Quick-create: estado de "línea activa" para crear ítem
+   ========================= */
+let targetItemSelect = null;
+document.addEventListener("click", (e) => {
+  // botón + de ítem
+  const btnItem = e.target.closest(".js-openItemModal");
+  if (btnItem) {
+    const line = btnItem.closest(".quote-line");
+    targetItemSelect = line ? line.querySelector("select.js-item") : null;
+    showErr("errItemNew", "");
+  }
+});
+
+/* =========================
+   DOMContentLoaded: wiring completo
+   ========================= */
+document.addEventListener("DOMContentLoaded", () => {
+  /* -------- refs base -------- */
+  const wrap = document.querySelector("#linesWrap");
+
+  // modal detalle ítem
+  const detailsModalEl = document.getElementById("itemDetailsModal");
+  const detailsModal =
+    window.bootstrap && detailsModalEl ? new bootstrap.Modal(detailsModalEl) : null;
+
+  /* -------- init primera línea -------- */
+  const initLine = wrap?.querySelector(".quote-line");
+  if (initLine) {
+    initLineTomSelect(initLine);
+    syncLineUI(initLine);
+  }
+
+  /* -------- delegación eventos líneas -------- */
+  wrap?.addEventListener("change", (e) => {
+    const line = e.target.closest(".quote-line");
+    if (!line) return;
+    if (e.target.classList.contains("js-item") || e.target.classList.contains("js-priceMode")) {
+      syncLineUI(line);
+    }
+  });
+
+  wrap?.addEventListener("click", (e) => {
+    const line = e.target.closest(".quote-line");
+    if (!line) return;
+
+    const btnDetails = e.target.closest(".js-details");
+    if (btnDetails) openDetailsModal(detailsModal, line);
+  });
+
+  /* =========================================================
+     QUICK CREATE: CLIENTE
+     ========================================================= */
+  const formClientNew = document.getElementById("formClientNew");
+  formClientNew?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    showErr("errClientNew", "");
+
+    try {
+      const fd = new FormData(formClientNew);
+
+      const payload = {
+        name: (fd.get("name") || "").trim(),
+        tax_id: (fd.get("tax_id") || "").trim(),
+        email: (fd.get("email") || "").trim(),
+        phone: (fd.get("phone") || "").trim(),
+        street: (fd.get("street") || "").trim(),
+        city: (fd.get("city") || "").trim(),
+        state: (fd.get("state") || "").trim(),
+        zip: ((fd.get("zip") || "").trim() || null),
+        country: (fd.get("country") || "").trim(),
+        is_eventual: fd.get("is_eventual") ? true : false
+      };
+
+      if (!payload.name) throw new Error("Nombre es obligatorio.");
+      if (!payload.tax_id) throw new Error("RTN es obligatorio.");
+      if (!payload.email) throw new Error("Correo es obligatorio.");
+      if (!payload.phone) throw new Error("Teléfono es obligatorio.");
+      if (!payload.street || !payload.city || !payload.state || !payload.country) {
+        throw new Error("Dirección incompleta.");
+      }
+
+      const data = await postJSON("{{ url_for('quotations.api_client_create') }}", payload);
+      const c = data.client;
+
+      const sel = document.getElementById("clientSelect");
+      upsertOptionSmart(sel, c.id, c.name, null, true);
+
+      bootstrap.Modal.getInstance(document.getElementById("modalClientNew"))?.hide();
+      formClientNew.reset();
+    } catch (err) {
+      showErr("errClientNew", err.message || "Error");
+    }
+  });
+
+  /* =========================================================
+     QUICK CREATE: CONTACTO
+     ========================================================= */
+  const formContactNew = document.getElementById("formContactNew");
+  formContactNew?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    showErr("errContactNew", "");
+
+    try {
+      const fd = new FormData(formContactNew);
+
+      const payload = {
+        client_id: (fd.get("client_id") || "").trim(),
+        name: (fd.get("name") || "").trim(),
+        email: ((fd.get("email") || "").trim() || null),
+        phone: ((fd.get("phone") || "").trim() || null),
+        role: ((fd.get("role") || "").trim() || null),
+        is_primary: fd.get("is_primary") ? true : false
+      };
+
+      if (!payload.client_id) throw new Error("Cliente es obligatorio.");
+      if (!payload.name) throw new Error("Nombre es obligatorio.");
+
+      const data = await postJSON("{{ url_for('quotations.api_contact_create') }}", payload);
+      const ct = data.contact;
+
+      // ajustar cliente de cotización si aplica
+      const clientSelect = document.getElementById("clientSelect");
+      if (clientSelect && payload.client_id) {
+        if (clientSelect.tomselect) clientSelect.tomselect.setValue(payload.client_id, true);
+        else clientSelect.value = payload.client_id;
+
+        clientSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+
+      const contactSelect = document.getElementById("contactSelect");
+      upsertOptionSmart(contactSelect, ct.id, ct.name, { client: ct.client_id }, true);
+
+      bootstrap.Modal.getInstance(document.getElementById("modalContactNew"))?.hide();
+      formContactNew.reset();
+    } catch (err) {
+      showErr("errContactNew", err.message || "Error");
+    }
+  });
+
+  /* =========================================================
+     QUICK CREATE: EVENTO (cliente/contacto filtrado)
+     ========================================================= */
+  const formEventNew = document.getElementById("formEventNew");
+  const modalEventEl = document.getElementById("modalEventNew");
+
+  const qClientSel = document.getElementById("clientSelect");
+  const qEventSel = document.getElementById("eventSelect");
+
+  const evClientEl = document.getElementById("evClientSel");
+  const evContactEl = document.getElementById("evContactSel");
+
+  // TomSelect para created_by y otros selects "normales"
+  document.querySelectorAll("select.js-ios-select").forEach((el) => {
+    if (el.tomselect) return;
+    new TomSelect(el, {
+      create: false,
+      allowEmptyOption: true,
+      openOnFocus: true,
+      placeholder: "Seleccionar…"
+    });
+  });
+
+  const tsEvClient = evClientEl
+    ? new TomSelect(evClientEl, {
+        create: false,
+        allowEmptyOption: false,
+        openOnFocus: true,
+        placeholder: "Seleccionar…"
+      })
+    : null;
+
+  const tsEvContact = evContactEl
+    ? new TomSelect(evContactEl, {
+        create: false,
+        allowEmptyOption: true,
+        openOnFocus: true,
+        placeholder: "Seleccionar…"
+      })
+    : null;
+
+  const allContacts = evContactEl
+    ? [...evContactEl.querySelectorAll("option")]
+        .filter((o) => o.value)
+        .map((o) => ({
+          value: o.value,
+          text: o.textContent.trim(),
+          clientId: String(o.dataset.client || "")
+        }))
+    : [];
+
+  function rebuildContactsForClient(cid) {
+    if (!tsEvContact) return;
+    cid = String(cid || "");
+
+    const prev = tsEvContact.getValue();
+
+    tsEvContact.clear(true);
+    tsEvContact.clearOptions();
+    tsEvContact.addOption({ value: "", text: "—" });
+
+    allContacts
+      .filter((c) => c.clientId === cid)
+      .forEach((c) => tsEvContact.addOption({ value: c.value, text: c.text }));
+
+    tsEvContact.refreshOptions(false);
+
+    const still = allContacts.some((c) => c.clientId === cid && c.value === prev);
+    tsEvContact.setValue(still ? prev : "", true);
+  }
+
+  modalEventEl?.addEventListener("show.bs.modal", () => {
+    showErr("errEventNew", "");
+
+    const currentClient = qClientSel?.tomselect
+      ? qClientSel.tomselect.getValue()
+      : (qClientSel?.value || "");
+
+    if (tsEvClient && currentClient) {
+      tsEvClient.setValue(currentClient, true);
+      rebuildContactsForClient(currentClient);
+    } else if (tsEvClient) {
+      rebuildContactsForClient(tsEvClient.getValue());
+    }
+  });
+
+  tsEvClient?.on("change", (val) => rebuildContactsForClient(val));
+
+  formEventNew?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    showErr("errEventNew", "");
+
+    try {
+      const fd = new FormData(formEventNew);
+
+      const payload = {
+        name: (fd.get("name") || "").trim(),
+        client_id: (tsEvClient ? tsEvClient.getValue() : (fd.get("client_id") || "")).trim(),
+        contact_id: (tsEvContact ? tsEvContact.getValue() : (fd.get("contact_id") || "")).trim() || null,
+        venue: (fd.get("venue") || "").trim(),
+        start_at: (fd.get("start_at") || "").trim(),
+        end_at: (fd.get("end_at") || "").trim(),
+        build_start_at: (fd.get("build_start_at") || "").trim() || null,
+        strike_end_at: (fd.get("strike_end_at") || "").trim() || null,
+        created_by: (fd.get("created_by") || "").trim(),
+        notes: (fd.get("notes") || "").trim() || null
+      };
+
+      if (!payload.name) throw new Error("Nombre es obligatorio.");
+      if (!payload.client_id) throw new Error("Cliente es obligatorio.");
+      if (!payload.venue) throw new Error("Lugar es obligatorio.");
+      if (!payload.start_at || !payload.end_at) throw new Error("Inicio y fin son obligatorios.");
+      if (!payload.created_by) throw new Error("Creado por es obligatorio.");
+
+      const data = await postJSON("{{ url_for('quotations.api_event_create') }}", payload);
+      const ev = data.event;
+
+      upsertOptionSmart(qEventSel, ev.id, ev.name, { client: ev.client_id }, true);
+
+      bootstrap.Modal.getInstance(modalEventEl)?.hide();
+      formEventNew.reset();
+
+      if (tsEvClient) tsEvClient.setValue(payload.client_id, true);
+      if (tsEvContact) tsEvContact.setValue("", true);
+    } catch (err) {
+      showErr("errEventNew", err.message || "Error");
+    }
+  });
+
+  /* =========================================================
+     QUICK CREATE: ITEM (producto)
+     ========================================================= */
+  const modalItemEl = document.getElementById("modalItemNew");
+  const formItemEl = document.getElementById("formItemNew");
+
+  // TomSelect en selects del modal (excepto unit, que se maneja con rebuild)
+  document.querySelectorAll("#modalItemNew select.js-ios-select").forEach((el) => {
+    if (el.tomselect) return;
+    new TomSelect(el, {
+      create: false,
+      allowEmptyOption: true,
+      openOnFocus: true,
+      placeholder: "Seleccionar…"
+    });
+  });
+
+  const typeEl = document.getElementById("m_item_type");
+  const unitEl = document.getElementById("m_unit");
+  const stockBlock = document.getElementById("m_stock_block");
+  const assetsBlock = document.getElementById("m_assets_block");
+
+  const allUnits = unitEl
+    ? [...unitEl.querySelectorAll("option")]
+        .map((o) => ({
+          value: o.value,
+          text: o.textContent.trim(),
+          types: (o.getAttribute("data-types") || "")
+            .toLowerCase()
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        }))
+        .filter((u, i, arr) => arr.findIndex((x) => x.value === u.value && x.text === u.text) === i)
+    : [];
+
+  const tsUnit = unitEl
+    ? new TomSelect(unitEl, {
+        create: false,
+        allowEmptyOption: false,
+        openOnFocus: true,
+        placeholder: "Seleccionar…"
+      })
+    : null;
+
+  function rebuildUnitsForType(t) {
+    if (!tsUnit) return;
+
+    t = String(t || "").toLowerCase();
+    const prev = tsUnit.getValue();
+
+    tsUnit.clear(true);
+    tsUnit.clearOptions();
+
+    const allowed = allUnits.filter((u) => u.types.length === 0 || u.types.includes(t));
+    allowed.forEach((u) => tsUnit.addOption({ value: u.value, text: u.text }));
+    tsUnit.refreshOptions(false);
+
+    const still = allowed.some((u) => u.value === prev);
+    if (still) tsUnit.setValue(prev, true);
+    else if (allowed[0]?.value) tsUnit.setValue(allowed[0].value, true);
+  }
+
+  function toggleItemBlocks() {
+    const t = (typeEl?.value || "").toLowerCase();
+    if (stockBlock) stockBlock.style.display = t === "consumable" ? "" : "none";
+    if (assetsBlock) assetsBlock.style.display = t === "rentable" ? "" : "none";
+  }
+
+  typeEl?.addEventListener("change", () => {
+    rebuildUnitsForType(typeEl.value);
+    toggleItemBlocks();
+  });
+
+  modalItemEl?.addEventListener("show.bs.modal", () => {
+    showErr("errItemNew", "");
+    formItemEl?.reset();
+    rebuildUnitsForType(typeEl?.value);
+    toggleItemBlocks();
+  });
+
+  formItemEl?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    showErr("errItemNew", "");
+
+    try {
+      const fd = new FormData(formItemEl);
+
+      const payload = {
+        name: (fd.get("name") || "").trim(),
+        description: (fd.get("description") || "").trim(),
+        item_type: (fd.get("item_type") || "").trim(),
+        unit: tsUnit ? tsUnit.getValue() : (fd.get("unit") || "").trim(),
+        default_rate: Number(fd.get("default_rate") || 0),
+        low_rate: Number(fd.get("low_rate") || 0),
+        sku: (fd.get("sku") || "").trim() || null,
+        supplier_id: (fd.get("supplier_id") || "").trim() || null,
+        category: (fd.get("category") || "").trim() || null,
+        new_category: (fd.get("new_category") || "").trim() || null,
+        stock: Number(fd.get("stock") || 0),
+        asset_count: Number(fd.get("asset_count") || 0),
+        tags: (fd.get("tags") || "").trim() || null,
+        active: fd.get("active") ? true : false
+      };
+
+      if (!payload.name) throw new Error("Nombre es obligatorio.");
+      if (!payload.description) throw new Error("Descripción es obligatoria.");
+      if (!payload.item_type) throw new Error("Tipo es obligatorio.");
+      if (!payload.unit) throw new Error("Unidad es obligatoria.");
+      if (!Number.isFinite(payload.default_rate) || payload.default_rate < 1) throw new Error("Precio STD inválido.");
+      if (!Number.isFinite(payload.low_rate) || payload.low_rate < 1) throw new Error("Precio LOW inválido.");
+
+      if (payload.new_category) payload.category = payload.new_category;
+
+      const data = await postJSON("{{ url_for('quotations.api_item_create') }}", payload);
+      const it = data.item;
+
+      document.querySelectorAll("select.js-item").forEach((sel) => {
+        const selectNow = targetItemSelect && sel === targetItemSelect;
+        upsertItemOption(sel, it, selectNow);
+      });
+
+      bootstrap.Modal.getInstance(modalItemEl)?.hide();
+
+      if (targetItemSelect) {
+        targetItemSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    } catch (err) {
+      showErr("errItemNew", err.message || "Error");
+    }
+  });
+});
+</script>
+
+
+    <!-- Modal igual -->
+    <div class="modal fade" id="itemDetailsModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="itemDetailsTitle">Detalle del ítem</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="mb-2"><strong>SKU:</strong> <span id="mSku">—</span></div>
+            <div class="mb-2"><strong>Nombre:</strong> <span id="mName">—</span></div>
+            <div class="mb-2"><strong>Tipo:</strong> <span id="mType">—</span></div>
+            <div class="mb-2"><strong>Unidad:</strong> <span id="mUnit">—</span></div>
+
+            <hr>
+
+            <div class="mb-2"><strong>Precio STD:</strong> <span id="mStd">—</span></div>
+            <div class="mb-2"><strong>Precio LOW:</strong> <span id="mLow">—</span></div>
+
+            <hr>
+
+            <div class="mb-0"><strong>Descripción:</strong></div>
+            <div class="text-muted" id="mDesc" style="white-space: pre-wrap;">—</div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary ios-btn" data-bs-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- ===================== -->
+<!-- MODAL: Nuevo Cliente  -->
+<!-- ===================== -->
+<div class="modal fade" id="modalClientNew" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content ios-modal">
+
+      <form id="formClientNew" novalidate>
+        <div class="modal-header ios-modal-header">
+          <h5 class="modal-title">Nuevo cliente</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+
+        <div class="modal-body ios-modal-body">
+          <!-- Error general -->
+          <div class="alert alert-danger d-none" id="errClientNew"></div>
+
+          <!-- ===================== -->
+          <!-- DATOS DEL CLIENTE -->
+          <!-- ===================== -->
+          <div class="ios-section-title">Datos del cliente</div>
+          <div class="ios-group">
+
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-person-vcard"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Nombre del cliente <span class="text-danger">*</span></div>
+                <input name="name" class="ios-input" required
+                       placeholder="Empresa / Persona"
+                       autocomplete="organization">
+              </div>
+            </div>
+
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-receipt"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">RTN <span class="text-danger">*</span></div>
+                <input name="tax_id" class="ios-input" required
+                       inputmode="numeric"
+                       placeholder="0801XXXXXXXXX"
+                       autocomplete="off">
+                <div class="ios-help">Sin guiones ni espacios.</div>
+              </div>
+            </div>
+
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-envelope"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Correo electrónico <span class="text-danger">*</span></div>
+                <input name="email" type="email" class="ios-input" required
+                       placeholder="correo@dominio.com"
+                       autocomplete="email">
+              </div>
+            </div>
+
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-telephone"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Teléfono <span class="text-danger">*</span></div>
+                <input name="phone" type="tel" class="ios-input" required
+                       placeholder="+504 9999-9999"
+                       autocomplete="tel">
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ===================== -->
+          <!-- DIRECCIÓN -->
+          <!-- ===================== -->
+          <div class="ios-section-title">Dirección</div>
+          <div class="ios-group">
+
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-geo-alt"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Calle / Colonia <span class="text-danger">*</span></div>
+                <input name="street" class="ios-input" required
+                       placeholder="Colonia, calle, número"
+                       autocomplete="street-address">
+              </div>
+            </div>
+
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-pin-map"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Ciudad <span class="text-danger">*</span></div>
+                <input name="city" class="ios-input" required
+                       placeholder="Tegucigalpa / SPS"
+                       autocomplete="Tegucigalpa">
+              </div>
+            </div>
+
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-map"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Depto / Estado <span class="text-danger">*</span></div>
+                <input name="state" class="ios-input" required
+                       placeholder="Francisco Morazán"
+                       autocomplete="Francisco Morazán">
+              </div>
+            </div>
+
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-mailbox"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">ZIP</div>
+                <input name="zip" class="ios-input"
+                       inputmode="numeric"
+                       placeholder="10111"
+                       autocomplete="10111">
+              </div>
+            </div>
+
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-globe"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">País <span class="text-danger">*</span></div>
+                <input name="country" class="ios-input" required
+                       value="Honduras"
+                       placeholder="Honduras"
+                       autocomplete="country-name">
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ===================== -->
+          <!-- OPCIONES -->
+          <!-- ===================== -->
+          <div class="ios-section-title">Opciones</div>
+          <div class="ios-group">
+            <div class="ios-row">
+              <div class="ios-switch">
+                <div class="ios-switch-label">
+                  <div class="ios-ico"><i class="bi bi-hourglass-split"></i></div>
+                  <span>Cliente eventual</span>
+                </div>
+
+                <label class="ios-toggle-wrap">
+                  <input class="ios-toggle-input" type="checkbox" name="is_eventual" value="1">
+                  <span class="ios-toggle"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer ios-modal-footer">
+          <button type="button" class="btn btn-secondary ios-btn" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary ios-btn" id="btnClientNewSave">
+            Guardar
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===================== -->
+<!-- MODAL: Nuevo Contacto -->
+<!-- ===================== -->
+<div class="modal fade" id="modalContactNew" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content ios-modal">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Nuevo contacto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="formContactNew">
+
+          <div class="ios-group">
+
+            <!-- Cliente -->
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-building"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Cliente <span class="text-danger">*</span></div>
+                <select name="client_id" class="ios-select js-ios-select js-ts" required>
+                  <option value="">Seleccionar…</option>
+                  {% for c in clients %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+            </div>
+
+            <!-- Nombre -->
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-person"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Nombre <span class="text-danger">*</span></div>
+                <input name="name" class="ios-input" required placeholder="Nombre del contacto">
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-envelope"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Email</div>
+                <input name="email" type="email" class="ios-input" placeholder="correo@dominio.com">
+                <div class="ios-hint">Si lo llenás, debería ser único por cliente.</div>
+              </div>
+            </div>
+
+            <!-- Teléfono -->
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-telephone"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Teléfono</div>
+                <input name="phone" class="ios-input" placeholder="+504 9999-9999">
+              </div>
+            </div>
+
+            <!-- Rol -->
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-person-badge"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Rol</div>
+                <input name="role" class="ios-input" placeholder="Compras / Planner / Producción">
+              </div>
+            </div>
+
+            <!-- Principal -->
+            <div class="ios-row">
+              <div class="ios-switch">
+                <div class="ios-switch-label">
+                  <div class="ios-ico"><i class="bi bi-star"></i></div>
+                  <span>Contacto principal</span>
+                </div>
+
+                <label class="ios-toggle-wrap">
+                  <input class="ios-toggle-input" type="checkbox" name="is_primary" value="1">
+                  <span class="ios-toggle"></span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+
+          <div id="errContactNew" class="alert alert-danger py-2 px-3 mt-2 d-none"></div>
+
+          <div class="d-flex gap-2 justify-content-end mt-3">
+            <button type="button" class="btn btn-outline-secondary ios-btn" data-bs-dismiss="modal">Cancelar</button>
+            <button class="btn btn-success ios-btn">Guardar</button>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===================== -->
+<!-- MODAL: Nuevo Evento    -->
+<!-- ===================== -->
+<div class="modal fade" id="modalEventNew" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content ios-modal">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Nuevo evento</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="formEventNew">
+
+          <div class="ios-group">
+
+            <!-- Nombre -->
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-calendar2-event"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Nombre <span class="text-danger">*</span></div>
+                <input name="name" class="ios-input" required placeholder="Ej. Boda López-Martínez">
+              </div>
+            </div>
+
+            <!-- Cliente (se pre-llena desde la cotización) -->
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-building"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Cliente <span class="text-danger">*</span></div>
+                <select id="evClientSel" name="client_id" class="ios-select js-ts" required>
+                  <option value="">Seleccionar…</option>
+                  {% for c in clients %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+            </div>
+
+            <!-- Contacto (filtrado por cliente) -->
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-person-lines-fill"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Contacto</div>
+                <select id="evContactSel" name="contact_id" class="ios-select js-ts">
+                  <option value="">—</option>
+                  {% for k in contacts %}
+                    <option value="{{ k.id }}" data-client="{{ k.client_id }}">{{ k.name }}</option>
+                  {% endfor %}
+                </select>
+                <div class="ios-hint">Se filtra por cliente.</div>
+              </div>
+              <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+            </div>
+
+            <!-- Lugar -->
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-geo-alt"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Lugar <span class="text-danger">*</span></div>
+                <input name="venue" class="ios-input" required placeholder="Hotel / Salón / Dirección">
+              </div>
+            </div>
+
+            <!-- Inicio -->
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-play-circle"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Inicio <span class="text-danger">*</span></div>
+                <input name="start_at" type="datetime-local" class="ios-input" required>
+              </div>
+            </div>
+
+            <!-- Fin -->
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-stop-circle"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Fin <span class="text-danger">*</span></div>
+                <input name="end_at" type="datetime-local" class="ios-input" required>
+              </div>
+            </div>
+
+            <!-- Montaje -->
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-hammer"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Inicio montaje</div>
+                <input name="build_start_at" type="datetime-local" class="ios-input">
+              </div>
+            </div>
+
+            <!-- Desmontaje -->
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-wrench-adjustable"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Fin desmontaje</div>
+                <input name="strike_end_at" type="datetime-local" class="ios-input">
+              </div>
+            </div>
+
+            <!-- Creado por -->
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-person-check"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Creado por <span class="text-danger">*</span></div>
+                <select name="created_by" class="ios-select js-ios-select js-ts" required>
+                  <option value="">Seleccionar…</option>
+                  {% for o in owners %}
+                    <option value="{{ o.id }}">{{ o.full_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+            </div>
+
+            <!-- Notas -->
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-sticky"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Notas</div>
+                <textarea name="notes" class="ios-input" rows="3" placeholder="Accesos, operación, etc."></textarea>
+              </div>
+            </div>
+
+          </div>
+
+          <div id="errEventNew" class="alert alert-danger py-2 px-3 mt-2 d-none"></div>
+
+          <div class="d-flex gap-2 justify-content-end mt-3">
+            <button type="button" class="btn btn-outline-secondary ios-btn" data-bs-dismiss="modal">Cancelar</button>
+            <button class="btn btn-success ios-btn">Crear</button>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ===================== -->
+<!-- MODAL: Nuevo Ítem      -->
+<!-- ===================== -->
+<div class="modal fade" id="modalItemNew" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content ios-modal">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Nuevo producto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="formItemNew">
+
+          <!-- ===== Datos principales ===== -->
+          <div class="ios-group">
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-box-seam"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Nombre <span class="text-danger">*</span></div>
+                <input type="text" name="name" class="ios-input" required placeholder="Nombre del producto">
+              </div>
+            </div>
+
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-card-text"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Descripción <span class="text-danger">*</span></div>
+                <textarea name="description" class="ios-input" rows="3" required placeholder="Descripción"></textarea>
+              </div>
+            </div>
+
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-tag"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Tipo <span class="text-danger">*</span></div>
+                <select id="m_item_type" name="item_type" class="ios-select js-ts" required>
+                  <option value="consumable">Consumible</option>
+                  <option value="rentable">Alquiler</option>
+                  <option value="service">Servicio</option>
+                  <option value="bundle">Paquete</option>
+                </select>
+              </div>
+              <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+            </div>
+
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-rulers"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Unidad <span class="text-danger">*</span></div>
+
+                <!-- OJO: este se reconstruye por tipo -->
+                <select id="m_unit" name="unit" class="ios-select js-ts" required>
+                  <!-- Consumible -->
+                  <option value="EA"  data-types="consumable">Unidad</option>
+                  <option value="BOX" data-types="consumable">Caja</option>
+                  <option value="PK"  data-types="consumable">Paquete</option>
+                  <option value="SET" data-types="consumable,bundle">Set</option>
+                  <option value="M"   data-types="consumable">Metro</option>
+                  <option value="L"   data-types="consumable">Litro</option>
+                  <option value="KG"  data-types="consumable">Kilogramo</option>
+
+                  <!-- Rentable -->
+                  <option value="EA"  data-types="rentable">Unidad / Equipo</option>
+                  <option value="DAY" data-types="rentable">Día</option>
+                  <option value="WK"  data-types="rentable">Semana</option>
+                  <option value="MON" data-types="rentable">Mes</option>
+
+                  <!-- Service -->
+                  <option value="HR"  data-types="service">Hora</option>
+                  <option value="DAY" data-types="service">Día</option>
+                  <option value="EVT" data-types="service,bundle">Evento</option>
+                  <option value="JOB" data-types="service">Trabajo</option>
+                  <option value="KM"  data-types="service">Kilómetro</option>
+
+                  <!-- Bundle -->
+                  <option value="SET" data-types="bundle,consumable">Set</option>
+                  <option value="PKG" data-types="bundle">Paquete</option>
+                  <option value="EVT" data-types="bundle,service">Por evento</option>
+                </select>
+
+                <div class="ios-hint">La unidad cambia según el tipo.</div>
+              </div>
+              <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+            </div>
+          </div>
+
+          <!-- ===== Precios ===== -->
+          <div class="mt-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-weight:800;color:var(--ios-text);">Precios</div>
+            <small style="color:var(--ios-muted);">Tarifas</small>
+          </div>
+
+          <div class="ios-group">
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-cash-coin"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Precio STD <span class="text-danger">*</span></div>
+                <input type="number" step="1" min="1" name="default_rate" class="ios-input" value="1" required>
+              </div>
+            </div>
+
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-tags"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Precio LOW <span class="text-danger">*</span></div>
+                <input type="number" step="1" min="1" name="low_rate" class="ios-input" value="1" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== Identificación ===== -->
+          <div class="mt-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-weight:800;color:var(--ios-text);">Identificación</div>
+            <small style="color:var(--ios-muted);">SKU / Proveedor / Categoría</small>
+          </div>
+
+          <div class="ios-group">
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-upc-scan"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">SKU</div>
+                <input type="text" name="sku" class="ios-input" placeholder="(opcional) ITM-...">
+                <div class="ios-hint">Si lo dejás vacío, se autogenera.</div>
+              </div>
+            </div>
+
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-truck"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Proveedor</div>
+                <select id="m_supplier" name="supplier_id" class="ios-select js-ios-select js-ts">
+                  <option value="">— Sin proveedor —</option>
+                  {% for s in suppliers or [] %}
+                    <option value="{{ s.id }}">{{ s.name }}{% if s.email %} — {{ s.email }}{% endif %}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+            </div>
+
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-folder2-open"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Categoría</div>
+                <select id="m_category" name="category" class="ios-select js-ios-select js-ts">
+                  <option value="">— Sin categoría —</option>
+                  {% for c in categories or [] %}
+                    <option value="{{ c }}">{{ c }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+            </div>
+
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-plus-circle"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Nueva categoría</div>
+                <input type="text" name="new_category" class="ios-input" placeholder="Nueva categoría (opcional)">
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== Inventario ===== -->
+          <div class="mt-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-weight:800;color:var(--ios-text);">Inventario</div>
+            <small style="color:var(--ios-muted);">Stock / seriales</small>
+          </div>
+
+          <div class="ios-group">
+            <div class="ios-row" id="m_stock_block">
+              <div class="ios-ico"><i class="bi bi-boxes"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Stock inicial</div>
+                <input type="number" min="0" name="stock" class="ios-input" value="0">
+              </div>
+            </div>
+
+            <div class="ios-row" id="m_assets_block" style="display:none;">
+              <div class="ios-ico"><i class="bi bi-hdd-stack"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Activos seriados</div>
+                <input type="number" min="0" name="asset_count" class="ios-input" placeholder="# activos (ej. 3)">
+                <div class="ios-hint">Se usa para rentables.</div>
+              </div>
+            </div>
+
+            <div class="ios-row">
+              <div class="ios-ico"><i class="bi bi-hash"></i></div>
+              <div class="ios-body">
+                <div class="ios-label">Tags</div>
+                <input type="text" name="tags" class="ios-input" placeholder="audio, iluminacion, cableado">
+              </div>
+            </div>
+
+            <div class="ios-row">
+              <div class="ios-switch">
+                <div class="ios-switch-label">
+                  <div class="ios-ico"><i class="bi bi-check2-circle"></i></div>
+                  <span>Activo</span>
+                </div>
+                <label class="ios-toggle-wrap">
+                  <input class="ios-toggle-input" type="checkbox" value="1" name="active" checked>
+                  <span class="ios-toggle"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div id="errItemNew" class="alert alert-danger py-2 px-3 mt-2 d-none"></div>
+
+          <div class="d-flex gap-2 justify-content-end mt-3">
+            <button type="button" class="btn btn-outline-secondary ios-btn" data-bs-dismiss="modal">Cancelar</button>
+            <button class="btn btn-success ios-btn">Crear producto</button>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}

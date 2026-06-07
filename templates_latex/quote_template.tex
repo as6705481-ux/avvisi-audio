@@ -1,0 +1,301 @@
+\documentclass[a4paper,11pt]{article}
+
+% =========================
+% PAQUETES
+% =========================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage[table]{xcolor}
+
+% Tablas con salto de página + columnas X
+\usepackage{longtable}
+\usepackage{ltablex}
+\keepXColumns
+
+\geometry{
+  top=1.2cm,
+  bottom=1.2cm,
+  left=1.2cm,
+  right=1.2cm
+}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.25em}
+
+% =========================
+% COLORES
+% =========================
+\definecolor{brandOrange}{HTML}{F7941D}
+\definecolor{lightSand}{HTML}{F7EFE5}
+\definecolor{textGray}{HTML}{555555}
+\definecolor{lineGray}{HTML}{DDDDDD}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=brandOrange,
+  urlcolor=brandOrange
+}
+
+% =========================
+% TIPOGRAFÍA SIMPLE (pdflatex-friendly)
+% =========================
+\renewcommand{\familydefault}{\sfdefault}
+
+% =========================
+% COMANDOS ÚTILES
+% =========================
+\newcommand{\Field}[2]{\textcolor{textGray}{\textbf{#1}}~#2}
+\newcommand{\Small}[1]{{\small\textcolor{textGray}{#1}}}
+
+% =========================
+% VARIABLES (placeholders tipo moustache)
+% =========================
+% Documento
+\newcommand{\DocTipo}{ Cotización de servicios }          % "Factura" / "Cotización"
+\newcommand{\DocSerie}{ x\ \ x\ \ x\ \ x }        % decorativo "x x x x" o lo que uses
+
+% Paths / Assets
+\newcommand{\LogoPath}{ {{LOGO_PATH}} }        % ej: logo_avvisi.pdf / .png
+\newcommand{\FirmaPath}{ {{SIGNATURE_PATH}} }  % ej: firma.png
+\newcommand{\FacebookIcon}{ {{FACEBOOK_ICON}} }
+\newcommand{\InstagramIcon}{ {{INSTAGRAM_ICON}} }
+\newcommand{\WhatsappIcon}{ {{WHATSAPP_ICON}} }
+\newcommand{\TiktokIcon}{ {{TIKTOK_ICON}} }
+
+% Datos cliente / evento
+\newcommand{\ClienteNombre}{ {{CLIENT_NAME}} }
+\newcommand{\EventoLugar}{ {{EVENT_VENUE}} }
+\newcommand{\EventoNombre}{ {{EVENT_NAME}} }
+\newcommand{\EventoFecha}{ {{EVENT_DATE}} }
+\newcommand{\VigenteHasta}{ {{VALID_UNTIL}} }
+
+% Datos documento
+\newcommand{\InvoiceNum}{ {{QUOTE_NUMBER}} }
+\newcommand{\InvoiceDate}{ {{EVENT_DATE}} }      % si querés, puede ser igual a EVENT_DATE
+\newcommand{\Moneda}{ {{CURRENCY}} }
+\newcommand{\TipoCambio}{ {{EXCHANGE_RATE}} }
+
+% Payment / ejecutivo
+\newcommand{\Ejecutivo}{ {{OWNER_NAME}} }
+\newcommand{\EmailEjecutivo}{ {{OWNER_EMAIL}} }
+\newcommand{\Telefonos}{ 3249-0824 / 9533-8173 }              % "PHONE"
+
+% Totales
+\newcommand{\Subtotal}{ {{SUBTOTAL}} }
+\newcommand{\Descuento}{ {{DISCOUNT_TOTAL}} }
+\newcommand{\Impuesto}{ {{TAX_TOTAL}} }
+\newcommand{\Anticipo}{ {{DEPOSIT_TOTAL}} }        % si no aplica, mandar "0.00"
+\newcommand{\Total}{ {{TOTAL}} }
+
+% Filas de ítems: tu backend genera filas tipo:
+% Descripción & Precio & Qty & Días & Total \\
+\newcommand{\LineItems}{%
+{{LINE_ITEMS}}
+}
+
+% Links footer
+\newcommand{\EmailEmpresa}{ avvisiaudio@gmail.com } % avvisiaudio@gmail.com
+\newcommand{\WebEmpresa}{ avvisiaudio.com }     % avvisi.com o avvisiaudio.com
+\newcommand{\FacebookURL}{ https://www.facebook.com/Avvisicorporation/ }
+\newcommand{\InstagramURL}{ https://www.instagram.com/avvisiaudio/ }
+\newcommand{\WhatsappURL}{ https://wa.me/50432490824 }
+\newcommand{\TiktokURL}{ https://www.tiktok.com/@avvisiaudio }
+
+% =========================
+% FONDO (decoración)
+% =========================
+\newcommand{\PageBackground}{%
+\begin{tikzpicture}[remember picture,overlay]
+  % Banda inferior naranja
+  \fill[brandOrange] (current page.south west) rectangle ([yshift=0.95cm]current page.south east);
+
+  % Esquina superior izquierda
+  \fill[brandOrange!18] ([xshift=0.3cm,yshift=-0.3cm]current page.north west)
+    rectangle ([xshift=4.4cm,yshift=-1.5cm]current page.north west);
+
+  % Esquina inferior derecha
+  \fill[brandOrange!18] ([xshift=-4.4cm,yshift=1.25cm]current page.south east)
+    rectangle ([xshift=-0.3cm,yshift=2.45cm]current page.south east);
+\end{tikzpicture}%
+}
+
+% =========================
+% DOCUMENTO
+% =========================
+\begin{document}
+\PageBackground
+
+% =========================
+% ENCABEZADO
+% =========================
+\vspace*{0.35cm}
+\begin{minipage}[t]{0.45\textwidth}
+  \vspace{0pt}
+  \includegraphics[width=3.2cm]{\LogoPath}\\[-0.2cm]
+  \Small{\textbf{Avvisi Audiovisuales}}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.5\textwidth}
+  \vspace{0pt}
+  \begin{tikzpicture}
+    \node[fill=brandOrange, rounded corners=2pt, inner xsep=14pt, inner ysep=8pt, anchor=north east] (inv)
+      at (0,0) {\textcolor{white}{\Huge \textbf{\DocTipo}}};
+    \node[anchor=south east] at (inv.north east) {\textcolor{brandOrange}{\Large \textbf{\DocSerie}}};
+  \end{tikzpicture}
+\end{minipage}
+
+\vspace{0.6cm}
+
+% =========================
+% DATOS: cliente + meta
+% =========================
+\begin{minipage}[t]{0.55\textwidth}
+  \vspace{0pt}
+  {\large \textbf{INVOICE TO:}}\\[0.25em]
+  \Field{Nombre del Cliente: }{\ClienteNombre}\\
+  \Field{Lugar de Evento: \hspace*{0.55cm}}{\EventoLugar}\\
+  \Field{Nombre del Evento: \hspace*{0.06cm}}{\EventoNombre}\\
+  \Field{Fecha de Evento:\hspace*{0.7cm}}{\EventoFecha}\\
+  \Field{Vigente hasta:\hspace*{1.2cm}}{\VigenteHasta}\\
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.4\textwidth}
+  \vspace{0pt}
+  \begin{flushright}
+    \Field{Invoice \#}{\InvoiceNum}\\
+    \Field{Date:}{\InvoiceDate}\\
+    \vspace{0.4em}
+    \Field{Moneda:}{\Moneda}\\
+    \Field{Tipo de cambio:}{\TipoCambio}\\
+  \end{flushright}
+\end{minipage}
+
+\vspace{0.35cm}
+
+% =========================
+% TABLA (con salto de página real)
+% Usamos ltablex para tener X + longtable
+% =========================
+\renewcommand{\arraystretch}{1.55}
+\setlength{\tabcolsep}{8pt}
+
+{\setlength{\LTpre}{0pt}\setlength{\LTpost}{0pt}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X
+                            >{\raggedleft\arraybackslash}p{2.6cm}
+                            >{\centering\arraybackslash}p{1.6cm}
+                            >{\centering\arraybackslash}p{1.6cm}
+                            >{\raggedleft\arraybackslash}p{2.8cm}@{}}
+\rowcolor{brandOrange}
+\textcolor{white}{\textbf{Descripción}} &
+\textcolor{white}{\textbf{Precio}} &
+\textcolor{white}{\textbf{Qty.}} &
+\textcolor{white}{\textbf{Días}} &
+\textcolor{white}{\textbf{Total}} \\
+\addlinespace[-0.2em]
+\arrayrulecolor{lineGray}\midrule
+\end{tabularx}
+
+{\setlength{\LTpre}{0pt}\setlength{\LTpost}{0pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.2\textwidth} 
+        >{\raggedleft\arraybackslash}p{0.35\textwidth} 
+        >{\centering\arraybackslash}p{0.1\textwidth} 
+        >{\centering\arraybackslash}p{0.08\textwidth} 
+        >{\raggedleft\arraybackslash}p{0.15\textwidth}@{}}
+\arrayrulecolor{lineGray}
+% (si querés repetir encabezado en cada página, lo ponemos aquí también)
+\endhead
+
+\LineItems
+
+\arrayrulecolor{lineGray}\midrule
+\end{longtable}
+}
+
+\vspace{0.35cm}
+
+% =========================
+% BLOQUE INFERIOR: payment + summary
+% =========================
+\begin{minipage}[t]{0.54\textwidth}
+  \vspace{0pt}
+  {\large \textbf{Payment Info:}}\\[0.25em]
+  \Field{Ejecutivo:}{\Ejecutivo}\\
+  \Field{Email:\hspace*{0.7cm}}{\EmailEjecutivo}\\
+  \Field{Tel:\hspace*{1.1cm}}{\Telefonos}\\
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.42\textwidth}
+  \vspace{0pt}
+  \begin{tikzpicture}
+    \node[fill=lineGray, rounded corners=2pt, inner sep=10pt] (box) {
+      \begin{minipage}{0.95\linewidth}
+        \textcolor{black}{
+        \begin{tabularx}{\linewidth}{X r}
+          \textbf{Subtotal} & \textbf{\Subtotal} \\
+          \textbf{Descuento} & \textbf{\Descuento} \\
+          \textbf{Impuesto} & \textbf{\Impuesto} \\
+          \textbf{Anticipo} & \textbf{\Anticipo} \\
+          \addlinespace[0.35em]\hline\addlinespace[0.35em]
+          \textbf{\Large TOTAL} & \textbf{\Large \Total} \\
+        \end{tabularx}
+        }
+      \end{minipage}
+    };
+    \node[anchor=north east] at (box.south east) {\textcolor{brandOrange}{\Large \textbf{\DocSerie}}};
+  \end{tikzpicture}
+\end{minipage}
+
+\vspace{0.6cm}
+
+\newpage
+\PageBackground
+
+% =========================
+% TÉRMINOS
+% =========================
+{\large \textbf{Term \& Conditions:}}\\[-0.2em]
+\begin{enumerate}[leftmargin=*, itemsep=0.25em]
+  \item El uso del equipo dependerá del montaje a realizar según las especificaciones del cliente, tomando en cuenta lugar, número de personas y duración.
+  \item La siguiente es una descripción de algunos servicios dentro del presupuesto: presupuesto, personal de staff, presupuesto de operación, impuestos y permisos del montaje.
+  \item Los precios en esta cotización están sujetos a cambios según la logística. El 50\% del adelanto antes del evento y el 50\% faltante terminado el sound check y el montaje o una cantidad acordada entre las partes.
+  \item En caso de que se cancele el evento, se deberá dar un aviso 4 días antes para la devolución del dinero.
+  \item Cualquier daño al equipo causado por los invitados o participantes del evento, se reconocerá un porcentaje del valor del mismo según la gravedad del caso.
+  \item Si surge alguna consulta, puede comunicarse al \href{tel:+50432490824}{3249-0824} y visitar \href{https://avvisiaudio.com}{avvisiaudio.com}.
+\end{enumerate}
+
+\vspace{0.35cm}
+
+% =========================
+% FIRMA
+% =========================
+\begin{flushright}
+  \Small{Authorized Sign}\\[-0.2em]
+  \includegraphics[width=0.3\linewidth]{\FirmaPath}\\
+\end{flushright}
+
+% =========================
+% FOOTER (iconos PNG)
+% =========================
+\vfill
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=south, yshift=0.15cm] at (current page.south) {%
+    \textcolor{white}{\small
+      \textbf{\EmailEmpresa}\hspace{1.2em}
+      \href{\FacebookURL}{\includegraphics[height=15pt]{\FacebookIcon}}\hspace{0.8em}
+      \href{\InstagramURL}{\includegraphics[height=15pt]{\InstagramIcon}}\hspace{0.8em}
+      \href{\WhatsappURL}{\includegraphics[height=15pt]{\WhatsappIcon}}\hspace{0.8em}
+      \href{\TiktokURL}{\includegraphics[height=15pt]{\TiktokIcon}}\hspace{1.2em}
+      \textbf{\WebEmpresa}
+    }%
+  };
+\end{tikzpicture}
+
+\end{document}

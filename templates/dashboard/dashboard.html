@@ -1,0 +1,991 @@
+{% extends "layout.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+{# ── Colores helpers ──────────────────────────────────────────────── #}
+{% set STATUS_COLOR = {
+  "draft":     "secondary",
+  "sent":      "primary",
+  "accepted":  "success",
+  "declined":  "danger",
+  "expired":   "warning",
+  "cancelled": "dark",
+  "converted": "info",
+  "void":      "danger",
+} %}
+{% set STATUS_ES = {
+  "draft":     "Borrador",
+  "sent":      "Enviada",
+  "accepted":  "Aceptada",
+  "declined":  "Rechazada",
+  "expired":   "Expirada",
+  "cancelled": "Cancelada",
+  "converted": "Convertida",
+  "void":      "Anulada",
+} %}
+
+{# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   KPI CARDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ #}
+{# ── Encabezado ──────────────────────────────────────────────────────────── #}
+<div class="d-flex align-items-center justify-content-between mb-4 mt-1">
+  <div>
+    <h5 class="mb-0 fw-bold text-dark">
+      <i class="bi bi-speedometer2 me-2" style="color:#e65a00;"></i>Panel de control
+    </h5>
+    <div class="text-muted small mt-1">Bienvenido, <strong>{{ user.name }}</strong> · datos últimos 12 meses</div>
+  </div>
+</div>
+
+{# ── KPI cards ────────────────────────────────────────────────────────────── #}
+<div class="row g-3 mb-4">
+
+  {# Ingresos confirmados 12m #}
+  <div class="col-6 col-md-4 col-xl">
+    <div class="kpi-card" style="--kpi-color:#e65a00;">
+      <div class="kpi-icon-wrap" style="background:rgba(230,90,0,.1);">
+        <i class="bi bi-cash-stack" style="color:#e65a00;"></i>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-label">Ingresos 12m</div>
+        <div class="kpi-value">L {{ "{:,.0f}".format(total_revenue) }}</div>
+        <div class="kpi-sub">sólo confirmadas</div>
+      </div>
+    </div>
+  </div>
+
+  {# Cotizaciones 12m #}
+  <div class="col-6 col-md-4 col-xl">
+    <div class="kpi-card" style="--kpi-color:#0d6efd;">
+      <div class="kpi-icon-wrap" style="background:rgba(13,110,253,.1);">
+        <i class="bi bi-file-earmark-text" style="color:#0d6efd;"></i>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-label">Cotizaciones</div>
+        <div class="kpi-value">{{ total_quotes }}</div>
+        <div class="kpi-sub">últimos 12m</div>
+      </div>
+    </div>
+  </div>
+
+  {# Cerradas / Aceptadas #}
+  <div class="col-6 col-md-4 col-xl">
+    <div class="kpi-card" style="--kpi-color:#198754;">
+      <div class="kpi-icon-wrap" style="background:rgba(25,135,84,.1);">
+        <i class="bi bi-check-circle" style="color:#198754;"></i>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-label">Cerradas</div>
+        <div class="kpi-value">{{ accepted_count }}</div>
+        <div class="kpi-sub">aceptadas + convertidas</div>
+      </div>
+    </div>
+  </div>
+
+  {# Conversión #}
+  <div class="col-6 col-md-4 col-xl">
+    <div class="kpi-card" style="--kpi-color:#7c3aed;">
+      <div class="kpi-icon-wrap" style="background:rgba(124,58,237,.1);">
+        <i class="bi bi-percent" style="color:#7c3aed;"></i>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-label">Conversión</div>
+        <div class="kpi-value">{{ conversion_rate }}%</div>
+        <div class="kpi-sub">tasa de cierre</div>
+      </div>
+    </div>
+  </div>
+
+  {# Clientes #}
+  <div class="col-6 col-md-4 col-xl">
+    <div class="kpi-card" style="--kpi-color:#0891b2;">
+      <div class="kpi-icon-wrap" style="background:rgba(8,145,178,.1);">
+        <i class="bi bi-people" style="color:#0891b2;"></i>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-label">Clientes</div>
+        <div class="kpi-value">{{ total_clients }}</div>
+        <div class="kpi-sub">registrados</div>
+      </div>
+    </div>
+  </div>
+
+  {# Próximos eventos #}
+  <div class="col-6 col-md-4 col-xl">
+    <div class="kpi-card" style="--kpi-color:#dc3545;">
+      <div class="kpi-icon-wrap" style="background:rgba(220,53,69,.1);">
+        <i class="bi bi-calendar-event" style="color:#dc3545;"></i>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-label">Próx. eventos</div>
+        <div class="kpi-value">{{ upcoming_events }}</div>
+        <div class="kpi-sub">programados</div>
+      </div>
+    </div>
+  </div>
+
+  {# Ticket promedio #}
+  <div class="col-6 col-md-4 col-xl">
+    <div class="kpi-card" style="--kpi-color:#f59e0b;">
+      <div class="kpi-icon-wrap" style="background:rgba(245,158,11,.1);">
+        <i class="bi bi-graph-up-arrow" style="color:#f59e0b;"></i>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-label">Ticket prom.</div>
+        <div class="kpi-value">L {{ "{:,.0f}".format(avg_quote_value) }}</div>
+        <div class="kpi-sub">por cotización</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   TABS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ #}
+<ul class="nav nav-tabs border-bottom mb-3" id="dashTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active fw-semibold" id="tab-ops-btn"
+            data-bs-toggle="tab" data-bs-target="#tab-ops"
+            type="button" role="tab">
+      <i class="bi bi-broadcast me-1 text-danger"></i>Operaciones
+      {% if events_in_progress %}
+      <span class="badge bg-danger ms-1">{{ events_in_progress|length }} LIVE</span>
+      {% endif %}
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link fw-semibold" id="tab-team-btn"
+            data-bs-toggle="tab" data-bs-target="#tab-team"
+            type="button" role="tab">
+      <i class="bi bi-people me-1 text-primary"></i>Equipo
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link fw-semibold" id="tab-quotes-btn"
+            data-bs-toggle="tab" data-bs-target="#tab-quotes"
+            type="button" role="tab">
+      <i class="bi bi-kanban me-1 text-warning"></i>Cotizaciones
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link fw-semibold" id="tab-income-btn"
+            data-bs-toggle="tab" data-bs-target="#tab-income"
+            type="button" role="tab">
+      <i class="bi bi-bar-chart me-1 text-success"></i>Ingresos
+    </button>
+  </li>
+</ul>
+
+<div class="tab-content" id="dashTabsContent">
+
+{# ══════════════════════════════════════════════════════════════════
+   TAB 1 — OPERACIONES
+══════════════════════════════════════════════════════════════════ #}
+<div class="tab-pane fade show active" id="tab-ops" role="tabpanel">
+
+  {# ── Eventos en ejecución AHORA ─────────────────────────────────── #}
+  <div class="mb-4">
+    <h6 class="fw-bold text-danger mb-3">
+      <i class="bi bi-broadcast-pin me-1"></i>
+      En ejecución ahora
+      {% if events_in_progress %}
+      <span class="badge bg-danger ms-1">{{ events_in_progress|length }}</span>
+      {% endif %}
+    </h6>
+
+    {% if events_in_progress %}
+    <div class="row g-3">
+      {% for ev in events_in_progress %}
+      <div class="col-md-6 col-xl-4">
+        <div class="card border-danger border-2 shadow-sm h-100">
+          <div class="card-body p-3">
+            {# Cabecera #}
+            <div class="d-flex align-items-start justify-content-between mb-2">
+              <div>
+                <span class="badge bg-danger mb-1">
+                  <i class="bi bi-circle-fill me-1" style="font-size:7px;vertical-align:middle;"></i>LIVE
+                </span>
+                <div class="fw-bold fs-6 text-dark lh-sm">{{ ev.name }}</div>
+              </div>
+              {% if ev.id %}
+              <a href="{{ url_for('events.event_edit_get', event_id=ev.id) }}"
+                 class="btn btn-sm btn-outline-danger ms-2 flex-shrink-0">
+                <i class="bi bi-arrow-right-circle"></i>
+              </a>
+              {% endif %}
+            </div>
+
+            <div class="row g-1 small text-muted mt-1">
+              {% if ev.client and ev.client != '—' %}
+              <div class="col-12">
+                <i class="bi bi-building me-1"></i>{{ ev.client }}
+              </div>
+              {% endif %}
+              {% if ev.venue and ev.venue != '—' %}
+              <div class="col-12">
+                <i class="bi bi-geo-alt me-1"></i>{{ ev.venue }}
+              </div>
+              {% endif %}
+              {% if ev.start %}
+              <div class="col-12">
+                <i class="bi bi-clock me-1 text-success"></i>
+                Inició: <span class="text-dark fw-semibold">{{ ev.start }}</span>
+              </div>
+              {% endif %}
+              {% if ev.end %}
+              <div class="col-12">
+                <i class="bi bi-clock-history me-1 text-danger"></i>
+                Termina: <span class="text-dark fw-semibold">{{ ev.end }}</span>
+              </div>
+              {% endif %}
+            </div>
+
+            {% if ev.owner and ev.owner != '—' %}
+            <div class="mt-2 pt-2 border-top d-flex align-items-center gap-2">
+              <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary small">
+                <i class="bi bi-person-fill me-1"></i>{{ ev.owner }}
+              </span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-4 text-muted">
+      <i class="bi bi-check-circle fs-3 text-success mb-2 d-block"></i>
+      <span class="small">No hay eventos en ejecución en este momento.</span>
+    </div>
+    {% endif %}
+  </div>
+
+  {# ── Próximos eventos ───────────────────────────────────────────── #}
+  <div>
+    <h6 class="fw-bold text-dark mb-3">
+      <i class="bi bi-calendar2-week me-1 text-primary"></i>Próximos eventos
+      {% if events_upcoming %}
+      <span class="badge bg-primary bg-opacity-75 ms-1">{{ events_upcoming|length }}</span>
+      {% endif %}
+    </h6>
+
+    {% if events_upcoming %}
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Evento</th>
+              <th>Cliente</th>
+              <th>Lugar</th>
+              <th>Inicio</th>
+              <th>Fin</th>
+              <th>Responsable</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ev in events_upcoming %}
+            <tr>
+              <td class="fw-semibold">{{ ev.name }}</td>
+              <td class="text-muted">{{ ev.client }}</td>
+              <td class="text-muted">{{ ev.venue }}</td>
+              <td>
+                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary" style="white-space:nowrap;">
+                  {{ ev.start if ev.start else '—' }}
+                </span>
+              </td>
+              <td class="text-muted small">{{ ev.end or '—' }}</td>
+              <td>
+                {% if ev.owner and ev.owner != '—' %}
+                <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border">
+                  <i class="bi bi-person me-1"></i>{{ ev.owner }}
+                </span>
+                {% else %}
+                <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if ev.id %}
+                <a href="{{ url_for('events.event_edit_get', event_id=ev.id) }}"
+                   class="btn btn-sm btn-outline-secondary">
+                  <i class="bi bi-arrow-right-circle"></i>
+                </a>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="text-center py-4 text-muted">
+      <i class="bi bi-calendar2 fs-3 mb-2 d-block"></i>
+      <span class="small">No hay eventos próximos registrados.</span>
+    </div>
+    {% endif %}
+  </div>
+
+</div><!-- /tab-ops -->
+
+{# ══════════════════════════════════════════════════════════════════
+   TAB 2 — EQUIPO
+══════════════════════════════════════════════════════════════════ #}
+<div class="tab-pane fade" id="tab-team" role="tabpanel">
+
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h6 class="fw-bold text-dark mb-0">
+      <i class="bi bi-people-fill me-1 text-primary"></i>Estado del equipo
+    </h6>
+    <div class="d-flex gap-2 small text-muted align-items-center">
+      <span class="badge bg-danger bg-opacity-15 text-danger border border-danger">● En evento</span>
+      <span class="badge bg-warning bg-opacity-15 text-warning border border-warning">◷ Próximo</span>
+      <span class="badge bg-success bg-opacity-15 text-success border border-success">✓ Disponible</span>
+    </div>
+  </div>
+
+  {% if team_cards %}
+  <div class="row g-3">
+    {% for member in team_cards %}
+
+    {% if member.status == 'in_progress' %}
+      {% set card_border = 'border-danger border-2' %}
+      {% set badge_cls   = 'bg-danger' %}
+      {% set badge_txt   = 'En evento' %}
+      {% set icon_name   = 'broadcast-pin' %}
+    {% elif member.status == 'upcoming' %}
+      {% set card_border = 'border-warning' %}
+      {% set badge_cls   = 'bg-warning text-dark' %}
+      {% set badge_txt   = 'Próximo evento' %}
+      {% set icon_name   = 'clock' %}
+    {% else %}
+      {% set card_border = 'border-0' %}
+      {% set badge_cls   = 'bg-success' %}
+      {% set badge_txt   = 'Disponible' %}
+      {% set icon_name   = 'check-circle' %}
+    {% endif %}
+
+    <div class="col-md-6 col-xl-4">
+      <div class="card {{ card_border }} shadow-sm h-100">
+        <div class="card-body p-3">
+
+          {# Header persona #}
+          <div class="d-flex align-items-start justify-content-between mb-2">
+            <div class="d-flex align-items-center gap-2">
+              <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center
+                          justify-content-center" style="width:40px;height:40px;flex-shrink:0;">
+                <i class="bi bi-person-fill text-primary fs-5"></i>
+              </div>
+              <div>
+                <div class="fw-bold text-dark lh-sm">{{ member.name }}</div>
+                <div class="text-muted small">{{ member.role }}</div>
+              </div>
+            </div>
+            <span class="badge {{ badge_cls }} small">
+              <i class="bi bi-{{ icon_name }} me-1"></i>{{ badge_txt }}
+            </span>
+          </div>
+
+          <hr class="my-2">
+
+          {# Eventos actuales de esta persona #}
+          {% if member.in_progress %}
+          <div class="mb-2">
+            <div class="text-danger fw-semibold small mb-1">
+              <i class="bi bi-broadcast-pin me-1"></i>Ejecutando ahora
+            </div>
+            {% for ev in member.in_progress %}
+            <div class="p-2 rounded bg-danger bg-opacity-10 border border-danger border-opacity-25 mb-1">
+              <div class="fw-semibold small text-dark">{{ ev.name }}</div>
+              {% if ev.client and ev.client != '—' %}
+              <div class="text-muted" style="font-size:.75rem;">
+                <i class="bi bi-building me-1"></i>{{ ev.client }}
+              </div>
+              {% endif %}
+              {% if ev.venue and ev.venue != '—' %}
+              <div class="text-muted" style="font-size:.75rem;">
+                <i class="bi bi-geo-alt me-1"></i>{{ ev.venue }}
+              </div>
+              {% endif %}
+              {% if ev.start %}
+              <div class="text-muted" style="font-size:.75rem;">
+                <i class="bi bi-clock me-1"></i>{{ ev.start }} → {{ ev.end or '?' }}
+              </div>
+              {% endif %}
+              {% if ev.id %}
+              <a href="{{ url_for('events.event_edit_get', event_id=ev.id) }}"
+                 class="btn btn-sm btn-danger py-0 mt-1" style="font-size:.7rem;">
+                Ver evento <i class="bi bi-arrow-right-short"></i>
+              </a>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {# Próximos eventos de esta persona #}
+          {% if member.upcoming %}
+          <div class="mb-2">
+            <div class="text-primary fw-semibold small mb-1">
+              <i class="bi bi-calendar-week me-1"></i>Próximos
+            </div>
+            {% for ev in member.upcoming %}
+            <div class="p-2 rounded bg-primary bg-opacity-10 border border-primary border-opacity-25 mb-1">
+              <div class="fw-semibold small text-dark">{{ ev.name }}</div>
+              {% if ev.client and ev.client != '—' %}
+              <div class="text-muted" style="font-size:.75rem;">
+                <i class="bi bi-building me-1"></i>{{ ev.client }}
+              </div>
+              {% endif %}
+              {% if ev.venue and ev.venue != '—' %}
+              <div class="text-muted" style="font-size:.75rem;">
+                <i class="bi bi-geo-alt me-1"></i>{{ ev.venue }}
+              </div>
+              {% endif %}
+              {% if ev.start %}
+              <div class="text-muted" style="font-size:.75rem;">
+                <i class="bi bi-calendar3 me-1"></i>{{ ev.start }}
+              </div>
+              {% endif %}
+              {% if ev.id %}
+              <a href="{{ url_for('events.event_edit_get', event_id=ev.id) }}"
+                 class="btn btn-sm btn-outline-primary py-0 mt-1" style="font-size:.7rem;">
+                Ver evento <i class="bi bi-arrow-right-short"></i>
+              </a>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {# Sin eventos #}
+          {% if not member.in_progress and not member.upcoming %}
+          <div class="text-center text-muted py-2 small">
+            <i class="bi bi-check-circle text-success fs-5 d-block mb-1"></i>
+            Sin eventos asignados próximamente
+          </div>
+          {% endif %}
+
+          {# Métricas rápidas #}
+          {% if member.total_quotes > 0 %}
+          <hr class="my-2">
+          <div class="d-flex justify-content-between text-muted small">
+            <span><i class="bi bi-file-text me-1"></i>{{ member.total_quotes }} cotiz.</span>
+            <span class="text-success"><i class="bi bi-check me-1"></i>{{ member.closed_quotes }} cerradas</span>
+            <span class="fw-semibold text-dark">{{ member.conversion }}%</span>
+          </div>
+          {% if member.revenue > 0 %}
+          <div class="small text-muted mt-1">
+            <i class="bi bi-cash me-1 text-success"></i>
+            Revenue: <span class="fw-semibold text-dark">L {{ "{:,.0f}".format(member.revenue) }}</span>
+          </div>
+          {% endif %}
+          {% endif %}
+
+        </div><!-- /card-body -->
+      </div><!-- /card -->
+    </div><!-- /col -->
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-people fs-2 mb-2 d-block"></i>
+    <span>No hay perfiles activos registrados.</span>
+  </div>
+  {% endif %}
+
+</div><!-- /tab-team -->
+
+{# ══════════════════════════════════════════════════════════════════
+   TAB 3 — COTIZACIONES
+══════════════════════════════════════════════════════════════════ #}
+<div class="tab-pane fade" id="tab-quotes" role="tabpanel">
+  <div class="row g-4">
+
+    {# ── Pipeline Kanban ─────────────────────────────────────────── #}
+    <div class="col-12">
+      <h6 class="fw-bold text-dark mb-3">
+        <i class="bi bi-kanban me-1 text-warning"></i>Pipeline de cotizaciones
+      </h6>
+
+      <div class="d-flex gap-3 overflow-auto pb-2">
+        {% set PIPE_LABELS = {
+          'draft':     'Borrador',
+          'sent':      'Enviadas',
+          'accepted':  'Aceptadas',
+          'converted': 'Convertidas',
+        } %}
+        {% set PIPE_COLOR = {
+          'draft':     'secondary',
+          'sent':      'primary',
+          'accepted':  'success',
+          'converted': 'info',
+        } %}
+
+        {% for st in pipeline_order %}
+        {% set col_items = pipeline_by_status[st] %}
+        {% set col_color = PIPE_COLOR[st] %}
+        {% set col_label = PIPE_LABELS[st] %}
+
+        <div class="flex-shrink-0" style="width:220px;">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="fw-semibold small text-{{ col_color }}">{{ col_label }}</span>
+            <span class="badge bg-{{ col_color }} bg-opacity-75">{{ col_items|length }}</span>
+          </div>
+
+          <div class="d-flex flex-column gap-2">
+            {% if col_items %}
+              {% for c in col_items %}
+              <a href="{{ url_for('quotations.quotation_edit_get', quote_id=c.id) }}"
+                 class="text-decoration-none">
+                <div class="card border-{{ col_color }} border-opacity-50 shadow-sm hover-lift">
+                  <div class="card-body p-2">
+                    <div class="fw-semibold small text-dark mb-1"># {{ c.quote_number }}</div>
+                    <div class="text-muted small mb-1 text-truncate">{{ c.client }}</div>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="fw-bold small text-{{ col_color }}">
+                        L {{ "{:,.0f}".format(c.total) }}
+                      </span>
+                      {% if c.valid_until %}
+                      <span class="text-muted" style="font-size:.68rem;">
+                        <i class="bi bi-calendar3 me-1"></i>{{ c.valid_until }}
+                      </span>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </a>
+              {% endfor %}
+            {% else %}
+            <div class="text-center text-muted py-3 small border rounded" style="border-style:dashed !important;">
+              Sin cotizaciones
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# ── Gráfico donut estado ─────────────────────────────────── #}
+    <div class="col-md-5 col-lg-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3 text-muted small text-uppercase">
+            <i class="bi bi-pie-chart me-1"></i>Distribución por estado
+          </h6>
+          <canvas id="statusDonut" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+    {# ── Cotizaciones recientes ──────────────────────────────── #}
+    <div class="col-md-7 col-lg-8">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3 text-muted small text-uppercase">
+            <i class="bi bi-clock-history me-1"></i>Recientes
+          </h6>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle small mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Cliente</th>
+                  <th>Estado</th>
+                  <th class="text-end">Total</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in recent_quotes %}
+                <tr>
+                  <td class="fw-semibold">{{ r.quote_number }}</td>
+                  <td class="text-muted text-truncate" style="max-width:140px;">{{ r.client }}</td>
+                  <td>
+                    <span class="badge bg-{{ STATUS_COLOR.get(r.status, 'secondary') }} bg-opacity-75">
+                      {{ STATUS_ES.get(r.status, r.status) }}
+                    </span>
+                  </td>
+                  <td class="text-end fw-semibold">L {{ "{:,.0f}".format(r.total) }}</td>
+                  <td>
+                    <a href="{{ url_for('quotations.quotation_edit_get', quote_id=r.id) }}"
+                       class="btn btn-sm btn-outline-secondary py-0">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                  </td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="5" class="text-center text-muted py-3">Sin cotizaciones</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="mt-2 text-end">
+            <a href="{{ url_for('quotations.quotations_list') }}" class="btn btn-sm btn-outline-primary">
+              Ver todas <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /tab-quotes -->
+
+{# ══════════════════════════════════════════════════════════════════
+   TAB 4 — INGRESOS
+══════════════════════════════════════════════════════════════════ #}
+<div class="tab-pane fade" id="tab-income" role="tabpanel">
+
+  {# ── Mini-KPIs de ingresos ─────────────────────────────────────── #}
+  <div class="row g-3 mb-4">
+
+    {# YTD Ingresos #}
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #e65a00 !important;">
+        <div class="card-body p-3">
+          <div class="income-kpi-label">Ingresos {{ current_year }}</div>
+          <div class="income-kpi-value" style="color:#e65a00;">
+            L {{ "{:,.0f}".format(ytd_revenue) }}
+          </div>
+          {% if mom_pct > 0 %}
+          <div class="income-kpi-trend text-success">
+            <i class="bi bi-arrow-up-short"></i>+{{ mom_pct }}% vs mes ant.
+          </div>
+          {% elif mom_pct < 0 %}
+          <div class="income-kpi-trend text-danger">
+            <i class="bi bi-arrow-down-short"></i>{{ mom_pct }}% vs mes ant.
+          </div>
+          {% else %}
+          <div class="income-kpi-trend text-muted">Sin cambio mensual</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# YTD Cotizaciones #}
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #0d6efd !important;">
+        <div class="card-body p-3">
+          <div class="income-kpi-label">Cotizaciones {{ current_year }}</div>
+          <div class="income-kpi-value" style="color:#0d6efd;">{{ ytd_quotes }}</div>
+          <div class="income-kpi-trend text-muted">en el año en curso</div>
+        </div>
+      </div>
+    </div>
+
+    {# Mejor mes #}
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #198754 !important;">
+        <div class="card-body p-3">
+          <div class="income-kpi-label">Mejor mes (12m)</div>
+          <div class="income-kpi-value" style="color:#198754;">
+            L {{ "{:,.0f}".format(best_month_revenue) }}
+          </div>
+          <div class="income-kpi-trend text-muted">{{ best_month_label }}</div>
+        </div>
+      </div>
+    </div>
+
+    {# Promedio mensual #}
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100" style="border-left:4px solid #7c3aed !important;">
+        <div class="card-body p-3">
+          <div class="income-kpi-label">Promedio mensual</div>
+          <div class="income-kpi-value" style="color:#7c3aed;">
+            L {{ "{:,.0f}".format(avg_monthly_revenue) }}
+          </div>
+          <div class="income-kpi-trend text-muted">últimos 12 meses</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  {# ── Gráfico principal 12m ─────────────────────────────────────── #}
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h6 class="fw-bold mb-0 text-dark">
+          <i class="bi bi-bar-chart-line me-1 text-success"></i>
+          Cotizado vs. confirmado — 12 meses
+        </h6>
+        <div class="d-flex gap-3 small text-muted">
+          <span><span class="d-inline-block me-1 rounded" style="width:12px;height:12px;background:rgba(25,135,84,.85);"></span>Confirmado</span>
+          <span><span class="d-inline-block me-1 rounded" style="width:12px;height:12px;background:rgba(13,110,253,.35);"></span>Total cotizado</span>
+          <span><span class="d-inline-block me-1 rounded-circle" style="width:10px;height:10px;background:#e65a00;"></span>Nº cotizaciones</span>
+        </div>
+      </div>
+      <canvas id="incomeChart" height="90"></canvas>
+    </div>
+  </div>
+
+  {# ── Top clientes + Donut estado ───────────────────────────────── #}
+  <div class="row g-4 mb-4">
+
+    {# Top clientes (barra horizontal) #}
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3 text-dark">
+            <i class="bi bi-trophy me-1 text-warning"></i>Top clientes — ingresos confirmados (12m)
+          </h6>
+          {% if client_labels and client_labels[0] != '—' %}
+          <canvas id="clientsChart" height="180"></canvas>
+          {% else %}
+          <div class="text-center text-muted py-4">
+            <i class="bi bi-people fs-3 d-block mb-2 opacity-50"></i>Sin datos de clientes
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# Donut por estado (ingresos totales) #}
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3 text-dark">
+            <i class="bi bi-pie-chart me-1 text-primary"></i>Monto por estado
+          </h6>
+          <canvas id="incomeStatusDonut" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  {# ── Productos más cotizados ────────────────────────────────────── #}
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <h6 class="fw-bold mb-3 text-dark">
+        <i class="bi bi-box-seam me-1 text-secondary"></i>Productos más cotizados (12m)
+      </h6>
+      <canvas id="productsChart" height="80"></canvas>
+    </div>
+  </div>
+
+</div><!-- /tab-income -->
+
+</div><!-- /tab-content -->
+
+{# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ESTILOS LOCALES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ #}
+<style>
+/* ── Hover lift ──────────────────────────────────────────────────── */
+.hover-lift { transition: transform .15s ease, box-shadow .15s ease; }
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.12) !important;
+}
+
+/* ── KPI cards (main row) ────────────────────────────────────────── */
+.kpi-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 14px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.07);
+  border-top: 3px solid var(--kpi-color, #aaa);
+  height: 100%;
+  transition: transform .15s, box-shadow .15s;
+}
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 16px rgba(0,0,0,.10);
+}
+.kpi-icon-wrap {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.35rem;
+}
+.kpi-body   { min-width: 0; }
+.kpi-label  { font-size: .68rem; text-transform: uppercase; letter-spacing: .6px;
+               color: #6b7280; font-weight: 600; margin-bottom: 2px; }
+.kpi-value  { font-size: 1.25rem; font-weight: 800; color: #111827; line-height: 1.15; }
+.kpi-sub    { font-size: .65rem; color: #9ca3af; margin-top: 2px; }
+
+/* ── Income mini-KPIs ────────────────────────────────────────────── */
+.income-kpi-label { font-size:.68rem; text-transform:uppercase; letter-spacing:.6px;
+                    color:#6b7280; font-weight:600; margin-bottom:4px; }
+.income-kpi-value { font-size:1.35rem; font-weight:800; line-height:1.1; }
+.income-kpi-trend { font-size:.7rem; margin-top:4px; }
+
+/* ── Tabs polish ─────────────────────────────────────────────────── */
+#dashTabs.nav-tabs { border-bottom: 2px solid #e5e7eb !important; }
+#dashTabs .nav-link {
+  color: #6b7280 !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 3px solid transparent !important;
+  padding: 9px 16px;
+  border-radius: 0;
+  font-size: 13.5px;
+  margin-bottom: -2px;
+  transition: color .15s, border-color .15s;
+}
+#dashTabs .nav-link:hover {
+  color: #111 !important;
+  border-bottom-color: #d1d5db !important;
+}
+#dashTabs .nav-link.active {
+  color: #e65a00 !important;
+  border-bottom-color: #e65a00 !important;
+  background: transparent !important;
+  font-weight: 700;
+}
+</style>
+
+{# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SCRIPTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+// ── Datos del servidor ────────────────────────────────────────────
+const _d = {
+  months:         {{ months                 | tojson }},
+  incomes:        {{ incomes                | tojson }},   // confirmadas
+  totalQuoted:    {{ total_quoted_month     | tojson }},   // todas
+  qCounts:        {{ quote_counts_per_month | tojson }},
+  stLbls:         {{ status_labels          | tojson }},
+  stVals:         {{ status_values          | tojson }},
+  incStLbls:      {{ income_status_labels   | tojson }},
+  incStVals:      {{ income_status_values   | tojson }},
+  prodNames:      {{ product_names          | tojson }},
+  prodQtys:       {{ product_quantities     | tojson }},
+  clientLabels:   {{ client_labels          | tojson }},
+  clientRevenues: {{ client_revenues        | tojson }},
+};
+
+const PALETTE = ['#e65a00','#0d6efd','#198754','#7c3aed','#dc3545',
+                 '#0891b2','#f59e0b','#20c997','#fd7e14','#6f42c1'];
+const pal = n => Array.from({length:n},(_,i)=>PALETTE[i%PALETTE.length]);
+
+// Formateador de moneda para tooltips
+const fmtL = v => 'L ' + v.toLocaleString('es-HN', {maximumFractionDigits:0});
+
+// ── Inicialización perezosa por tab ───────────────────────────────
+const done = {};
+
+function initQuotesCharts() {
+  if (done.quotes) return; done.quotes = true;
+  new Chart(document.getElementById('statusDonut'), {
+    type: 'doughnut',
+    data: { labels: _d.stLbls, datasets: [{ data: _d.stVals,
+      backgroundColor: pal(_d.stLbls.length), hoverOffset:8, borderWidth:2,
+      borderColor:'#fff' }]},
+    options: { cutout:'70%',
+      plugins: {
+        legend: { position:'bottom', labels:{font:{size:11}, padding:10} },
+        tooltip: { callbacks:{ label: ctx => ` ${ctx.label}: ${ctx.parsed}` } },
+      }},
+  });
+}
+
+function initIncomeCharts() {
+  if (done.income) return; done.income = true;
+
+  // ── Gráfico principal: cotizado vs confirmado + línea nº cotiz. ──
+  new Chart(document.getElementById('incomeChart'), {
+    type: 'bar',
+    data: { labels: _d.months, datasets: [
+      { label:'Confirmado (L)', data: _d.incomes,
+        backgroundColor:'rgba(25,135,84,.85)', borderRadius:5,
+        order:2, yAxisID:'y' },
+      { label:'Total cotizado (L)', data: _d.totalQuoted,
+        backgroundColor:'rgba(13,110,253,.30)', borderRadius:5,
+        order:3, yAxisID:'y' },
+      { label:'Nº cotizaciones', data: _d.qCounts, type:'line',
+        borderColor:'#e65a00', backgroundColor:'rgba(230,90,0,.12)',
+        borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#e65a00',
+        tension:.35, order:1, yAxisID:'y2' },
+    ]},
+    options: { responsive:true, interaction:{mode:'index', intersect:false},
+      plugins: { legend:{ display:false } },
+      scales: {
+        y:  { beginAtZero:true, grid:{color:'#f3f4f6'},
+              title:{display:true, text:'Lempiras', font:{size:11}},
+              ticks:{ callback: v => v >= 1000 ? 'L'+(v/1000).toFixed(0)+'K' : 'L'+v } },
+        y2: { beginAtZero:true, position:'right',
+              grid:{drawOnChartArea:false},
+              title:{display:true, text:'Nº cot.', font:{size:11}} },
+      },
+    },
+  });
+
+  // ── Top clientes barra horizontal ────────────────────────────────
+  if (document.getElementById('clientsChart')) {
+    const lbls = [..._d.clientLabels].reverse();
+    const revs = [..._d.clientRevenues].reverse();
+    const maxR = Math.max(...revs, 1);
+    new Chart(document.getElementById('clientsChart'), {
+      type: 'bar',
+      data: { labels: lbls, datasets: [{
+        label:'Ingresos confirmados (L)', data: revs,
+        backgroundColor: lbls.map((_,i) =>
+          i === lbls.length-1 ? 'rgba(230,90,0,.85)' : 'rgba(13,110,253,.65)'
+        ),
+        borderRadius:5,
+      }]},
+      options: { indexAxis:'y', responsive:true,
+        plugins: {
+          legend: { display:false },
+          tooltip: { callbacks:{ label: ctx => ' ' + fmtL(ctx.parsed.x) } },
+        },
+        scales: {
+          x: { beginAtZero:true, grid:{color:'#f3f4f6'},
+               ticks:{ callback: v => v >= 1000 ? 'L'+(v/1000).toFixed(0)+'K' : 'L'+v } },
+          y: { grid:{display:false} },
+        },
+      },
+    });
+  }
+
+  // ── Donut monto por estado ────────────────────────────────────────
+  new Chart(document.getElementById('incomeStatusDonut'), {
+    type: 'doughnut',
+    data: { labels: _d.incStLbls, datasets:[{ data: _d.incStVals,
+      backgroundColor: pal(_d.incStLbls.length), hoverOffset:8,
+      borderWidth:2, borderColor:'#fff' }]},
+    options: { cutout:'70%',
+      plugins: {
+        legend: { position:'bottom', labels:{font:{size:11}, padding:8} },
+        tooltip: { callbacks:{ label: ctx => ' ' + fmtL(ctx.parsed) } },
+      }},
+  });
+
+  // ── Productos más cotizados ────────────────────────────────────────
+  new Chart(document.getElementById('productsChart'), {
+    type: 'bar',
+    data: { labels: _d.prodNames, datasets:[{
+      label:'Unidades cotizadas', data: _d.prodQtys,
+      backgroundColor: pal(_d.prodNames.length), borderRadius:5 }]},
+    options: { indexAxis:'y', responsive:true,
+      plugins: { legend:{display:false} },
+      scales: { x:{beginAtZero:true, grid:{color:'#f3f4f6'}},
+                y:{grid:{display:false}} } },
+  });
+}
+
+// ── Escuchar eventos Bootstrap tab ────────────────────────────────
+document.querySelectorAll('[data-bs-toggle="tab"]').forEach(btn => {
+  btn.addEventListener('shown.bs.tab', e => {
+    const target = e.target.getAttribute('data-bs-target');
+    if (target === '#tab-quotes') initQuotesCharts();
+    if (target === '#tab-income') initIncomeCharts();
+  });
+});
+</script>
+
+{% endblock %}

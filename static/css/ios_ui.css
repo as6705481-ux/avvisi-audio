@@ -1,0 +1,393 @@
+/* ============================
+   iOS-ish Form UI (Bootstrap-friendly)
+   Pégalo en tu CSS global que carga layout.html
+   ============================ */
+
+:root{
+  --ios-bg: #f6f7fb;
+  --ios-card: rgba(255,255,255,.92);
+  --ios-border: rgba(15, 23, 42, .10);
+  --ios-text: #0f172a;
+  --ios-muted: rgba(15, 23, 42, .55);
+  --ios-radius: 18px;
+  --ios-row-radius: 14px;
+  --ios-shadow: 0 14px 40px rgba(15,23,42,.12);
+  --ios-shadow-soft: 0 10px 26px rgba(15,23,42,.08);
+  --ios-focus: rgba(59,130,246,.35); /* azul iOS-ish */
+}
+
+/* Contenedor principal del form */
+.ios-form{
+  max-width: 520px;
+  margin: 0 auto;
+  background: var(--ios-card);
+  border: 1px solid var(--ios-border);
+  border-radius: var(--ios-radius);
+  box-shadow: var(--ios-shadow);
+  padding: 18px;
+  backdrop-filter: blur(10px);
+}
+
+.ios-title{
+  margin: 6px 0 14px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ios-text);
+  text-align: center;
+}
+
+/* Grupo tipo “card” */
+.ios-group{
+  background: rgba(255,255,255,.78);
+  border: 1px solid var(--ios-border);
+  border-radius: var(--ios-radius);
+  /* overflow: hidden; */
+  box-shadow: var(--ios-shadow-soft);
+}
+
+/* Fila estilo Settings */
+.ios-row{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px;
+  background: transparent;
+}
+
+.ios-row + .ios-row{
+  border-top: 1px solid rgba(15, 23, 42, .07);
+}
+
+/* Icono a la izquierda */
+.ios-ico{
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, .05);
+  color: rgba(15, 23, 42, .70);
+  flex: 0 0 auto;
+}
+
+.ios-ico i{
+  font-size: 16px;
+}
+
+/* Cuerpo */
+.ios-body{
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ios-label{
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ios-muted);
+  margin-bottom: 2px;
+}
+
+/* Inputs iOS-ish */
+.ios-input{
+  width: 100%;
+  border: 0;
+  outline: none;
+  padding: 6px 0;
+  background: transparent;
+  color: var(--ios-text);
+  font-size: 15px;
+}
+
+.ios-input::placeholder{
+  color: rgba(15,23,42,.35);
+}
+
+/* caret derecha */
+.ios-caret{
+  color: rgba(15,23,42,.40);
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.ios-caret i{
+  font-size: 14px;
+}
+
+/* Focus bonito */
+.ios-row:focus-within{
+  box-shadow: inset 0 0 0 2px var(--ios-focus);
+  background: rgba(59,130,246,.04);
+}
+
+/* Acciones */
+.ios-actions{
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.ios-btn{
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-weight: 700;
+}
+
+/* Switch row */
+.ios-switch{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ios-switch-label{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ios-text);
+  font-weight: 600;
+}
+
+/* Toggle switch */
+.ios-toggle-wrap{
+  position: relative;
+  width: 52px;
+  height: 30px;
+  display: inline-block;
+}
+
+.ios-toggle-input{
+  width: 0;
+  height: 0;
+  opacity: 0;
+  position: absolute;
+}
+
+.ios-toggle{
+  position: absolute;
+  inset: 0;
+  background: rgba(15,23,42,.18);
+  border-radius: 999px;
+  transition: .18s ease;
+  box-shadow: inset 0 0 0 1px rgba(15,23,42,.12);
+}
+
+.ios-toggle::after{
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  background: #fff;
+  border-radius: 50%;
+  transition: .18s ease;
+  box-shadow: 0 8px 16px rgba(0,0,0,.15);
+}
+
+/* ON */
+.ios-toggle-input:checked + .ios-toggle{
+  background: #34c759; /* iOS green */
+}
+.ios-toggle-input:checked + .ios-toggle::after{
+  transform: translateX(22px);
+}
+
+/* ============================
+   iOS-ish TomSelect skin
+   (para selects dentro de .ios-row)
+   ============================ */
+
+/* wrapper */
+.ios-row .ts-wrapper{
+  width: 100%;
+}
+
+/* control (lo que se ve cerrado) */
+.ios-row .ts-control{
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 6px 0 !important;
+  min-height: auto !important;
+  font-size: 15px !important;
+  color: var(--ios-text) !important;
+}
+
+/* placeholder / texto */
+.ios-row .ts-control .item,
+.ios-row .ts-control input{
+  color: var(--ios-text) !important;
+  font-size: 15px !important;
+}
+.ios-row .ts-control input::placeholder{
+  color: rgba(15,23,42,.35) !important;
+}
+
+/* quita caret propio de TomSelect (vos ya tenés .ios-caret) */
+.ios-row .ts-control:after{
+  display: none !important;
+}
+
+/* dropdown panel (flotante) */
+.ios-row .ts-dropdown{
+  margin-top: 10px !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(15, 23, 42, .10) !important;
+  box-shadow: 0 24px 60px rgba(15,23,42,.22) !important;
+  overflow: hidden !important;
+  background: rgba(255,255,255,.98) !important;
+  backdrop-filter: blur(10px);
+}
+
+/* buscador arriba */
+.ios-row .ts-dropdown .ts-dropdown-input{
+  padding: 12px !important;
+  border-bottom: 1px solid rgba(15,23,42,.08) !important;
+  background: rgba(246,247,251,.9) !important;
+}
+
+.ios-row .ts-dropdown .ts-dropdown-input input{
+  width: 100% !important;
+  border: 0 !important;
+  outline: none !important;
+  background: #fff !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  box-shadow: inset 0 0 0 1px rgba(15,23,42,.10) !important;
+}
+
+/* lista */
+.ios-row .ts-dropdown .ts-dropdown-content{
+  max-height: 280px !important;
+  padding: 6px 0 !important;
+}
+
+/* opción */
+.ios-row .ts-dropdown .option{
+  padding: 12px 14px !important;
+  font-size: 16px !important;
+  color: var(--ios-text) !important;
+}
+
+/* hover */
+.ios-row .ts-dropdown .option:hover{
+  background: rgba(59,130,246,.08) !important;
+}
+
+/* seleccionada (check + azul) */
+.ios-row .ts-dropdown .option.selected{
+  background: transparent !important;
+  color: #0a84ff !important; /* iOS blue */
+  position: relative;
+  padding-left: 38px !important;
+}
+
+.ios-row .ts-dropdown .option.selected::before{
+  content: "✓";
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #0a84ff;
+  font-weight: 800;
+}
+
+/* scrollbar (como iOS suave) */
+.ios-row .ts-dropdown .ts-dropdown-content::-webkit-scrollbar{
+  width: 10px;
+}
+.ios-row .ts-dropdown .ts-dropdown-content::-webkit-scrollbar-thumb{
+  background: rgba(15,23,42,.20);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+
+/* Mobile */
+@media (max-width: 576px){
+  .ios-form{
+    max-width: 100%;
+    padding: 14px;
+  }
+  .ios-title{
+    font-size: 20px;
+  }
+}
+
+/* MODAL */
+.modal .modal-content{
+  border: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--ios-card, #fff);
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+
+.modal .modal-header{
+  border-bottom: 1px solid var(--ios-border, rgba(0,0,0,.08));
+  background: var(--ios-card, #fff);
+  padding: 14px 16px;
+}
+
+.modal .modal-title{
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--ios-text, #111);
+}
+
+.modal .modal-body{
+  padding: 14px 16px;
+  color: var(--ios-text, #111);
+}
+
+.modal .modal-footer{
+  border-top: 1px solid var(--ios-border, rgba(0,0,0,.08));
+  background: var(--ios-card, #fff);
+  padding: 12px 16px;
+}
+
+/* Botón cerrar más iOS */
+.modal .btn-close{
+  opacity: .55;
+}
+.modal .btn-close:hover{
+  opacity: .8;
+}
+
+/* ===== iOS sheet animation (slide + fade) ===== */
+.modal.fade .modal-dialog{
+  transform: translateY(18px) scale(.98);
+  opacity: 0;
+  transition: transform .22s ease, opacity .22s ease;
+}
+.modal.show .modal-dialog{
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* Backdrop más suave */
+.modal-backdrop.show{
+  opacity: .35;
+}
+
+/* Opcional: modal centrado en desktop, tipo sheet en móvil */
+@media (max-width: 576px){
+  .modal .modal-dialog{
+    margin: 0;
+    min-height: 100%;
+    display: flex;
+    align-items: flex-end;
+  }
+  .modal .modal-content{
+    border-radius: 18px 18px 0 0;
+  }
+  .modal.fade .modal-dialog{
+    transform: translateY(28px);
+  }
+  .modal.show .modal-dialog{
+    transform: translateY(0);
+  }
+}

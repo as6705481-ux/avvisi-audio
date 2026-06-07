@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\tulloa\\\\OneDrive - SAR\\\\Documentos\\\\avvisi-audio-main\\\\avvisi-audio-main\" -Recurse -File)",
+      "Bash(Select-Object FullName)",
+      "mcp__f98ef848-9d41-4244-91bb-98db63abebd7__list_projects",
+      "mcp__f98ef848-9d41-4244-91bb-98db63abebd7__list_tables",
+      "mcp__f98ef848-9d41-4244-91bb-98db63abebd7__execute_sql",
+      "Bash(python -c ' *)",
+      "Bash(python -c \"from blueprints.import_quotes import bp; print\\('import_quotes blueprint OK:', bp.name\\)\")",
+      "Bash(python -c \"import ast, sys; files = ['blueprints/import_quotes/__init__.py','blueprints/import_quotes/parser.py','blueprints/import_quotes/service.py','blueprints/import_quotes/routes.py']; [print\\('OK:', f\\) or ast.parse\\(open\\(f, encoding='utf-8'\\).read\\(\\)\\) for f in files]; print\\('All syntax OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('__init__.py', encoding='utf-8'\\).read\\(\\)\\); print\\('__init__.py syntax OK'\\)\")",
+      "Bash(dir blueprints\\\\import_quotes)",
+      "Bash(dir templates\\\\import_quotes)",
+      "Bash(dir \"blueprints\\\\import_quotes\")",
+      "Bash(dir \"templates\\\\import_quotes\")",
+      "Bash(.venv\\\\Scripts\\\\python.exe -c \"from __init__ import create_app; app = create_app\\(\\); print\\('App created OK'\\); print\\('Routes:', [r.endpoint for r in app.url_map.iter_rules\\(\\) if 'import' in r.endpoint]\\)\")",
+      "Bash(\".venv/Scripts/python.exe\" -c \"from __init__ import create_app; app = create_app\\(\\); print\\('App OK'\\); print\\([r.endpoint for r in app.url_map.iter_rules\\(\\) if 'import' in r.endpoint]\\)\")",
+      "Bash(.venv/Scripts/python.exe -c ' *)",
+      "mcp__f98ef848-9d41-4244-91bb-98db63abebd7__apply_migration",
+      "Bash(.venv\\\\Scripts\\\\pip show *)",
+      "Bash(.venv\\\\Scripts\\\\pip.exe show *)",
+      "Bash(python -m pip show supabase)"
+    ]
+  }
+}

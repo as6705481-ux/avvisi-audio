@@ -1,0 +1,39 @@
+{# templates/components/av_table.html #}
+{% macro av_table(id, title, subtitle='', search_placeholder='Buscar...', enable_role_filter=true) %}
+<main class="av-table" id="{{ id }}">
+  <div class="av-table__header">
+    <div class="av-table__title">
+      <h1>{{ title }}</h1>
+      {% if subtitle %}<small>{{ subtitle }}</small>{% endif %}
+    </div>
+
+    <div class="av-controls">
+      {% if enable_role_filter %}
+      <select class="av-select av-roleFilter" aria-label="Filtrar por rol">
+        <option value="">Todos los roles</option>
+      </select>
+      {% endif %}
+
+      <div class="av-input">
+        <i class="fas fa-search"></i>
+        <input class="av-search" type="text" placeholder="{{ search_placeholder }}" />
+      </div>
+    </div>
+  </div>
+
+  <div class="av-table__body">
+    <table>
+      {{ caller() }}
+    </table>
+  </div>
+
+  <div class="av-pager">
+    <div class="meta av-pagerMeta">Mostrando 0–0 de 0</div>
+    <div class="d-flex gap-2 align-items-center">
+      <button class="btn btn-sm btn-outline-secondary av-prev" type="button">Anterior</button>
+      <div class="meta av-pagerPage">Página 1</div>
+      <button class="btn btn-sm btn-outline-secondary av-next" type="button">Siguiente</button>
+    </div>
+  </div>
+</main>
+{% endmacro %}

@@ -1,0 +1,341 @@
+{# product_edit.html #}
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container mt-5">
+  <form method="POST" class="ios-form" id="itemForm">
+    <h1 class="ios-title">Editar Producto</h1>
+
+    {# defaults #}
+    {% set product = product or {} %}
+    {% set suppliers = suppliers or [] %}
+    {% set categories = categories or [] %}
+    {% set on_hand = on_hand if on_hand is not none else '' %}
+    {% set tags_val = (product.tags | join(', ')) if product.tags else '' %}
+
+    <!-- ===== Datos principales ===== -->
+    <div class="ios-group">
+      <!-- Nombre -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-box-seam"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Nombre <span class="text-danger">*</span></div>
+          <input type="text" name="name" class="ios-input"
+                 value="{{ product.name or '' }}"
+                 placeholder="Ingrese el nombre del producto" required>
+        </div>
+      </div>
+
+      <!-- Descripción -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-card-text"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Descripción <span class="text-danger">*</span></div>
+          <textarea name="description" class="ios-input" rows="3"
+                    placeholder="Ingrese la descripción del producto" required>{{ product.description or '' }}</textarea>
+        </div>
+      </div>
+
+      <!-- Tipo de producto -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-tag"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Tipo de producto <span class="text-danger">*</span></div>
+          <select id="item_type" name="item_type" class="ios-select js-ios-select" required>
+            <option value="consumable" {{ 'selected' if product.item_type=='consumable' else '' }}>Consumible</option>
+            <option value="rentable"  {{ 'selected' if product.item_type=='rentable' else '' }}>Alquiler</option>
+            <option value="service"   {{ 'selected' if product.item_type=='service' else '' }}>Servicio</option>
+            <option value="bundle"    {{ 'selected' if product.item_type=='bundle' else '' }}>Paquete</option>
+          </select>
+        </div>
+        <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+      </div>
+
+      <!-- Unidad -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-rulers"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Unidad <span class="text-danger">*</span></div>
+
+          {# NOTA: este select se filtra por JS, por eso NO uses TomSelect global directo aquí
+             (lo instanciamos manualmente abajo como en tu ejemplo) #}
+          <select id="unit" name="unit" class="ios-select" required>
+            <!-- Consumable / Rentable -->
+            <option value="EA"  data-types="consumable,rentable" {{ 'selected' if product.unit=='EA' else '' }}>Unidad / Equipo</option>
+
+            <!-- Consumable -->
+            <option value="BOX" data-types="consumable" {{ 'selected' if product.unit=='BOX' else '' }}>Caja</option>
+            <option value="PK"  data-types="consumable" {{ 'selected' if product.unit=='PK' else '' }}>Paquete</option>
+            <option value="M"   data-types="consumable" {{ 'selected' if product.unit=='M' else '' }}>Metro</option>
+            <option value="L"   data-types="consumable" {{ 'selected' if product.unit=='L' else '' }}>Litro</option>
+            <option value="KG"  data-types="consumable" {{ 'selected' if product.unit=='KG' else '' }}>Kilogramo</option>
+
+            <!-- Rentable / Service -->
+            <option value="DAY" data-types="rentable,service" {{ 'selected' if product.unit=='DAY' else '' }}>Día</option>
+            <option value="WK"  data-types="rentable" {{ 'selected' if product.unit=='WK' else '' }}>Semana</option>
+            <option value="MON" data-types="rentable" {{ 'selected' if product.unit=='MON' else '' }}>Mes</option>
+
+            <!-- Service -->
+            <option value="HR"  data-types="service" {{ 'selected' if product.unit=='HR' else '' }}>Hora</option>
+            <option value="JOB" data-types="service" {{ 'selected' if product.unit=='JOB' else '' }}>Trabajo</option>
+            <option value="KM"  data-types="service" {{ 'selected' if product.unit=='KM' else '' }}>Kilómetro</option>
+
+            <!-- Bundle -->
+            <option value="SET" data-types="bundle,consumable" {{ 'selected' if product.unit=='SET' else '' }}>Set</option>
+            <option value="PKG" data-types="bundle" {{ 'selected' if product.unit=='PKG' else '' }}>Paquete</option>
+            <option value="EVT" data-types="bundle,service" {{ 'selected' if product.unit=='EVT' else '' }}>Por evento</option>
+          </select>
+        </div>
+        <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+      </div>
+    </div>
+
+    <!-- ===== Precios ===== -->
+    <div class="mt-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-weight:800;color:var(--ios-text);">Precios</div>
+      <small style="color:var(--ios-muted);">Tarifas</small>
+    </div>
+
+    <div class="ios-group">
+      <!-- Precio Unitario -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-cash-coin"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Precio Unitario <span class="text-danger">*</span></div>
+          <input type="number" step="0.01" name="default_rate" class="ios-input"
+                 value="{{ product.default_rate if product.default_rate is not none else 0 }}"
+                 placeholder="1.00" required min="0">
+        </div>
+      </div>
+
+      <!-- Precio bajo -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-tags"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Precio bajo <span class="text-danger">*</span></div>
+          <input type="number" step="0.01" name="low_rate" class="ios-input"
+                 value="{{ product.low_rate if product.low_rate is not none else 0 }}"
+                 placeholder="1.00" required min="0">
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Identificación / clasificación ===== -->
+    <div class="mt-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-weight:800;color:var(--ios-text);">Identificación</div>
+      <small style="color:var(--ios-muted);">SKU / Proveedor / Categoría</small>
+    </div>
+
+    <div class="ios-group">
+      <!-- SKU -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-upc-scan"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">SKU</div>
+          <input type="text" name="sku" class="ios-input"
+                 value="{{ product.sku or '' }}"
+                 placeholder="Ej: ITM-ABC12345">
+          <div style="font-size:12px;color:var(--ios-muted);margin-top:2px;">
+            Puedes editar el SKU si lo necesitas.
+          </div>
+        </div>
+      </div>
+
+      <!-- Proveedor -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-truck"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Proveedor</div>
+          <select id="supplier" name="supplier_id" class="ios-select js-ios-select">
+            <option value="">— Sin proveedor —</option>
+            {% for s in suppliers %}
+              <option value="{{ s.id }}" {{ 'selected' if product.supplier_id==s.id else '' }}>
+                {{ s.name }}{% if s.email %} — {{ s.email }}{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+      </div>
+
+      <!-- Categoría -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-folder2-open"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Categoría</div>
+          <select id="category" name="category" class="ios-select js-ios-select">
+            <option value="">— Sin categoría —</option>
+            {% for c in categories %}
+              <option value="{{ c }}" {{ 'selected' if product.category==c else '' }}>{{ c }}</option>
+            {% endfor %}
+          </select>
+          <div style="font-size:12px;color:var(--ios-muted);margin-top:2px;">
+            Seleccione una existente o ingrese una nueva:
+          </div>
+        </div>
+        <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+      </div>
+
+      <!-- Nueva categoría -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-plus-circle"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Nueva categoría (opcional)</div>
+          <input type="text" id="new_category" name="new_category" class="ios-input" placeholder="Nueva categoría">
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Inventario / activos ===== -->
+    <div class="mt-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-weight:800;color:var(--ios-text);">Inventario</div>
+      <small style="color:var(--ios-muted);">Stock / capacidad</small>
+    </div>
+
+    <div class="ios-group">
+      <!-- Stock (solo consumible) -->
+      <div class="ios-row" id="stock_block">
+        <div class="ios-ico"><i class="bi bi-boxes"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Stock <span class="text-danger">*</span></div>
+          <input type="number" id="stock" name="stock" class="ios-input"
+                 value="{{ stocked_info.on_hand }}"
+                 placeholder="1" min="1">
+        </div>
+      </div>
+
+      <!-- Rentable capacity (solo rentable) -->
+      <div class="ios-row" id="rentable_capacity_block" style="display:none;">
+        <div class="ios-ico"><i class="bi bi-building-check"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Unidades en bodega</div>
+          <input type="number" min="0" id="rentable_capacity" name="rentable_capacity" class="ios-input"
+                 value="{{ stocked_info.rentable_capacity if stocked_info.rentable_capacity is not none else '' }}"
+                 placeholder="0">
+          <div style="font-size:12px;color:var(--ios-muted);margin-top:6px;">
+            Capacidad disponible para reservas (rentables).
+          </div>
+        </div>
+      </div>
+
+      <!-- Tags -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-hash"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Tags (separados por coma)</div>
+          <input type="text" id="tags" name="tags" class="ios-input"
+                 value="{{ tags_val }}"
+                 placeholder="audio, iluminacion, cableado">
+        </div>
+      </div>
+
+      <!-- Activo (switch) -->
+      <div class="ios-row">
+        <div class="ios-switch">
+          <div class="ios-switch-label">
+            <div class="ios-ico"><i class="bi bi-check2-circle"></i></div>
+            <span>Activo</span>
+          </div>
+
+          <label class="ios-toggle-wrap">
+            <input class="ios-toggle-input" type="checkbox" value="1" id="active" name="active"
+                   {{ 'checked' if product.active else '' }}>
+            <span class="ios-toggle"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="ios-actions">
+      <a href="{{ url_for('items.items_list') }}" class="btn btn-secondary ios-btn">Cancelar</a>
+      <button type="submit" class="btn btn-success ios-btn">Guardar Cambios</button>
+    </div>
+  </form>
+</div>
+
+<script>
+/* Unidad con TomSelect + filtro por tipo (misma lógica que tu "Agregar") */
+document.addEventListener("DOMContentLoaded", () => {
+  const typeSel = document.getElementById("item_type");
+  const unitEl  = document.getElementById("unit");
+
+  // Guarda el valor inicial (ya viene selected desde Jinja)
+  const initialUnit = unitEl.value;
+
+  // Captura todas las unidades del HTML
+  const allUnits = [...unitEl.querySelectorAll("option")]
+    .map(o => ({
+      value: o.value,
+      text: o.textContent.trim(),
+      types: (o.getAttribute("data-types") || "")
+        .toLowerCase().split(",").map(s => s.trim()).filter(Boolean)
+    }))
+    .filter((u, i, arr) =>
+      arr.findIndex(x => x.value === u.value && x.text === u.text) === i
+    );
+
+  const tsUnit = new TomSelect(unitEl, {
+    create: false,
+    allowEmptyOption: false,
+    openOnFocus: true,
+    placeholder: "Seleccionar…"
+  });
+
+  function rebuildUnitsForType(t){
+    t = String(t || "").toLowerCase();
+
+    const prev = tsUnit.getValue();
+
+    tsUnit.clear(true);
+    tsUnit.clearOptions();
+
+    const allowed = allUnits.filter(u => u.types.length === 0 || u.types.includes(t));
+    allowed.forEach(u => tsUnit.addOption({ value: u.value, text: u.text }));
+
+    tsUnit.refreshOptions(false);
+
+    // Mantener: prioriza lo que ya tenía (prev), si no, el initialUnit, si no, primera
+    const pick =
+      (allowed.some(u => u.value === prev) ? prev :
+       allowed.some(u => u.value === initialUnit) ? initialUnit :
+       allowed[0]?.value || "");
+
+    if (pick) tsUnit.setValue(pick, true);
+  }
+
+  rebuildUnitsForType(typeSel.value);
+  typeSel.addEventListener("change", () => {
+    rebuildUnitsForType(typeSel.value);
+    toggleBlocks(); // sincroniza inventario
+  });
+
+  // Inventario: stock vs rentable_capacity
+  const stockBlock = document.getElementById("stock_block");
+  const rentableBlock = document.getElementById("rentable_capacity_block");
+
+  function toggleBlocks(){
+    const t = (typeSel.value || "").toLowerCase();
+    if (stockBlock) stockBlock.style.display = (t === "consumable") ? "" : "none";
+    if (rentableBlock) rentableBlock.style.display = (t === "rentable") ? "" : "none";
+  }
+  toggleBlocks();
+});
+
+/* TomSelect (solo selects que NO se filtran por JS) */
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("select.js-ios-select").forEach((el) => {
+    // OJO: unit lo maneja el script de arriba, evitá duplicar
+    if (el.id === "unit") return;
+    if (el.tomselect) return;
+
+    new TomSelect(el, {
+      create: false,
+      allowEmptyOption: true,
+      openOnFocus: true,
+      placeholder: "Seleccionar…"
+    });
+  });
+});
+</script>
+
+{% endblock %}

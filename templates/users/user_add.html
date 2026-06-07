@@ -1,0 +1,101 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container mt-5">
+  <form method="POST" class="ios-form" id="userForm">
+    <h1 class="ios-title">Nuevo Usuario</h1>
+
+    <div class="ios-group">
+      <!-- Nombre -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-person"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Nombre completo</div>
+          <input name="full_name" class="ios-input" placeholder="Ej. Juan Pérez">
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-envelope"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Correo</div>
+          <input name="email" type="email" class="ios-input" placeholder="correo@dominio.com" required>
+        </div>
+      </div>
+
+      <!-- Teléfono -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-telephone"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Teléfono</div>
+          <input name="phone" class="ios-input" placeholder="+504 9999-9999">
+        </div>
+      </div>
+
+      <!-- Rol -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-person-badge"></i></div>
+
+        <div class="ios-body">
+          <div class="ios-label">Rol</div>
+
+          <!-- ✅ NO uses ts-dropdown aquí -->
+          <select name="role" class="ios-select js-ios-select" required>
+            {% for r in roles %}
+              <option value="{{ r }}">{{ USER_ROLE_ES.get(r, r|capitalize) }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+      </div>
+
+      <!-- Contraseña -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-lock"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Contraseña</div>
+          <input name="password" type="password" class="ios-input" placeholder="••••••••" required>
+        </div>
+      </div>
+
+      <!-- Activo (switch) -->
+      <div class="ios-row">
+        <div class="ios-switch">
+          <div class="ios-switch-label">
+            <div class="ios-ico"><i class="bi bi-check2-circle"></i></div>
+            <span>Activo</span>
+          </div>
+
+          <label class="ios-toggle-wrap">
+            <input class="ios-toggle-input" type="checkbox" name="active" value="1" checked>
+            <span class="ios-toggle"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="ios-actions">
+      <a href="{{ url_for('users.users_list') }}" class="btn btn-secondary ios-btn">Cancelar</a>
+      <button class="btn btn-success ios-btn">Crear</button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("select.js-ios-select").forEach((el) => {
+    if (el.tomselect) return;
+
+    new TomSelect(el, {
+      create: false,
+      allowEmptyOption: true,
+      openOnFocus: true,
+      placeholder: "Seleccionar…"
+    });
+  });
+});
+</script>

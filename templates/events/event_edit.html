@@ -1,0 +1,181 @@
+{# templates/events/event_edit.html #}
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container mt-5">
+  {% set e = event or {} %}
+
+  <form method="POST" class="ios-form" id="eventForm">
+    <h1 class="ios-title">Editar Evento</h1>
+
+    <!-- ===== Datos principales ===== -->
+    <div class="ios-group">
+
+      <!-- Nombre -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-calendar2-event"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Nombre del evento <span class="text-danger">*</span></div>
+          <input type="text" name="name" class="ios-input" required value="{{ e.name or '' }}" placeholder="Ej. Boda / Lanzamiento / Conferencia">
+        </div>
+      </div>
+
+      <!-- Cliente -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-building"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Cliente <span class="text-danger">*</span></div>
+          <select name="client_id" id="clientSel" class="ios-select js-ios-select" required>
+            {% for c in clients %}
+              <option value="{{ c.id }}" {{ 'selected' if c.id==e.client_id else '' }}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+      </div>
+
+      <!-- Contacto -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-person-lines-fill"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Contacto</div>
+          <select name="contact_id" id="contactSel" class="ios-select js-ios-select">
+            <option value="">—</option>
+            {% for k in contacts %}
+              <option value="{{ k.id }}"
+                      data-client="{{ k.client_id }}"
+                      {{ 'selected' if e.contact_id==k.id else '' }}>
+                {{ k.name }}
+              </option>
+            {% endfor %}
+          </select>
+          <div style="font-size:12px;color:var(--ios-muted);margin-top:2px;">Se filtra por cliente.</div>
+        </div>
+        <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+      </div>
+
+      <!-- Venue -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-geo-alt"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Venue</div>
+          <input type="text" name="venue" class="ios-input" value="{{ e.venue or '' }}" placeholder="Ej. Tegucigalpa / Hotel / Salón">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== Fechas ===== -->
+    <div class="mt-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-weight:800;color:var(--ios-text);">Fechas</div>
+      <small style="color:var(--ios-muted);">Inicio / Fin</small>
+    </div>
+
+    <div class="ios-group">
+
+      <!-- Inicio -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-play-circle"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Inicio <span class="text-danger">*</span></div>
+          <input type="datetime-local" name="start_at" class="ios-input" required value="{{ e.start_at_local }}">
+        </div>
+      </div>
+
+      <!-- Fin -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-stop-circle"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Fin <span class="text-danger">*</span></div>
+          <input type="datetime-local" name="end_at" class="ios-input" required value="{{ e.end_at_local }}">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== Montaje / Desmontaje ===== -->
+    <div class="mt-3 mb-2" style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-weight:800;color:var(--ios-text);">Operación</div>
+      <small style="color:var(--ios-muted);">Montaje / Desmontaje</small>
+    </div>
+
+    <div class="ios-group">
+
+      <!-- Montaje -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-tools"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Inicio de montaje</div>
+          <input type="datetime-local" name="build_start_at" class="ios-input" value="{{ e.build_local }}">
+        </div>
+      </div>
+
+      <!-- Desmontaje -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-box-arrow-down"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Fin desmontaje</div>
+          <input type="datetime-local" name="strike_end_at" class="ios-input" value="{{ e.strike_local }}">
+        </div>
+      </div>
+
+      <!-- Notas -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-journal-text"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Notas</div>
+          <textarea name="notes" class="ios-input" rows="2" placeholder="Notas internas / requerimientos">{{ e.notes or '' }}</textarea>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="ios-actions">
+      <a href="{{ url_for('events.events_list') }}" class="btn btn-secondary ios-btn">Cancelar</a>
+      <button class="btn btn-success ios-btn">Guardar cambios</button>
+    </div>
+
+  </form>
+</div>
+
+<script>
+/* Filtrar contactos por cliente (sin romper selección actual) */
+(function(){
+  const clientSel  = document.getElementById('clientSel');
+  const contactSel = document.getElementById('contactSel');
+
+  function filterContacts(){
+    const cid = clientSel.value;
+
+    [...contactSel.options].forEach(opt => {
+      if(!opt.value) { opt.hidden = false; return; } // opción "—"
+      opt.hidden = (opt.dataset.client !== cid);
+    });
+
+    const selected = contactSel.selectedOptions[0];
+    if (selected && selected.hidden) contactSel.value = "";
+  }
+
+  clientSel.addEventListener('change', filterContacts);
+  document.addEventListener('DOMContentLoaded', filterContacts);
+  filterContacts();
+})();
+
+/* TomSelect iOS-ish para selects */
+document.addEventListener("DOMContentLoaded", () => {
+  if (!window.TomSelect) return;
+
+  document.querySelectorAll("select.js-ios-select").forEach((el) => {
+    if (el.tomselect) return;
+
+    new TomSelect(el, {
+      create: false,
+      allowEmptyOption: true,
+      openOnFocus: true,
+      placeholder: "Seleccionar…"
+    });
+  });
+});
+</script>
+
+{% endblock %}

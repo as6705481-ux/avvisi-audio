@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+/* ═══════════════════════════════════════════════════════
+   PÁGINA
+═══════════════════════════════════════════════════════ */
+@page {
+  size: A4;
+  margin: 14mm 18mm 18mm;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Liberation Sans, Arial, Helvetica, sans-serif;
+  font-size: 9.5pt;
+  color: #222;
+  line-height: 1.45;
+}
+
+/* ═══════════════════════════════════════════════════════
+   CABECERA
+═══════════════════════════════════════════════════════ */
+.header {
+  width: 100%;
+  border-bottom: 3px solid #ff6600;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.logo img {
+  height: 64px;
+  display: block;
+}
+.quote-meta {
+  text-align: right;
+}
+.quote-label {
+  font-size: 18pt;
+  font-weight: 700;
+  color: #000428;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  line-height: 1;
+}
+.quote-number {
+  font-size: 13pt;
+  font-weight: 700;
+  color: #ff6600;
+  margin-top: 2px;
+}
+.quote-dates {
+  font-size: 8pt;
+  color: #777;
+  margin-top: 5px;
+  line-height: 1.7;
+}
+
+/* ═══════════════════════════════════════════════════════
+   BLOQUES DE INFORMACIÓN (fila superior)
+═══════════════════════════════════════════════════════ */
+.info-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.info-box {
+  flex: 1;
+  background: #f7f8fa;
+  border-left: 4px solid #ff6600;
+  border-radius: 3px;
+  padding: 8px 10px;
+}
+.info-box .ib-label {
+  font-size: 7pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #aaa;
+  margin-bottom: 3px;
+}
+.info-box .ib-value {
+  font-size: 9.5pt;
+  font-weight: 700;
+  color: #111;
+}
+.info-box .ib-sub {
+  font-size: 8pt;
+  color: #666;
+  margin-top: 1px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   TABLA DE LÍNEAS
+═══════════════════════════════════════════════════════ */
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+  font-size: 8.8pt;
+}
+.items-table thead tr {
+  background: #000428;
+  color: #fff;
+}
+.items-table thead th {
+  padding: 7px 8px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 8pt;
+  letter-spacing: 0.3px;
+}
+.items-table thead th.r { text-align: right; }
+.items-table thead th.c { text-align: center; }
+
+.items-table tbody tr:nth-child(even) { background: #f9fafb; }
+.items-table tbody td {
+  padding: 5.5px 8px;
+  border-bottom: 1px solid #eee;
+  vertical-align: top;
+}
+.items-table tbody td.r { text-align: right; }
+.items-table tbody td.c { text-align: center; color: #888; }
+
+/* sección */
+.section-row td {
+  background: #000428 !important;
+  color: #ff6600 !important;
+  font-weight: 700;
+  font-size: 8pt;
+  padding: 5px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: none !important;
+}
+
+.item-name  { font-weight: 600; color: #111; }
+.item-desc  { font-size: 7.8pt; color: #888; margin-top: 2px; }
+
+/* ═══════════════════════════════════════════════════════
+   TOTALES
+═══════════════════════════════════════════════════════ */
+.bottom-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 14px;
+  align-items: flex-start;
+}
+.notes-col { flex: 1; }
+.totals-col { flex: 0 0 230px; }
+
+.notes-box {
+  background: #fff8f0;
+  border: 1px solid #ffd0a0;
+  border-radius: 4px;
+  padding: 9px 11px;
+  font-size: 8.5pt;
+  color: #555;
+  height: 100%;
+}
+.notes-box .nb-label {
+  font-size: 7pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #ff6600;
+  margin-bottom: 4px;
+}
+
+.totals-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9pt;
+}
+.totals-table td {
+  padding: 4px 8px;
+}
+.totals-table .tl { text-align: left;  color: #666; }
+.totals-table .tr { text-align: right; font-weight: 600; color: #333; }
+.totals-table .sep td {
+  border-top: 1px solid #ddd;
+  padding-top: 6px;
+}
+.totals-table .grand td {
+  background: #000428;
+  color: #fff;
+  font-weight: 700;
+  font-size: 10.5pt;
+  padding: 7px 8px;
+  border-radius: 3px;
+}
+.totals-table .grand .tl { color: #ff6600; }
+.totals-table .discount .tr { color: #e53e3e; }
+.totals-table .deposit  .tr { color: #ff6600; }
+.totals-table .balance  td  { font-weight: 700; font-size: 9.5pt; }
+
+/* ═══════════════════════════════════════════════════════
+   PIE DE PÁGINA
+═══════════════════════════════════════════════════════ */
+.footer {
+  border-top: 2px solid #ff6600;
+  padding-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.sig-block { text-align: center; }
+.sig-block img {
+  height: 48px;
+  display: block;
+  margin: 0 auto 4px;
+}
+.sig-line {
+  width: 160px;
+  border-top: 1px solid #333;
+  margin: 0 auto 3px;
+}
+.sig-name  { font-size: 8.5pt; font-weight: 700; }
+.sig-title { font-size: 7.5pt; color: #777; }
+
+.social-block { text-align: right; }
+.social-block img {
+  height: 17px;
+  margin-left: 7px;
+  vertical-align: middle;
+}
+.company-tagline {
+  font-size: 7.8pt;
+  color: #888;
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     CABECERA
+══════════════════════════════════════════════════════ -->
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <img src="assets/logo.png" alt="Avvisi Audio">
+    </div>
+    <div class="quote-meta">
+      <div class="quote-label">Cotización</div>
+      <div class="quote-number">{{ q.quote_number }}</div>
+      <div class="quote-dates">
+        Emitida:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ issued_date }}<br>
+        Válida hasta: {{ valid_until }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     INFO
+══════════════════════════════════════════════════════ -->
+<div class="info-row">
+
+  <div class="info-box">
+    <div class="ib-label">Para</div>
+    <div class="ib-value">{{ client_name }}</div>
+  </div>
+
+  {% if event %}
+  <div class="info-box">
+    <div class="ib-label">Evento</div>
+    <div class="ib-value">{{ event.name or '—' }}</div>
+    {% if event.venue %}<div class="ib-sub">{{ event.venue }}</div>{% endif %}
+    {% if event_date != '—' %}<div class="ib-sub">{{ event_date }}</div>{% endif %}
+  </div>
+  {% endif %}
+
+  {% if owner %}
+  <div class="info-box">
+    <div class="ib-label">Vendedor</div>
+    <div class="ib-value">{{ owner.full_name or '—' }}</div>
+    {% if owner.phone %}<div class="ib-sub">{{ owner.phone }}</div>{% endif %}
+  </div>
+  {% endif %}
+
+  <div class="info-box">
+    <div class="ib-label">Moneda</div>
+    <div class="ib-value">{{ currency }}</div>
+    {% if q.exchange_rate and q.exchange_rate|float != 1.0 %}
+    <div class="ib-sub">TC: {{ q.exchange_rate }}</div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     TABLA DE LÍNEAS
+══════════════════════════════════════════════════════ -->
+{% set ns = namespace(last_section=None) %}
+<table class="items-table">
+  <thead>
+    <tr>
+      <th class="c" style="width:26px;">#</th>
+      <th>Descripción</th>
+      <th class="r" style="width:44px;">Cant.</th>
+      <th class="r" style="width:38px;">Días</th>
+      <th class="r" style="width:72px;">P. Unitario</th>
+      <th class="r" style="width:78px;">Total {{ currency }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for line in lines %}
+      {# encabezado de sección si cambia #}
+      {% if line.section and line.section != ns.last_section %}
+        {% set ns.last_section = line.section %}
+        <tr class="section-row">
+          <td colspan="6">{{ line.section }}</td>
+        </tr>
+      {% endif %}
+      <tr>
+        <td class="c">{{ loop.index }}</td>
+        <td>
+          <div class="item-name">{{ line.custom_name or '—' }}</div>
+          {% if line.description %}
+          <div class="item-desc">{{ line.description }}</div>
+          {% endif %}
+        </td>
+        <td class="r">{{ (line.quantity or 0) | int }}</td>
+        <td class="r">{{ (line.days or 1) | int }}</td>
+        <td class="r">{{ money_str(line.unit_price) }}</td>
+        <td class="r">{{ money_str(line.line_total) }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- ══════════════════════════════════════════════════════
+     NOTAS + TOTALES
+══════════════════════════════════════════════════════ -->
+<div class="bottom-row">
+
+  <div class="notes-col">
+    {% if q.notes_client %}
+    <div class="notes-box">
+      <div class="nb-label">Notas</div>
+      <p>{{ q.notes_client }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="totals-col">
+    <table class="totals-table">
+      <tr>
+        <td class="tl">Subtotal</td>
+        <td class="tr">{{ currency }} {{ subtotal }}</td>
+      </tr>
+      {% if has_discount %}
+      <tr class="discount">
+        <td class="tl">Descuento</td>
+        <td class="tr">− {{ currency }} {{ discount_total }}</td>
+      </tr>
+      {% endif %}
+      <tr>
+        <td class="tl">Impuesto (ISV)</td>
+        <td class="tr">{{ currency }} {{ tax_total }}</td>
+      </tr>
+      <tr class="sep grand">
+        <td class="tl">TOTAL</td>
+        <td class="tr" style="color:#fff;">{{ currency }} {{ total }}</td>
+      </tr>
+      {% if has_deposit %}
+      <tr class="deposit">
+        <td class="tl">Anticipo requerido</td>
+        <td class="tr">− {{ currency }} {{ deposit }}</td>
+      </tr>
+      <tr class="balance">
+        <td class="tl">Saldo a pagar</td>
+        <td class="tr">{{ currency }} {{ balance_due }}</td>
+      </tr>
+      {% endif %}
+    </table>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PIE
+══════════════════════════════════════════════════════ -->
+<div class="footer">
+
+  <div class="sig-block">
+    <img src="assets/firma.png" alt="Firma">
+    <div class="sig-line"></div>
+    <div class="sig-name">{{ owner.full_name if owner else 'Avvisi Audio' }}</div>
+    <div class="sig-title">Gerente Comercial — Avvisi Audio</div>
+  </div>
+
+  <div class="social-block">
+    <div>
+      <img src="assets/facebook.png"  alt="Facebook">
+      <img src="assets/instagram.png" alt="Instagram">
+      <img src="assets/whatsapp.png"  alt="WhatsApp">
+      <img src="assets/tiktok.png"    alt="TikTok">
+    </div>
+    <div class="company-tagline">
+      avvisi.audio &nbsp;|&nbsp; Honduras<br>
+      Eventos Inolvidables
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

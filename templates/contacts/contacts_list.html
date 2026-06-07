@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+{% from "components/av_table.html" import av_table %}
+{% block title %}Contactos{% endblock %}
+{% block content %}
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div></div>
+    <a href="{{ url_for('contacts.contact_add_get') }}" class="btn btn-success">
+      <i class="fas fa-plus"></i> Nuevo Contacto
+    </a>
+  </div>
+
+  {# true => mostramos filtro (aquí sí aplica por Rol del contacto) #}
+  {% call av_table('contacts_table', 'Contactos', 'contactos y clientes', 'Buscar por cliente, nombre, email, teléfono...', true) %}
+    <thead>
+      <tr>
+        <th data-type="text">Cliente <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Nombre <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Email <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Teléfono <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Rol <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Principal <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="date">Creado <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-nosort="1" style="text-align:center;width:160px;">Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for c in contacts %}
+      {% set created = (c.created_at[:10] if c.created_at else '') %}
+      <tr data-role="{{ (c.role or '—')|lower }}">
+        <td>{{ c.client_name }}</td>
+        <td>{{ c.name }}</td>
+        <td>{{ c.email or '—' }}</td>
+        <td>{{ c.phone or '—' }}</td>
+        <td><span class="av-badge role">{{ c.role or '—' }}</span></td>
+
+        <td>
+          {% if c.is_primary %}
+            <form method="post"
+                  action="{{ url_for('contacts.contact_primary', contact_id=c.id, action='unset') }}"
+                  class="d-inline">
+              <button class="btn btn-sm btn-outline-secondary" type="submit" title="Quitar principal">
+                Quitar principal
+              </button>
+            </form>
+          {% else %}
+            <form method="post"
+                  action="{{ url_for('contacts.contact_primary', contact_id=c.id, action='set') }}"
+                  class="d-inline">
+              <button class="btn btn-sm btn-outline-success" type="submit" title="Marcar principal">
+                Marcar principal
+              </button>
+            </form>
+          {% endif %}
+
+        </td>
+
+        <td data-sort="{{ created }}">{{ created or '—' }}</td>
+
+        <td class="av-actions" style="text-align:center;">
+          <div class="btn-group" role="group">
+            <a href="{{ url_for('contacts.contact_edit_get', contact_id=c.id) }}"
+               class="btn btn-sm btn-outline-primary"
+               style="border-radius:10px 0 0 10px;"
+               title="Editar">
+              <i class="fas fa-edit"></i>
+            </a>
+
+            <form action="{{ url_for('contacts.contact_delete', contact_id=c.id) }}" method="POST" class="d-inline">
+              <button class="btn btn-sm btn-outline-danger" type="submit"
+                data-av-confirm
+                data-av-title="¿Eliminar contacto?"
+                data-av-message="¿Estas seguro que deseas eliminar el contacto definitivamente?"
+                style="border-radius:0 10px 10px 0;"><i class="fas fa-trash-alt"></i>
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+
+      {% else %}
+      <tr><td colspan="8" class="text-center text-muted py-4">Sin resultados</td></tr>
+      {% endfor %}
+    </tbody>
+  {% endcall %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container mt-5">
+  <form method="POST" class="ios-form" id="contactForm">
+    <h1 class="ios-title">Nuevo Contacto</h1>
+
+    <div class="ios-group">
+      <!-- Cliente -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-building"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Cliente</div>
+          <select name="client_id" class="ios-select js-ios-select" required>
+            {% for c in clients %}
+              <option value="{{ c.id }}">{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="ios-caret"><i class="bi bi-chevron-down"></i></div>
+      </div>
+
+      <!-- Nombre -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-person"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Nombre</div>
+          <input type="text" name="name" class="ios-input" required placeholder="Nombre del contacto">
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-envelope"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Email</div>
+          <input type="email" name="email" class="ios-input" placeholder="correo@dominio.com">
+          <div class="ios-hint">Único por cliente (si se llena).</div>
+        </div>
+      </div>
+
+      <!-- Teléfono -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-telephone"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Teléfono</div>
+          <input type="text" name="phone" class="ios-input" placeholder="+504 9999-9999">
+        </div>
+      </div>
+
+      <!-- Rol -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-person-badge"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Rol</div>
+          <input type="text" name="role" class="ios-input" placeholder="Compras / Planner / Producción">
+        </div>
+      </div>
+
+      <!-- Principal (switch) -->
+      <div class="ios-row">
+        <div class="ios-switch">
+          <div class="ios-switch-label">
+            <div class="ios-ico"><i class="bi bi-star"></i></div>
+            <span>Contacto principal</span>
+          </div>
+
+          <label class="ios-toggle-wrap">
+            <input class="ios-toggle-input" type="checkbox" id="is_primary" name="is_primary" value="1">
+            <span class="ios-toggle"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="ios-actions">
+      <a href="{{ url_for('contacts.contacts_list') }}" class="btn btn-secondary ios-btn">Cancelar</a>
+      <button class="btn btn-success ios-btn">Guardar</button>
+    </div>
+  </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Solo si estás usando TomSelect en el layout (como en tu ejemplo de usuario).
+  document.querySelectorAll("select.js-ios-select").forEach((el) => {
+    if (el.tomselect) return;
+    new TomSelect(el, {
+      create: false,
+      allowEmptyOption: true,
+      openOnFocus: true,
+      placeholder: "Seleccionar…"
+    });
+  });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Avvisi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{font-family:system-ui,Arial;margin:2rem;line-height:1.4}
+    table{border-collapse:collapse;width:100%}
+    th,td{border:1px solid #ddd;padding:.5rem}
+    th{background:#f6f6f6}
+    .flash{padding:.5rem 1rem;margin-bottom:1rem;border-radius:.25rem}
+    .success{background:#e6ffed;border:1px solid #b7f5c4}
+    .error{background:#ffe6e6;border:1px solid #f5b7b7}
+    form{display:inline}
+  </style>
+</head>
+<body>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for cat, msg in messages %}
+      <div class="flash {{cat}}">{{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</body>
+</html>

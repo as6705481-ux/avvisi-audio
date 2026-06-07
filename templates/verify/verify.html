@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verificación — Avvisi Audio</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+<style>
+  :root {
+    --orange: #e65a00;
+    --navy:   #000428;
+    --green:  #15803d;
+    --red:    #dc2626;
+    --yellow: #b45309;
+    --bg:     #f0f2f5;
+    --card:   #ffffff;
+    --border: #e5e7eb;
+    --muted:  #6b7280;
+    --text:   #111827;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 12px 40px;
+  }
+
+  /* ── Contenedor estrecho — ancho de teléfono ─── */
+  .wrap {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ── Header ─────────────────────────────────── */
+  .v-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 2px;
+    margin-bottom: 4px;
+  }
+  .v-header img      { height: 36px; }
+  .v-company         { font-size: 14px; font-weight: 800; color: var(--navy); line-height: 1.1; }
+  .v-tagline         { font-size: 10px; color: var(--muted); }
+
+  /* ── Sello compacto (horizontal) ─────────────── */
+  .stamp {
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .stamp.valid    { background: #f0fdf4; border: 1.5px solid #86efac; }
+  .stamp.warning  { background: #fffbeb; border: 1.5px solid #fcd34d; }
+  .stamp.invalid  { background: #fef2f2; border: 1.5px solid #fca5a5; }
+  .stamp.notfound { background: #f8fafc; border: 1.5px dashed #cbd5e1; }
+
+  .stamp-icon {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+  .valid    .stamp-icon { background: #dcfce7; color: var(--green); }
+  .warning  .stamp-icon { background: #fef9c3; color: var(--yellow); }
+  .invalid  .stamp-icon { background: #fee2e2; color: var(--red); }
+  .notfound .stamp-icon { background: #f1f5f9; color: #94a3b8; }
+
+  .stamp-body { flex: 1; min-width: 0; }
+  .stamp-title {
+    font-size: 15px; font-weight: 800; line-height: 1.2;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .valid    .stamp-title { color: var(--green); }
+  .warning  .stamp-title { color: var(--yellow); }
+  .invalid  .stamp-title { color: var(--red); }
+  .notfound .stamp-title { color: #64748b; }
+
+  .stamp-sub {
+    font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4;
+  }
+  .stamp-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 700; margin-top: 6px;
+  }
+  .valid    .stamp-badge { background: #dcfce7; color: var(--green); }
+  .warning  .stamp-badge { background: #fef9c3; color: var(--yellow); }
+  .invalid  .stamp-badge { background: #fee2e2; color: var(--red); }
+
+  /* ── Card genérica ───────────────────────────── */
+  .v-card {
+    background: var(--card);
+    border-radius: 14px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.07);
+    padding: 14px 16px;
+  }
+  .v-card-title {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .6px; color: var(--muted);
+    display: flex; align-items: center; gap: 5px;
+    margin-bottom: 10px;
+  }
+  .v-card-title i { color: var(--orange); font-size: 12px; }
+
+  /* ── Grid info: 3 columnas fijas ─────────────── */
+  .v-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px 8px;
+  }
+  .v-field          { display: flex; flex-direction: column; gap: 2px; }
+  .v-field.wide     { grid-column: span 2; }
+  .v-lbl            { font-size: 9px; font-weight: 700; text-transform: uppercase;
+                      letter-spacing: .4px; color: var(--muted); }
+  .v-val            { font-size: 13px; font-weight: 600; color: var(--text);
+                      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .v-val.quote-num  { font-size: 14px; color: var(--orange); }
+
+  /* ── Tabla de ítems simplificada ─────────────── */
+  .v-items-table {
+    width: 100%; border-collapse: collapse; font-size: 12px;
+  }
+  .v-items-table th {
+    background: #f9fafb; color: var(--muted); font-size: 9px;
+    font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+    padding: 6px 8px; text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .v-items-table th.r { text-align: right; }
+  .v-items-table td   {
+    padding: 7px 8px; border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+  }
+  .v-items-table tr:last-child td { border-bottom: none; }
+  .v-items-table td.r   { text-align: right; }
+  .v-items-table td.dim { color: var(--muted); font-size: 11px; }
+
+  /* ── Totales compactos ───────────────────────── */
+  .v-totals { border-top: 1px solid var(--border); margin-top: 10px; padding-top: 8px; }
+  .v-trow {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 3px 0; font-size: 12px; color: var(--muted);
+  }
+  .v-trow .v-amount { font-weight: 600; color: var(--text); }
+  .v-trow.grand {
+    border-top: 2px solid var(--border); margin-top: 5px; padding-top: 8px;
+    font-size: 15px; font-weight: 800; color: var(--text);
+  }
+
+  /* ── Banner anti-fraude compacto ─────────────── */
+  .anti-fraud {
+    background: var(--navy); color: #fff; border-radius: 10px;
+    padding: 10px 14px; font-size: 11px; line-height: 1.5;
+    display: flex; gap: 10px; align-items: center;
+  }
+  .anti-fraud i { font-size: 18px; color: var(--orange); flex-shrink: 0; }
+
+  /* ── Footer mínimo ───────────────────────────── */
+  .v-footer {
+    text-align: center; font-size: 11px; color: #9ca3af;
+    line-height: 1.6; padding: 4px 0 0;
+  }
+  .v-footer strong { color: var(--navy); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="v-header">
+    <img src="/static/logo_avvisi.svg" alt="Avvisi" onerror="this.style.display='none'">
+    <div>
+      <div class="v-company">Avvisi Audiovisuales</div>
+      <div class="v-tagline">Verificación de autenticidad</div>
+    </div>
+  </div>
+
+  {% if not found %}
+
+  <div class="stamp notfound">
+    <div class="stamp-icon"><i class="bi bi-question-circle"></i></div>
+    <div class="stamp-body">
+      <div class="stamp-title">No encontrada</div>
+      <div class="stamp-sub">
+        Este QR no corresponde a ninguna cotización registrada.
+        Si tienes dudas, contáctanos directamente.
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+
+  <!-- Sello -->
+  {% if is_valid %}
+  <div class="stamp valid">
+    <div class="stamp-icon"><i class="bi bi-patch-check-fill"></i></div>
+    <div class="stamp-body">
+      <div class="stamp-title">Cotización Verificada</div>
+      <div class="stamp-sub">Auténtica y registrada en nuestro sistema.</div>
+      <div class="stamp-badge"><i class="bi bi-shield-fill-check"></i> {{ status_label }} · {{ issued_date }}</div>
+    </div>
+  </div>
+
+  {% elif is_warning %}
+  <div class="stamp warning">
+    <div class="stamp-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+    <div class="stamp-body">
+      <div class="stamp-title">En proceso</div>
+      <div class="stamp-sub">Existe en el sistema pero aún no confirmada.</div>
+      <div class="stamp-badge"><i class="bi bi-clock-history"></i> {{ status_label }}</div>
+    </div>
+  </div>
+
+  {% elif is_invalid %}
+  <div class="stamp invalid">
+    <div class="stamp-icon"><i class="bi bi-x-circle-fill"></i></div>
+    <div class="stamp-body">
+      <div class="stamp-title">Cotización {{ status_label }}</div>
+      <div class="stamp-sub">Esta cotización ya no está vigente.</div>
+      <div class="stamp-badge"><i class="bi bi-slash-circle"></i> {{ status_label }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Anti-fraude -->
+  <div class="anti-fraud">
+    <i class="bi bi-shield-lock-fill"></i>
+    <span>
+      <strong>Anti-falsificación.</strong>
+      Los datos mostrados son los registrados en la BD de Avvisi. Si difieren del documento físico, pudo haber sido alterado.
+    </span>
+  </div>
+
+  <!-- Info general -->
+  <div class="v-card">
+    <div class="v-card-title"><i class="bi bi-file-earmark-text"></i> Cotización</div>
+    <div class="v-grid">
+      <div class="v-field">
+        <span class="v-lbl">Número</span>
+        <span class="v-val quote-num">{{ q.quote_number }}</span>
+      </div>
+      <div class="v-field">
+        <span class="v-lbl">Emitida</span>
+        <span class="v-val">{{ issued_date }}</span>
+      </div>
+      {% if valid_until and valid_until != '—' %}
+      <div class="v-field">
+        <span class="v-lbl">Válida hasta</span>
+        <span class="v-val">{{ valid_until }}</span>
+      </div>
+      {% endif %}
+      <div class="v-field wide">
+        <span class="v-lbl">Cliente</span>
+        <span class="v-val">{{ client_name }}</span>
+      </div>
+      <div class="v-field">
+        <span class="v-lbl">Ejecutivo</span>
+        <span class="v-val">{{ owner_name }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ítems + totales -->
+  <div class="v-card">
+    <div class="v-card-title"><i class="bi bi-list-ul"></i> Servicios</div>
+    <table class="v-items-table">
+      <thead>
+        <tr>
+          <th>Descripción</th>
+          <th class="r" style="width:52px;">Cant×Días</th>
+          <th class="r" style="width:72px;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ln in lines %}
+        <tr>
+          <td>{{ ln.custom_name or '—' }}</td>
+          <td class="r dim">{{ (ln.quantity or 1)|int }}×{{ (ln.days or 1)|int }}</td>
+          <td class="r" style="font-weight:600;">{{ money_str(ln.line_total or 0) }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3" style="text-align:center;color:#9ca3af;padding:16px 0;">Sin detalle.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="v-totals">
+      <div class="v-trow">
+        <span>Subtotal</span>
+        <span class="v-amount">{{ currency }} {{ subtotal }}</span>
+      </div>
+      {% if has_discount %}
+      <div class="v-trow">
+        <span>Descuento</span>
+        <span class="v-amount" style="color:#16a34a;">– {{ currency }} {{ discount }}</span>
+      </div>
+      {% endif %}
+      <div class="v-trow">
+        <span>ISV (15%)</span>
+        <span class="v-amount">{{ currency }} {{ tax_total }}</span>
+      </div>
+      <div class="v-trow grand">
+        <span>TOTAL</span>
+        <span>{{ currency }} {{ total }}</span>
+      </div>
+    </div>
+  </div>
+
+  {% endif %}
+
+  <!-- Footer -->
+  <div class="v-footer">
+    <strong>Avvisi Audiovisuales</strong> · Honduras · avvisi.audio
+  </div>
+
+</div>
+</body>
+</html>
