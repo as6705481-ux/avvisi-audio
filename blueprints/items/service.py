@@ -1,6 +1,8 @@
 # blueprints/items/service.py
 from __future__ import annotations
 
+import uuid
+
 from extensions.supabase import get_service_client
 from utils.money import money_float
 from utils.validators import is_valid_item_type
@@ -80,6 +82,8 @@ def get_item(item_id: str):
 
 def create_item(form: dict):
     sku           = (form.get("sku") or "").strip()
+    if not sku:
+        sku = f"ITM-{uuid.uuid4().hex[:8].upper()}"
     item_type     = (form.get("item_type") or "").strip()
     stock         = int(float(form.get("stock") or 0))
     rentable_capacity = int(float(form.get("asset_count") or 0))
@@ -142,7 +146,6 @@ def update_item(item_id: str, form: dict):
         raise ValueError("Tipo inválido. Use: rentable/consumable/service/bundle")
     
     payload = {
-        "sku": (form.get("sku") or "").strip(),
         "name": (form.get("name") or "").strip(),
         "description": (form.get("description") or "").strip(),
         "item_type": item_type,

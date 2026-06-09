@@ -22,8 +22,8 @@
       <div class="ios-row">
         <div class="ios-ico"><i class="bi bi-envelope"></i></div>
         <div class="ios-body">
-          <div class="ios-label">Correo electrónico <span class="text-danger">*</span></div>
-          <input name="email" type="email" class="ios-input" value="{{ s.email or '' }}" required>
+          <div class="ios-label">Correo electrónico</div>
+          <input name="email" type="email" class="ios-input" value="{{ s.email or '' }}" placeholder="correo@dominio.com">
         </div>
       </div>
 
@@ -40,8 +40,8 @@
       <div class="ios-row">
         <div class="ios-ico"><i class="bi bi-card-text"></i></div>
         <div class="ios-body">
-          <div class="ios-label">RTN <span class="text-danger">*</span></div>
-          <input name="tax_id" class="ios-input" value="{{ s.tax_id or '' }}" required>
+          <div class="ios-label">RTN</div>
+          <input name="tax_id" class="ios-input" value="{{ s.tax_id or '' }}" placeholder="RTN del proveedor">
         </div>
       </div>
 

@@ -58,7 +58,7 @@
         <div class="ios-ico"><i class="bi bi-play-circle"></i></div>
         <div class="ios-body">
           <div class="ios-label">Inicio<span class="text-danger">*</span></div>
-          <input type="datetime-local" name="start_at" class="ios-input" required>
+          <div class="dt-picker" data-name="start_at" data-required="1"></div>
         </div>
       </div>
 
@@ -67,7 +67,7 @@
         <div class="ios-ico"><i class="bi bi-stop-circle"></i></div>
         <div class="ios-body">
           <div class="ios-label">Fin <span class="text-danger">*</span></div>
-          <input type="datetime-local" name="end_at" class="ios-input" required>
+          <div class="dt-picker" data-name="end_at" data-required="1"></div>
         </div>
       </div>
 
@@ -76,7 +76,7 @@
         <div class="ios-ico"><i class="bi bi-hammer"></i></div>
         <div class="ios-body">
           <div class="ios-label">Inicio de montaje</div>
-          <input type="datetime-local" name="build_start_at" class="ios-input">
+          <div class="dt-picker" data-name="build_start_at"></div>
         </div>
       </div>
 
@@ -85,7 +85,7 @@
         <div class="ios-ico"><i class="bi bi-wrench-adjustable"></i></div>
         <div class="ios-body">
           <div class="ios-label">Fin desmontaje</div>
-          <input type="datetime-local" name="strike_end_at" class="ios-input">
+          <div class="dt-picker" data-name="strike_end_at"></div>
         </div>
       </div>
 
@@ -229,46 +229,118 @@
     });
   });
 
-  // ── Validación de fechas inicio/fin ──────────────────────────────────────
+  // ── Datetime pickers: fecha + hora AM/PM ────────────────────────────────
   (function(){
-    const startIn = document.querySelector('[name="start_at"]');
-    const endIn   = document.querySelector('[name="end_at"]');
-    if (!startIn || !endIn) return;
-
-    const warn = document.createElement('div');
-    warn.style.cssText = 'font-size:12px;color:#dc3545;margin-top:4px;display:none;';
-    warn.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> La hora de fin debe ser posterior al inicio.';
-    endIn.closest('.ios-body').appendChild(warn);
-
-    function pad(n){ return String(n).padStart(2,'0'); }
-    function toLocal(d){
-      return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())
-             +'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+    const TIME_OPTS = [];
+    for (let h = 0; h < 24; h++) {
+      for (let m of [0, 30]) {
+        const ampm = h < 12 ? 'am' : 'pm';
+        const h12  = h === 0 ? 12 : (h > 12 ? h - 12 : h);
+        TIME_OPTS.push({
+          label: `${h12}:${m === 0 ? '00' : '30'}${ampm}`,
+          val:   `${String(h).padStart(2,'0')}:${m === 0 ? '00' : '30'}`
+        });
+      }
     }
 
-    function checkDates(){
-      if (!startIn.value || !endIn.value){ warn.style.display='none'; return; }
-      warn.style.display = (endIn.value <= startIn.value) ? 'block' : 'none';
+    function buildPicker(wrap) {
+      const name   = wrap.dataset.name;
+      const preset = (wrap.dataset.preset || '').trim();
+
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:6px;';
+
+      const dateIn = document.createElement('input');
+      dateIn.type  = 'date';
+      dateIn.className = 'ios-input';
+      dateIn.style.flex = '1';
+
+      const timeSel = document.createElement('select');
+      timeSel.className = 'ios-input';
+      timeSel.style.cssText = 'flex:0 0 108px;cursor:pointer;';
+      timeSel.add(new Option('— hora —', ''));
+      TIME_OPTS.forEach(t => timeSel.add(new Option(t.label, t.val)));
+
+      row.appendChild(dateIn);
+      row.appendChild(timeSel);
+
+      const hidIn = document.createElement('input');
+      hidIn.type  = 'hidden';
+      hidIn.name  = name;
+
+      wrap.appendChild(row);
+      wrap.appendChild(hidIn);
+
+      function sync() {
+        hidIn.value = (dateIn.value && timeSel.value)
+          ? `${dateIn.value}T${timeSel.value}` : '';
+        wrap.dispatchEvent(new Event('dt-change', { bubbles: true }));
+      }
+      dateIn.addEventListener('change', sync);
+      timeSel.addEventListener('change', sync);
+
+      if (preset.length >= 16) {
+        dateIn.value  = preset.substring(0, 10);
+        const hh = parseInt(preset.substring(11, 13));
+        const mm = parseInt(preset.substring(14, 16));
+        const rt = mm < 15 ? `${String(hh).padStart(2,'0')}:00`
+                 : mm < 45 ? `${String(hh).padStart(2,'0')}:30`
+                 : `${String((hh + 1) % 24).padStart(2,'0')}:00`;
+        timeSel.value = rt;
+        hidIn.value   = `${dateIn.value}T${timeSel.value}`;
+      }
+      return { dateIn, timeSel, hidIn };
     }
 
-    startIn.addEventListener('change', function(){
-      if (!endIn.value || endIn.value <= startIn.value){
-        const d = new Date(this.value);
+    const pickers = {};
+    document.querySelectorAll('.dt-picker').forEach(w => {
+      pickers[w.dataset.name] = buildPicker(w);
+    });
+
+    // Auto-suggest: end_at = start_at + 8h
+    const sWrap = document.querySelector('.dt-picker[data-name="start_at"]');
+    const eWrap = document.querySelector('.dt-picker[data-name="end_at"]');
+    if (sWrap && eWrap) {
+      sWrap.addEventListener('dt-change', function(){
+        const sv = pickers['start_at'].hidIn.value;
+        const ev = pickers['end_at'].hidIn.value;
+        if (!sv || (ev && ev > sv)) return;
+        const d = new Date(sv);
         d.setHours(d.getHours() + 8);
-        endIn.value = toLocal(d);
-      }
-      checkDates();
-    });
-    endIn.addEventListener('change', checkDates);
+        const p  = n => String(n).padStart(2, '0');
+        const nd = `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+        const h  = d.getHours(), m = d.getMinutes();
+        const nt = m < 15 ? `${p(h)}:00` : m < 45 ? `${p(h)}:30` : `${p((h+1)%24)}:00`;
+        pickers['end_at'].dateIn.value  = nd;
+        pickers['end_at'].timeSel.value = nt;
+        pickers['end_at'].hidIn.value   = `${nd}T${nt}`;
+      });
 
-    document.getElementById('eventForm').addEventListener('submit', function(e){
-      if (startIn.value && endIn.value && endIn.value <= startIn.value){
-        e.preventDefault();
-        warn.style.display = 'block';
-        endIn.scrollIntoView({behavior:'smooth', block:'center'});
-        endIn.focus();
+      const warn = document.createElement('div');
+      warn.style.cssText = 'font-size:12px;color:#dc3545;margin-top:4px;display:none;';
+      warn.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> La hora de fin debe ser posterior al inicio.';
+      eWrap.appendChild(warn);
+
+      function checkDates(){
+        const sv = pickers['start_at'].hidIn.value;
+        const ev = pickers['end_at'].hidIn.value;
+        warn.style.display = (sv && ev && ev <= sv) ? 'block' : 'none';
       }
-    });
+      sWrap.addEventListener('dt-change', checkDates);
+      eWrap.addEventListener('dt-change', checkDates);
+
+      document.getElementById('eventForm').addEventListener('submit', function(e){
+        const sv = pickers['start_at'].hidIn.value;
+        const ev = pickers['end_at'].hidIn.value;
+        if (!sv) { e.preventDefault(); pickers['start_at'].dateIn.focus(); return; }
+        if (!ev) { e.preventDefault(); pickers['end_at'].dateIn.focus(); return; }
+        if (ev <= sv) {
+          e.preventDefault();
+          warn.style.display = 'block';
+          eWrap.scrollIntoView({behavior:'smooth', block:'center'});
+        }
+      });
+    }
   })();
 </script>
 
