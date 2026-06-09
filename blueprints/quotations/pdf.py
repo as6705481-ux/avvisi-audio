@@ -61,7 +61,7 @@ def get_quote_print_context(quote_id: str) -> dict:
         sb.table("quotation_items")
         .select(
             "id,custom_name,description,section,"
-            "quantity,unit_price,line_total,days"
+            "quantity,unit_price,line_subtotal,line_total,days"
         )
         .eq("quotation_id", quote_id)
         .order("sort_order")

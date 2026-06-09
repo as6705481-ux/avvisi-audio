@@ -33,8 +33,8 @@
           <td>{{ e.contacts.name or '—' }}</td>
           <td>{{ e.venue or '—' }}</td>
 
-          <td data-sort="{{ e.start_at }}">{{ e.start_at }}</td>
-          <td data-sort="{{ e.end_at }}">{{ e.end_at }}</td>
+          <td data-sort="{{ e.start_at }}">{{ e.start_at | ampm }}</td>
+          <td data-sort="{{ e.end_at }}">{{ e.end_at | ampm }}</td>
 
           <td class="av-actions" style="text-align:center;">
             <div class="btn-group" role="group">

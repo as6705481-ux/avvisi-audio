@@ -51,5 +51,26 @@ def fmt_date_short(iso_dt: str | None, fallback: str = "—") -> str:
         return fallback
 
 
+def fmt_ampm(iso_dt: str | None, tzname: str = "America/Tegucigalpa") -> str:
+    """
+    Convierte un datetime UTC a hora local en formato AM/PM compacto.
+    Ej: '28 Jun · 2pm'  o  '28 Jun · 7:30am'
+    """
+    if not iso_dt:
+        return "—"
+    try:
+        dt    = datetime.fromisoformat(str(iso_dt).replace("Z", "+00:00"))
+        local = dt.astimezone(pytz.timezone(tzname))
+        day   = str(local.day)
+        month = local.strftime("%b")
+        hour  = int(local.strftime("%I"))   # 1-12, no leading zero
+        minute= local.strftime("%M")
+        ampm  = local.strftime("%p").lower()
+        time_str = f"{hour}:{minute}{ampm}" if minute != "00" else f"{hour}{ampm}"
+        return f"{day} {month} · {time_str}"
+    except Exception:
+        return "—"
+
+
 def now_utc_iso() -> str:
     return datetime.utcnow().isoformat()

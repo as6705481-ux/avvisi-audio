@@ -573,7 +573,7 @@ table.items-table-items {
             <td class="r">{{ (line.quantity or 0) | int }}</td>
             <td class="r">{{ (line.days or 1) | int }}</td>
             <td class="r">{{ money_str(line.unit_price) }}</td>
-            <td class="r">{{ money_str(line.line_total) }}</td>
+            <td class="r">{{ money_str(line.line_subtotal) }}</td>
           </tr>
         {% endfor %}
       </tbody>

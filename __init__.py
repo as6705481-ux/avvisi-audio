@@ -1,5 +1,6 @@
 from flask import Flask, render_template
 from config import Settings
+from utils.dates import fmt_ampm
 
 def create_app():
     app = Flask(__name__, template_folder="templates", static_folder="static")
@@ -39,6 +40,9 @@ def create_app():
     app.register_blueprint(catalogos_bp)
     app.register_blueprint(import_quotes_bp)
     app.register_blueprint(verify_bp)
+
+    # Filtros Jinja2
+    app.add_template_filter(fmt_ampm, "ampm")
 
     # ✅ context_processor: decorador de Flask
     from services.session_user import inject_user

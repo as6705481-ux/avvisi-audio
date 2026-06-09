@@ -1085,8 +1085,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!payload.description) throw new Error("Descripción es obligatoria.");
       if (!payload.item_type) throw new Error("Tipo es obligatorio.");
       if (!payload.unit) throw new Error("Unidad es obligatoria.");
-      if (!Number.isFinite(payload.default_rate) || payload.default_rate < 1) throw new Error("Precio STD inválido.");
-      if (!Number.isFinite(payload.low_rate) || payload.low_rate < 1) throw new Error("Precio LOW inválido.");
+      if (!Number.isFinite(payload.default_rate) || payload.default_rate < 0) throw new Error("Precio STD inválido.");
+      if (!Number.isFinite(payload.low_rate) || payload.low_rate < 0) throw new Error("Precio LOW inválido.");
 
       if (payload.new_category) payload.category = payload.new_category;
 
@@ -1648,7 +1648,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="ios-ico"><i class="bi bi-cash-coin"></i></div>
               <div class="ios-body">
                 <div class="ios-label">Precio STD <span class="text-danger">*</span></div>
-                <input type="number" step="1" min="1" name="default_rate" class="ios-input" value="1" required>
+                <input type="number" step="1" min="0" name="default_rate" class="ios-input" value="0" required>
               </div>
             </div>
 
@@ -1656,7 +1656,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="ios-ico"><i class="bi bi-tags"></i></div>
               <div class="ios-body">
                 <div class="ios-label">Precio LOW <span class="text-danger">*</span></div>
-                <input type="number" step="1" min="1" name="low_rate" class="ios-input" value="1" required>
+                <input type="number" step="1" min="0" name="low_rate" class="ios-input" value="0" required>
               </div>
             </div>
           </div>
