@@ -7,7 +7,9 @@ Patrón de insert Supabase-py correcto para esta versión:
 """
 from __future__ import annotations
 
-from datetime import datetime
+import re
+import unicodedata
+from datetime import datetime, timedelta
 from flask import session
 
 from extensions.supabase import get_service_client
@@ -29,58 +31,206 @@ def _today() -> str:
 
 _RENTABLE_KW = (
     "equipo", "consola", "mezcladora", "bocina", "speaker", "pantalla",
-    "proyector", "reflector", "truss", "tarima", "cámara", "camara",
+    "proyector", "reflector", "truss", "tarima", "camara",
     "monitor", "amplificador", "subwoofer", "procesador", "generador",
-    "cañon", "cannon", "follow spot", "followspot", "par64", "par 64",
-    "par38", "par 38", "scanner", "moving head", "moving", "beam",
-    "wash", "fog", "hazer", "haze", "cable", "rack", "patch",
+    "canon", "cannon", "follow spot", "followspot", "par64", "par38",
+    "scanner", "moving head", "moving", "beam", "wash", "fog",
+    "hazer", "haze", "cable", "rack", "patch",
+    # catálogo Avvisi
+    "microfono", "parlante", "escenario", "porteria", "sm58", "luces",
 )
 _SERVICE_KW = (
-    "técnico", "tecnico", "operador", "chofer", "instalación", "instalacion",
-    "transporte", "flete", "producción", "produccion", "dirección",
-    "direccion", "coordinación", "coordinacion", "diseño", "diseno",
-    "servicio", "montaje", "desmontaje", "logística", "logistica",
-    "traslado", "viático", "viatico",
+    "tecnico", "operador", "chofer", "instalacion",
+    "transporte", "flete", "produccion", "direccion",
+    "coordinacion", "diseno", "servicio", "montaje", "desmontaje",
+    "logistica", "traslado", "viatico",
+    # personal y servicios Avvisi
+    "animador", "host", "edecan", "promotora", "staff", "cantante",
+    "show", "personaje", "camarin", "camerino", "santa", "globo",
+    "silla", "mesa", "hotel", "alimentacion", "saco", "duende", "elfo",
 )
+# Iluminación va ANTES de Audio para capturar "Consola de Luces" correctamente
 _CATEGORY_MAP = (
-    ("Audio",        ("audio", "sonido", "mic", "bocina", "speaker", "amplificador",
-                      "mezcladora", "consola", "subwoofer", "xlr", "parlante", "pa ",
-                      "monitor de escenario")),
-    ("Video",        ("video", "pantalla", "proyector", "led wall", "cámara", "camara",
-                      "hdmi", "switcher", "scaler", "pantalla led", "videowall")),
-    ("Iluminación",  ("luz", "par ", "par6", "reflector", "strobo", "dmx",
-                      "iluminaci", "foco", "spotlight", "moving", "beam",
-                      "wash", "follow", "cañon", "cannon")),
+    ("Iluminación",  ("consola de luces", "consola dmx", "luces", "par led",
+                      "reflector", "strobo", "dmx", "iluminaci",
+                      "moving head", "beam", "wash", "follow", "canon", "foco")),
+    ("Audio",        ("consola de audio", "audio", "sonido", "microfono", "bocina",
+                      "speaker", "amplificador", "mezcladora", "subwoofer",
+                      "xlr", "parlante", "pa ", "monitor de escenario",
+                      "sm58", "diadema", "barra")),
+    ("Video",        ("video", "pantalla", "proyector", "led wall", "camara",
+                      "hdmi", "switcher", "scaler", "videowall", "totem")),
     ("Estructuras",  ("truss", "estructura", "andamio", "tarima", "rigging",
-                      "carga", "malla")),
-    ("Personal",     ("técnico", "tecnico", "operador", "chofer", "asistente",
-                      "personal", "staff")),
-    ("Transporte",   ("transporte", "flete", "traslado", "logística", "logistica",
-                      "viático", "viatico")),
-    ("Generadores",  ("generador", "planta eléctrica", "planta electrica")),
-    ("Producción",   ("producción", "produccion", "dirección", "direccion",
-                      "coordinación", "coordinacion", "diseño", "diseno",
-                      "montaje", "desmontaje")),
+                      "malla", "escenario", "porteria")),
+    ("Personal",     ("tecnico", "operador", "chofer", "asistente",
+                      "personal", "staff", "animador", "host", "edecan",
+                      "promotora", "cantante", "personaje", "santa",
+                      "duende", "elfo")),
+    ("Transporte",   ("transporte", "flete", "traslado", "logistica",
+                      "viatico", "montaje, desmontaje")),
+    ("Generadores",  ("generador", "planta electrica", "centro de carga")),
+    ("Producción",   ("produccion", "direccion", "coordinacion", "diseno",
+                      "montaje", "desmontaje", "show")),
 )
+
+
+def _no_acc(s: str) -> str:
+    """Elimina acentos para comparación case-insensitive sin acentos."""
+    return "".join(
+        c for c in unicodedata.normalize("NFD", s)
+        if unicodedata.category(c) != "Mn"
+    )
 
 
 def _classify_item(name: str) -> tuple[str, str]:
-    """Devuelve (item_type, category) inferidos del nombre."""
-    nl = name.lower()
+    """Devuelve (item_type, category) inferidos del nombre normalizado."""
+    nla = _no_acc(name.lower())   # sin acentos para matching consistente
 
     item_type = "service"
     for kw in _RENTABLE_KW:
-        if kw in nl:
+        if kw in nla:
             item_type = "rentable"
             break
 
     category = "General"
     for cat, keywords in _CATEGORY_MAP:
-        if any(kw in nl for kw in keywords):
+        if any(_no_acc(kw) in nla for kw in keywords):
             category = cat
             break
 
     return item_type, category
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Homologación / Normalización de nombres de productos
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Tabla: (nombre_canónico, [regex sobre lowercase-sin-acentos])  — primer match gana
+_HOMOLOG: list[tuple[str, list[str]]] = [
+    # Micrófonos
+    ("Micrófono Inalámbrico Shure SM58",
+        [r"sm58", r"inalambrico.*shure", r"shure.*inalambrico",
+         r"microfono.*inalambrico", r"inalambrico.*microfono"]),
+    ("Micrófono de Diadema",                    [r"diadema"]),
+    # Consolas
+    ("Consola de Luces DMX",
+        [r"consola.*luces", r"consola.*luz", r"consola.*dmx"]),
+    ("Consola de Audio",
+        [r"consola.*audio", r"consola de sonido"]),
+    # Audio / Parlantes
+    ("Sistema de Audio Tipo Barra",
+        [r"parlante.*barra", r"barra.*parlante", r"audio.*barra",
+         r"barra.*audio", r"audio de barra", r"audio.*corporativo"]),
+    ("Sistema de Audio Profesional",
+        [r"audio profesional", r"audio.*grande", r"audio para evento"]),
+    # Iluminación
+    ("Luces Robóticas",                         [r"luces roboticas", r"moving head", r"robotica"]),
+    ("Luces LED",                               [r"^luces led\b", r"\bpar led\b"]),
+    ("Iluminación General",                     [r"^iluminacion$", r"^iluminacion\s"]),
+    # Video
+    ("Tótem de Pantalla LED",                   [r"totem.*led", r"totem.*pantalla"]),
+    # Personal
+    ("Animador / Host de Evento",               [r"\banimador\b", r"\bhost\b"]),
+    ("Edecán",                                  [r"\bedecan\b"]),
+    ("Promotora",                               [r"\bpromotora\b"]),
+    ("Personal de Staff",                       [r"personal.*staff", r"\bstaff\b"]),
+    ("Santa Claus",                             [r"\bsanta\b"]),
+    ("Personajes Navideños (Grinch / Sra. Claus)", [r"grinch", r"senora claus"]),
+    ("Personajes Mickey y Minnie",              [r"mickey", r"minnie"]),
+    ("Duendes para Evento",                     [r"duendecita", r"\bduende\b", r"\belfo\b"]),
+    ("Show Musical",                            [r"show musical"]),
+    ("Cantante",                                [r"\bcantante\b"]),
+    # Transporte / Logística
+    ("Transporte Ida y Regreso",                [r"transporte.*ida", r"ida.*regreso"]),
+    ("Montaje, Desmontaje y Transporte",        [r"montaje.*desmontaje", r"desmontaje.*montaje"]),
+    ("Transporte de Activos y Montaje",         [r"transporte.*activo", r"transporte.*montaje"]),
+    # Varios
+    ("Centro de Carga",                         [r"centro de carga"]),
+    ("Camarín de Lona",                         [r"camerino", r"camarin"]),
+    ("Portaglobos",                             [r"portaglobo"]),
+    ("Globos Publicitarios",                    [r"\bglobo"]),
+    ("Sillas Tiffany",                          [r"tiffany"]),
+    ("Silla Blanca",                            [r"silla blanca", r"silla.*santa"]),
+    ("Mesas con Faldón",                        [r"mesa.*faldon"]),
+    ("Estructura de Entrada",                   [r"estructura.*entrada"]),
+    ("Sacos con Dulces Navideños",              [r"saco.*dulce"]),
+    ("Hotel",                                   [r"^hotel$"]),
+    ("Alimentación",                            [r"^alimentacion"]),
+]
+
+_DIM_RE = re.compile(
+    r"(\d+(?:[.,]\d+)?)\s*[xX×]\s*(\d+(?:[.,]\d+)?)\s*(?:metros?|mts?\.?)?"
+)
+
+
+def _fmt_dim(m: re.Match) -> str:
+    return f"{m.group(1).replace(',','.')}x{m.group(2).replace(',','.')}"
+
+
+def _normalize_item_name(name: str) -> str:
+    """
+    Convierte un nombre de producto importado a su forma canónica:
+    homologa variaciones de ortografía, acentos, marcas y dimensiones.
+    """
+    raw = name.strip()
+    if not raw:
+        return raw
+    nl  = raw.lower()
+    nla = _no_acc(nl)
+
+    # ── Tarima (preserva dimensiones y color) ─────────────────────────────────
+    if "tarima" in nla:
+        dim   = _DIM_RE.search(raw)
+        col   = re.search(r"\b(blanco|negro|blanca|negra)\b", nl)
+        forma = re.search(r"forma\s+de?\s*t\b|en\s+t\b|\bforma\s+t\b|\ben\s+forma\s+de?\s*t\b", nl)
+        parts = ["Tarima"]
+        if dim:
+            parts.append(f"{_fmt_dim(dim)} metros")
+        if forma:
+            parts.append("en Forma de T")
+        if col:
+            parts.append(f"en {col.group(1).capitalize()}")
+        return " ".join(parts)
+
+    # ── Truss / Portería (preserva dimensiones y color) ───────────────────────
+    if "truss" in nla:
+        dim  = _DIM_RE.search(raw)
+        col  = re.search(r"\b(blanco|negro|blanca|negra)\b", nl)
+        base = "Portería de Truss" if re.search(r"porteria|porterias", nla) else "Truss de Aluminio"
+        parts = [base]
+        if dim:
+            parts.append(f"{_fmt_dim(dim)} metros")
+        if col:
+            parts.append(f"en {col.group(1).capitalize()}")
+        return " ".join(parts)
+
+    # ── Pantalla LED (preserva dimensiones y resolución) ──────────────────────
+    if "pantalla" in nla and re.search(r"led|video|p\s?\d|alta", nla):
+        dim  = _DIM_RE.search(raw)
+        res  = re.search(r"\bP\s?(\d+(?:\.\d+)?)\b", raw, re.IGNORECASE)
+        parts = ["Pantalla LED"]
+        if dim:
+            parts.append(f"{_fmt_dim(dim)} metros")
+        if res:
+            parts.append(f"P{res.group(1)}")
+        return " ".join(parts)
+
+    # ── Escenario (preserva dimensiones) ──────────────────────────────────────
+    if "escenario" in nla:
+        dim = _DIM_RE.search(raw)
+        parts = ["Escenario"]
+        if dim:
+            parts.append(f"{_fmt_dim(dim)} metros")
+        return " ".join(parts)
+
+    # ── Tabla de homologación ──────────────────────────────────────────────────
+    for canonical, patterns in _HOMOLOG:
+        for pat in patterns:
+            if re.search(pat, nla):
+                return canonical
+
+    # ── Fallback: Title Case del nombre original ───────────────────────────────
+    return raw.title()
 
 
 def _get_or_create_supplier(sb, name: str) -> str | None:
@@ -280,8 +430,17 @@ def create_import(form) -> tuple[str, str]:
     # ── Fecha emitida ─────────────────────────────────────────────────────────
     date_issued = (form.get("date_issued") or "").strip()
 
+    # ── Vencimiento: 30 días después de la fecha emitida ──────────────────────
+    try:
+        _base = datetime.strptime(date_issued, "%Y-%m-%d").date() if date_issued else datetime.utcnow().date()
+    except ValueError:
+        _base = datetime.utcnow().date()
+    valid_until_calc = (_base + timedelta(days=30)).isoformat()
+
     # ── Encabezado de cotización ──────────────────────────────────────────────
-    quote_no = gen_quote_number(sb)
+    # Usar el número detectado en el archivo; si viene vacío, generar uno automático
+    original_qn = (form.get("original_quote_number") or "").strip()
+    quote_no    = original_qn if original_qn else gen_quote_number(sb)
 
     notes_lines = [
         "Importado desde archivo histórico.",
@@ -292,27 +451,30 @@ def create_import(form) -> tuple[str, str]:
     if event_date:  notes_lines.append(f"Fecha evento:   {event_date}")
     if venue:       notes_lines.append(f"Lugar:          {venue}")
 
+    q_payload: dict = {
+        "quote_number":   quote_no,
+        "client_id":      client_id,
+        "contact_id":     contact_id,
+        "event_id":       event_id,
+        "owner_id":       owner_id,
+        "currency":       "HNL",
+        "exchange_rate":  1.0,
+        "status":         "draft",
+        "valid_until":    valid_until_calc,
+        "tax_rate":       tax_rate,
+        "subtotal":       0.0,
+        "discount_total": 0.0,
+        "tax_total":      0.0,
+        "total":          0.0,
+        "notes_internal": "\n".join(notes_lines),
+    }
+    # Preservar la fecha de emisión original del archivo como created_at
+    if date_issued:
+        q_payload["created_at"] = f"{date_issued}T00:00:00+00:00"
+
     q_res = (
         sb.table("quotations")
-        .insert(
-            {
-                "quote_number":   quote_no,
-                "client_id":      client_id,
-                "contact_id":     contact_id,
-                "event_id":       event_id,
-                "owner_id":       owner_id,
-                "currency":       "HNL",
-                "exchange_rate":  1.0,
-                "status":         "draft",
-                "tax_rate":       tax_rate,
-                "subtotal":       0.0,
-                "discount_total": 0.0,
-                "tax_total":      0.0,
-                "total":          0.0,
-                "notes_internal": "\n".join(notes_lines),
-            },
-            returning="representation",
-        )
+        .insert(q_payload, returning="representation")
         .execute()
     )
     rows     = getattr(q_res, "data", None) or []
@@ -358,14 +520,15 @@ def create_import(form) -> tuple[str, str]:
         # Precio 0 es permitido — el usuario puede corregirlo en la edición
         price = max(price, 0.0)
 
-        # Registrar en catálogo y obtener item_id
-        catalog_id = _find_or_create_catalog_item(sb, name, price, avvisi_supplier_id)
-        item_type, _ = _classify_item(name)
+        # Homologar nombre antes de buscar/crear en catálogo
+        name_norm  = _normalize_item_name(name)
+        catalog_id = _find_or_create_catalog_item(sb, name_norm, price, avvisi_supplier_id)
+        item_type, _ = _classify_item(name_norm)
 
         to_insert.append({
             "quotation_id": quote_id,
             "item_id":      catalog_id,
-            "custom_name":  name,
+            "custom_name":  name_norm,   # nombre canónico en la cotización
             "item_type":    item_type,
             "quantity":     qty,
             "unit":         "unit",

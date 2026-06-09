@@ -364,7 +364,7 @@ table.items-table-items {
 .verify-block #qrcode canvas,
 .verify-block #qrcode img {
   display: block;
-  border: 2px solid var(--navy); border-radius: 4px;
+  border: none;
   -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
 .verify-label {
@@ -569,7 +569,6 @@ table.items-table-items {
             <td class="c">{{ loop.index }}</td>
             <td>
               <div class="item-name">{{ line.custom_name or '—' }}</div>
-              {% if line.description %}<div class="item-desc">{{ line.description }}</div>{% endif %}
             </td>
             <td class="r">{{ (line.quantity or 0) | int }}</td>
             <td class="r">{{ (line.days or 1) | int }}</td>

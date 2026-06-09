@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 import re as _re
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from typing import Any, Dict
 from config import Settings
@@ -298,7 +298,7 @@ def create_quote_from_form(form) -> tuple[str, str]:
     currency   = (form.get("currency") or DEFAULT_CURRENCY).strip()[:3].upper()
 
     exchange  = _to_float(form.get("exchange_rate"), 1.0) or 1.0
-    valid_u   = (form.get("valid_until") or "").strip() or None
+    valid_u   = (datetime.utcnow().date() + timedelta(days=30)).isoformat()
     notes_int = (form.get("notes_internal") or "").strip() or None
     notes_cli = (form.get("notes_client") or "").strip() or None
     deposit   = _to_float(form.get("deposit_due"), 0.0)
@@ -512,7 +512,7 @@ def add_quote_line(quote_id: str, form):
 def update_quote_header_from_form(quote_id: str, form, allow_quote_number: bool = False):
     sb = get_service_client()
 
-    q = sb.table("quotations").select("id,client_id,owner_id,currency,exchange_rate,deposit_due,tax_rate").eq("id", quote_id).single().execute().data
+    q = sb.table("quotations").select("id,client_id,owner_id,currency,exchange_rate,deposit_due,tax_rate,valid_until,created_at").eq("id", quote_id).single().execute().data
     if not q:
         raise ValueError("Cotización no encontrada.")
 
@@ -526,13 +526,20 @@ def update_quote_header_from_form(quote_id: str, form, allow_quote_number: bool 
         "owner_id":       (form.get("owner_id") or q["owner_id"]).strip(),
         "currency":       (form.get("currency") or q.get("currency") or DEFAULT_CURRENCY).strip()[:3].upper(),
         "exchange_rate":  _to_float(form.get("exchange_rate"), q.get("exchange_rate") or 1.0),
-        "valid_until":    (form.get("valid_until") or None),
         "notes_internal": (form.get("notes_internal") or None),
         "notes_client":   (form.get("notes_client") or None),
         "deposit_due":    _to_float(form.get("deposit_due"), q.get("deposit_due") or 0.0),
         "tax_rate":       new_tax_rate,
         "updated_at":     _now_iso(),
     }
+
+    # valid_until is always emission date + 30 days; backfill if missing on old records
+    if not q.get("valid_until") and q.get("created_at"):
+        try:
+            created_dt = datetime.fromisoformat(q["created_at"].replace("Z", "+00:00"))
+            upd["valid_until"] = (created_dt.date() + timedelta(days=30)).isoformat()
+        except Exception:
+            pass
 
     # Solo admin puede cambiar el número de cotización
     if allow_quote_number:

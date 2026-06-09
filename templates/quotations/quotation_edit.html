@@ -208,8 +208,10 @@
             <div class="ios-body">
               <div class="row g-2">
                 <div class="col-6">
-                  <div class="ios-label">Válida hasta</div>
-                  <input name="valid_until" type="date" value="{{ q.valid_until }}" class="ios-input">
+                  <div class="ios-label">Válida hasta <span style="font-size:10px;color:#aaa;">(auto)</span></div>
+                  <div class="ios-input" style="background:#f5f5f7;color:#888;cursor:default;">
+                    {{ q.valid_until or '—' }}
+                  </div>
                 </div>
                 <div class="col-6">
                   <div class="ios-label">Anticipo (L)</div>

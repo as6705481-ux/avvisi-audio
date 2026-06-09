@@ -126,17 +126,25 @@ def parse_xlsx(file_obj) -> dict:
         if ("cotizacion" in row_text or "cotización" in row_text) and not result["quote_number"]:
             for j, c in enumerate(row):
                 if c and ("cotizacion" in str(c).lower() or "cotización" in str(c).lower()):
-                    # Número en la siguiente fila, misma columna (verificar bounds)
+                    # Número en la siguiente fila, misma columna (prioritario)
                     if i + 1 < len(rows):
                         next_row = rows[i + 1]
                         next_val = next_row[j] if j < len(next_row) else None
-                        if next_val and str(next_val).strip():
-                            result["quote_number"] = str(next_val).strip()
-                    # O en la misma fila, celdas siguientes
-                    for k in range(j + 1, len(row)):
-                        if row[k] and str(row[k]).strip() and str(row[k]).strip() not in ("N°", "Nº", "No"):
-                            result["quote_number"] = str(row[k]).strip()
-                            break
+                        if next_val is not None:
+                            # Excel puede guardar como float (ej: 2025001.0 → "2025001")
+                            nv = next_val
+                            if isinstance(nv, float) and nv == int(nv):
+                                nv = str(int(nv))
+                            else:
+                                nv = str(nv).strip()
+                            if nv:
+                                result["quote_number"] = nv
+                    # Solo si la fila siguiente no tenía nada, buscar en la misma fila
+                    if not result["quote_number"]:
+                        for k in range(j + 1, len(row)):
+                            if row[k] and str(row[k]).strip() and str(row[k]).strip() not in ("N°", "Nº", "No"):
+                                result["quote_number"] = str(row[k]).strip()
+                                break
                     break
 
         # ── Cliente y ejecutivo ─────────────────────────────────────────────
@@ -323,13 +331,14 @@ def parse_pdf(file_obj) -> dict:
     for i, line in enumerate(lines):
         ll = line.lower()
 
-        # Número de cotización
+        # Número de cotización  (formatos: 2025-002, 2025–002, 202502, 2025002)
         if ("cotizacion" in ll or "cotización" in ll) and not result["quote_number"]:
-            m = re.search(r"(\d{4}[-–]\d+)", line)
+            _qn_pat = re.compile(r"\b(20\d{2}[-–]\d{2,4}|20\d{4,5})\b")
+            m = _qn_pat.search(line)
             if m:
                 result["quote_number"] = m.group(1)
             elif i + 1 < len(lines):
-                m2 = re.search(r"(\d{4}[-–]\d+)", lines[i + 1])
+                m2 = _qn_pat.search(lines[i + 1])
                 if m2:
                     result["quote_number"] = m2.group(1)
 

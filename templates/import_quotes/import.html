@@ -366,6 +366,26 @@
   <form method="POST" action="{{ url_for('import_quotes.import_create') }}" id="importForm"
         onsubmit="return validateImportForm(event)">
 
+    {# ─ Número de cotización ─────────────────────────────────────────── #}
+    <div class="imp-card">
+      <div class="imp-card-title">
+        Número de cotización
+        {% if parsed.quote_number %}
+        <span class="badge-found"><i class="bi bi-hash"></i> Detectado: {{ parsed.quote_number }}</span>
+        {% else %}
+        <span class="badge-miss"><i class="bi bi-exclamation-triangle"></i> No detectado</span>
+        {% endif %}
+      </div>
+      <input type="text" name="original_quote_number" class="imp-input"
+             placeholder="ej. 2025-001 ó 202501 (vacío = auto)"
+             value="{{ parsed.quote_number or '' }}"
+             style="font-weight:700;font-size:15px;letter-spacing:.5px;">
+      <div style="margin-top:6px;font-size:11px;color:#9ca3af;">
+        <i class="bi bi-info-circle me-1"></i>
+        Si lo dejas vacío se genera un número automático. Formatos aceptados: 2025-001, 2025001, 202501, etc.
+      </div>
+    </div>
+
     {# ─ Cliente ─────────────────────────────────────────────────────── #}
     <div class="imp-card">
       <div class="imp-card-title">Cliente</div>

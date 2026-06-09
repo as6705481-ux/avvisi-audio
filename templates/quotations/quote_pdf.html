@@ -325,9 +325,6 @@ body {
         <td class="c">{{ loop.index }}</td>
         <td>
           <div class="item-name">{{ line.custom_name or '—' }}</div>
-          {% if line.description %}
-          <div class="item-desc">{{ line.description }}</div>
-          {% endif %}
         </td>
         <td class="r">{{ (line.quantity or 0) | int }}</td>
         <td class="r">{{ (line.days or 1) | int }}</td>
