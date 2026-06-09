@@ -23,17 +23,28 @@ from .service import (
 
 def _event_payload_from_form(form: dict) -> dict:
     s = Settings()
+
+    start_at = parse_datetime_local(form.get("start_at") or "", s.tz_default)
+    end_at   = parse_datetime_local(form.get("end_at")   or "", s.tz_default)
+
+    if not start_at:
+        raise ValueError("La fecha/hora de inicio es obligatoria.")
+    if not end_at:
+        raise ValueError("La fecha/hora de fin es obligatoria.")
+    if end_at <= start_at:
+        raise ValueError("La hora de fin debe ser posterior a la hora de inicio.")
+
     return {
-        "name": (form.get("name") or "").strip(),
-        "client_id": form.get("client_id") or None,
-        "contact_id": form.get("contact_id") or None,
-        "venue": (form.get("venue") or "").strip(),
-        "start_at": parse_datetime_local(form.get("start_at") or "", s.tz_default),
-        "end_at": parse_datetime_local(form.get("end_at") or "", s.tz_default),
-        "notes": (form.get("notes") or "").strip(),
-        "created_by": form.get("created_by") or None,
+        "name":           (form.get("name") or "").strip(),
+        "client_id":      form.get("client_id") or None,
+        "contact_id":     form.get("contact_id") or None,
+        "venue":          (form.get("venue") or "").strip(),
+        "start_at":       start_at,
+        "end_at":         end_at,
+        "notes":          (form.get("notes") or "").strip(),
+        "created_by":     form.get("created_by") or None,
         "build_start_at": parse_datetime_local(form.get("build_start_at") or "", s.tz_default),
-        "strike_end_at": parse_datetime_local(form.get("strike_end_at") or "", s.tz_default)
+        "strike_end_at":  parse_datetime_local(form.get("strike_end_at")  or "", s.tz_default),
     }
 
 
