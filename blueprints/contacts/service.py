@@ -41,9 +41,9 @@ def create_contact(form: dict):
     payload = {
         "client_id": client_id,
         "name": (form.get("name") or "").strip(),
-        "phone": (form.get("phone") or "").strip(),
-        "email": (form.get("email") or "").strip().lower(),
-        "role": (form.get("role") or "").strip(),
+        "phone": (form.get("phone") or "").strip() or None,
+        "email": (form.get("email") or "").strip().lower() or None,
+        "role": (form.get("role") or "").strip() or None,
         "is_primary": is_primary,
     }
 
@@ -64,9 +64,9 @@ def update_contact(contact_id: str, form: dict):
     payload = {
         "client_id": client_id,
         "name": (form.get("name") or "").strip(),
-        "phone": (form.get("phone") or "").strip(),
-        "email": (form.get("email") or "").strip().lower(),
-        "role": (form.get("role") or "").strip(),
+        "phone": (form.get("phone") or "").strip() or None,
+        "email": (form.get("email") or "").strip().lower() or None,
+        "role": (form.get("role") or "").strip() or None,
         "is_primary": is_primary,
     }
 

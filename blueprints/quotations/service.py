@@ -288,11 +288,39 @@ def recompute_totals(sb, quote_id: str):
 # ==========================
 # CREATE (con líneas)
 # ==========================
+def _get_or_create_eventual_contact(sb, client_id: str) -> str | None:
+    """Busca o crea 'Contacto Eventual' para el cliente dado."""
+    if not client_id:
+        return None
+    try:
+        rows = (
+            sb.table("contacts")
+            .select("id")
+            .eq("client_id", client_id)
+            .eq("name", "Contacto Eventual")
+            .limit(1)
+            .execute()
+            .data or []
+        )
+        if rows:
+            return rows[0]["id"]
+        res = sb.table("contacts").insert({
+            "name": "Contacto Eventual",
+            "client_id": client_id,
+        }).execute()
+        return ((res.data or [{}])[0]).get("id")
+    except Exception as exc:
+        print(f"[quotations] eventual contact: {exc}")
+        return None
+
+
 def create_quote_from_form(form) -> tuple[str, str]:
     sb = get_service_client()
 
     client_id  = (form.get("client_id") or "").strip()
     contact_id = (form.get("contact_id") or "").strip() or None
+    if not contact_id and client_id:
+        contact_id = _get_or_create_eventual_contact(sb, client_id)
     event_id   = (form.get("event_id") or "").strip() or None
     owner_id   = (form.get("owner_id") or "").strip()
     currency   = (form.get("currency") or DEFAULT_CURRENCY).strip()[:3].upper()
