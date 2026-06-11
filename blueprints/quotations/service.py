@@ -34,8 +34,8 @@ ALLOWED_TRANSITIONS = {
     "declined":  {"void"},
     "expired":   {"void"},
     "cancelled": {"void"},
-    "converted": set(),
-    "void":      set(),
+    "converted": {"draft"},
+    "void":      {"draft"},
 }
 
 
