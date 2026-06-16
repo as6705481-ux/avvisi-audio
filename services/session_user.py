@@ -40,6 +40,9 @@ def role_required(*roles: str):
                 return redirect(url_for("auth.login_get"))
 
             user_role = session.get("user_role") or ""
+            # Los desarrolladores del sistema tienen acceso total (superusuario).
+            if user_role == "developer":
+                return view_fn(*args, **kwargs)
             if user_role not in roles:
                 flash("No tienes permiso para acceder a esta sección.", "warning")
                 if user_role == "ops":

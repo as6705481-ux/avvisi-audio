@@ -38,7 +38,8 @@ def list_profiles():
         .order("created_at", desc=True)
         .execute()
     )
-    return res.data or []
+    # Los desarrolladores del sistema no son parte del equipo: no se ofrecen como responsables.
+    return [p for p in (res.data or []) if p.get("role") != "developer"]
 
 
 def list_clients_for_events():

@@ -154,7 +154,10 @@ def get_quote_add_context() -> dict:
     def _clients():    return sb.table("clients").select("id,name").order("name").execute().data or []
     def _contacts():   return sb.table("contacts").select("id,client_id,name").order("name").execute().data or []
     def _events():     return sb.table("events").select("id,name,client_id,start_at,end_at").order("start_at", desc=True).limit(200).execute().data or []
-    def _owners():     return sb.table("profiles").select("id,full_name").order("full_name").execute().data or []
+    def _owners():
+        rows = sb.table("profiles").select("id,full_name,role").order("full_name").execute().data or []
+        # Los desarrolladores del sistema no son parte del equipo: no se ofrecen como responsables.
+        return [o for o in rows if o.get("role") != "developer"]
     def _categories(): return list_categories()
     def _suppliers():  return list_suppliers()
     def _items():
@@ -750,7 +753,9 @@ def create_event_from_quote(quote_id: str, request):
         or []
     )
 
-    owners = sb.table("profiles").select("id,full_name").order("full_name").execute().data or []
+    owners = sb.table("profiles").select("id,full_name,role").order("full_name").execute().data or []
+    # Los desarrolladores del sistema no son parte del equipo: no se ofrecen como responsables.
+    owners = [o for o in owners if o.get("role") != "developer"]
 
     if request.method == "GET":
         suggested_name = f"Evento — {q['quote_number']}"

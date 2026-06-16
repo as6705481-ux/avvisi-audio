@@ -251,14 +251,14 @@
 
         <!-- Brand / Logo -->
         <a class="sidebar-brand"
-           href="{{ url_for('dashboard.dashboard') if user.role == 'admin' else (url_for('quotations.quotations_list') if user.role == 'sales' else url_for('events.events_list')) }}">
+           href="{{ url_for('dashboard.dashboard') if user.role in ('admin', 'developer') else (url_for('quotations.quotations_list') if user.role == 'sales' else url_for('events.events_list')) }}">
             <img src="{{ url_for('static', filename='logo_avvisi.svg') }}" alt="Avvisi Audio">
         </a>
 
         <!-- Nav links -->
         <ul class="sidebar-nav" id="sidebarNav">
 
-            {% if user.role == 'admin' %}
+            {% if user.role in ('admin', 'developer') %}
             <li>
                 <a href="{{ url_for('dashboard.dashboard') }}">
                     <i class="bi bi-speedometer2"></i><span>Inicio</span>
@@ -266,7 +266,7 @@
             </li>
             {% endif %}
 
-            {% if user.role in ('admin', 'sales') %}
+            {% if user.role in ('admin', 'sales', 'developer') %}
             <li>
                 <a href="{{ url_for('quotations.quotations_list') }}">
                     <i class="bi bi-file-earmark-text"></i><span>Cotizaciones</span>
@@ -274,7 +274,7 @@
             </li>
             {% endif %}
 
-            {% if user.role in ('admin', 'sales') %}
+            {% if user.role in ('admin', 'sales', 'developer') %}
             <li>
                 <a href="{{ url_for('clients.clients') }}">
                     <i class="bi bi-people"></i><span>Clientes</span>
@@ -282,7 +282,7 @@
             </li>
             {% endif %}
 
-            {% if user.role in ('admin', 'sales') %}
+            {% if user.role in ('admin', 'sales', 'developer') %}
             <li>
                 <a href="{{ url_for('contacts.contacts_list') }}">
                     <i class="bi bi-person-lines-fill"></i><span>Contactos</span>
@@ -296,7 +296,7 @@
                 </a>
             </li>
 
-            {% if user.role in ('admin', 'sales', 'ops') %}
+            {% if user.role in ('admin', 'sales', 'ops', 'developer') %}
             <li>
                 <a href="{{ url_for('items.items_list') }}">
                     <i class="bi bi-box-seam"></i><span>Productos</span>
@@ -304,7 +304,7 @@
             </li>
             {% endif %}
 
-            {% if user.role in ('admin', 'ops') %}
+            {% if user.role in ('admin', 'ops', 'developer') %}
             <li>
                 <a href="{{ url_for('suppliers.suppliers_list') }}">
                     <i class="bi bi-truck"></i><span>Proveedores</span>
@@ -312,7 +312,7 @@
             </li>
             {% endif %}
 
-            {% if user.role in ('admin', 'sales') %}
+            {% if user.role in ('admin', 'sales', 'developer') %}
             <li>
                 <a href="{{ url_for('import_quotes.import_get') }}">
                     <i class="bi bi-cloud-arrow-up"></i><span>Importar</span>
@@ -320,7 +320,7 @@
             </li>
             {% endif %}
 
-            {% if user.role == 'admin' %}
+            {% if user.role in ('admin', 'developer') %}
             <li>
                 <a href="{{ url_for('users.users_list') }}">
                     <i class="bi bi-shield-person"></i><span>Usuarios</span>

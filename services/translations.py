@@ -23,8 +23,9 @@ RESERVATION_STATUS_ES: dict[str, str] = {
 }
 
 USER_ROLE_ES: dict[str, str] = {
-    "admin":   "Administrador",
-    "sales":   "Ventas",
-    "ops":     "Operaciones",
-    "finance": "Finanzas",
+    "admin":     "Administrador",
+    "sales":     "Ventas",
+    "ops":       "Operaciones",
+    "finance":   "Finanzas",
+    "developer": "Desarrollador",
 }

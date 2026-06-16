@@ -225,9 +225,13 @@ def build_dashboard_payload(user_id: str) -> dict:
     ) if total_count else 0.0
 
     # ── Tarjetas de equipo ────────────────────────────────────────────────────
-    ROLE_ES = {"admin": "Administrador", "sales": "Ventas", "ops": "Operaciones", "finance": "Finanzas"}
+    ROLE_ES = {"admin": "Administrador", "sales": "Ventas", "ops": "Operaciones",
+               "finance": "Finanzas", "developer": "Desarrollador"}
     team_cards = []
     for profile in all_profiles:
+        # Los desarrolladores del sistema están fuera del equipo operativo.
+        if (profile.get("role") or "") == "developer":
+            continue
         pid = profile["id"]
 
         p_in_prog = [e for e in in_progress_raw if e.get("created_by") == pid]

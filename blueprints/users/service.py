@@ -8,7 +8,7 @@ from extensions.supabase import get_service_client
 # Si USER_ROLES vive en config.py o constants.py, importalo desde ahí.
 # Ejemplo:
 # from config import USER_ROLES
-USER_ROLES = {"admin", "sales", "ops"}  # <-- reemplazá por tu fuente real
+USER_ROLES = {"admin", "sales", "ops", "developer"}  # <-- reemplazá por tu fuente real
 
 
 def list_users() -> list[dict]:
