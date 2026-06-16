@@ -84,10 +84,6 @@
          target="_blank" class="btn btn-outline-secondary ios-btn">
         <i class="bi bi-printer"></i> Imprimir / PDF
       </a>
-      <form action="{{ url_for('quotations.quotation_delete', quote_id=q.id) }}" method="POST"
-            onsubmit="return confirm('¿Eliminar cotización?');" class="d-inline">
-        <button class="btn btn-outline-danger ios-btn">Eliminar</button>
-      </form>
     </div>
   </div>
 
