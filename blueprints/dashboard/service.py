@@ -46,11 +46,23 @@ def _is_upcoming(event: dict, now: datetime) -> bool:
     return start > now
 
 
+def _is_past(event: dict, now: datetime) -> bool:
+    start = _parse_dt(event.get("start_at"))
+    end   = _parse_dt(event.get("end_at"))
+    if not start or start > now:
+        return False
+    if end is None:
+        return False  # sin fecha fin → se trata como en curso
+    return end < now
+
+
 def build_dashboard_payload(user_id: str) -> dict:
     sb  = get_service_client()
     now = datetime.now(timezone.utc)
     # Ventana operacional: 30 días atrás (captura eventos multi-día en curso)
     thirty_days_ago   = (now - timedelta(days=30)).isoformat()
+    # Ventana calendario: 90 días atrás para mostrar historial en el calendario
+    ninety_days_ago   = (now - timedelta(days=90)).isoformat()
     twelve_months_ago_dt = now.replace(day=1)
     for _ in range(12):
         twelve_months_ago_dt = (twelve_months_ago_dt - timedelta(days=1)).replace(day=1)
@@ -124,15 +136,15 @@ def build_dashboard_payload(user_id: str) -> dict:
             return []
 
     def _events_operational():
-        """Eventos en ventana de 30 días atrás — captura multi-día en curso y futuros.
+        """Eventos en ventana de 90 días atrás — captura historial + en curso + futuros.
         NOTA: la tabla events NO tiene campo 'status'; se omite.
         """
         try:
             return sb.table("events") \
                 .select("id,name,venue,start_at,end_at,created_by,client_id") \
-                .gte("start_at", thirty_days_ago) \
+                .gte("start_at", ninety_days_ago) \
                 .order("start_at") \
-                .limit(200).execute().data or []
+                .limit(500).execute().data or []
         except Exception as exc:
             print(f"[dashboard] _events_operational error: {exc}")
             return []
@@ -174,6 +186,7 @@ def build_dashboard_payload(user_id: str) -> dict:
     # ── Clasificar eventos (datetime-aware, tolerante a formatos) ─────────────
     in_progress_raw = [e for e in events_op if _is_in_progress(e, now)]
     upcoming_raw    = [e for e in events_op if _is_upcoming(e, now)]
+    past_raw        = [e for e in events_op if _is_past(e, now)]
 
     def _fmt_local(iso_str: str | None) -> str:
         """Convierte ISO UTC a hora local para mostrar en la interfaz."""
@@ -197,7 +210,8 @@ def build_dashboard_payload(user_id: str) -> dict:
         }
 
     events_in_progress = [_fmt_event(e) for e in in_progress_raw]
-    events_upcoming    = [_fmt_event(e) for e in upcoming_raw[:12]]
+    events_upcoming    = [_fmt_event(e) for e in upcoming_raw]
+    events_past        = [_fmt_event(e) for e in past_raw]
 
     # ── KPIs ─────────────────────────────────────────────────────────────────
     REVENUE_STATUSES = {"accepted", "converted"}
@@ -379,6 +393,7 @@ def build_dashboard_payload(user_id: str) -> dict:
         # Tab Operaciones
         "events_in_progress": events_in_progress,
         "events_upcoming":    events_upcoming,
+        "events_past":        events_past,
         # Tab Equipo
         "team_cards": team_cards,
         # Tab Cotizaciones

@@ -264,23 +264,37 @@
 
   {# ── Próximos eventos ───────────────────────────────────────────── #}
   <div>
-    <h6 class="fw-bold text-dark mb-3">
-      <i class="bi bi-calendar2-week me-1 text-primary"></i>Próximos eventos
-      {% if events_upcoming %}
-      <span class="badge bg-primary bg-opacity-75 ms-1">{{ events_upcoming|length }}</span>
-      {% endif %}
-    </h6>
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+      <h6 class="fw-bold text-dark mb-0">
+        <i class="bi bi-calendar2-week me-1 text-primary"></i>Calendario de eventos
+        {% set total_ev = (events_past|length) + (events_in_progress|length) + (events_upcoming|length) %}
+        {% if total_ev %}
+        <span class="badge bg-primary bg-opacity-75 ms-1">{{ total_ev }}</span>
+        {% endif %}
+      </h6>
+      <div class="d-flex gap-3 small text-muted align-items-center flex-wrap">
+        <span class="d-flex align-items-center gap-1">
+          <span class="cal-dot" style="background:#9ca3af;"></span>Pasados
+        </span>
+        <span class="d-flex align-items-center gap-1">
+          <span class="cal-dot" style="background:#dc3545;"></span>En curso
+        </span>
+        <span class="d-flex align-items-center gap-1">
+          <span class="cal-dot" style="background:#0d6efd;"></span>Próximos
+        </span>
+      </div>
+    </div>
 
-    {% if events_upcoming or events_in_progress %}
+    {% if events_upcoming or events_in_progress or events_past %}
     <div class="card border-0 shadow-sm">
-      <div class="card-body p-2">
+      <div class="card-body p-3">
         <div id="ops-calendar"></div>
       </div>
     </div>
     {% else %}
     <div class="text-center py-4 text-muted">
       <i class="bi bi-calendar2 fs-3 mb-2 d-block"></i>
-      <span class="small">No hay eventos próximos registrados.</span>
+      <span class="small">No hay eventos registrados.</span>
     </div>
     {% endif %}
   </div>
@@ -778,6 +792,116 @@
 .income-kpi-value { font-size:1.35rem; font-weight:800; line-height:1.1; }
 .income-kpi-trend { font-size:.7rem; margin-top:4px; }
 
+/* ── Calendar legend dot ─────────────────────────────────────────── */
+.cal-dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── FullCalendar overrides ──────────────────────────────────────── */
+#ops-calendar {
+  font-family: inherit;
+}
+#ops-calendar .fc-toolbar-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  text-transform: capitalize;
+}
+#ops-calendar .fc-button {
+  background: #e65a00 !important;
+  border-color: #e65a00 !important;
+  font-size: .78rem;
+  padding: 4px 10px;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+  font-weight: 600;
+}
+#ops-calendar .fc-button:hover,
+#ops-calendar .fc-button:focus {
+  background: #c44d00 !important;
+  border-color: #c44d00 !important;
+}
+#ops-calendar .fc-button-active,
+#ops-calendar .fc-button:not(:disabled).fc-button-active {
+  background: #a33f00 !important;
+  border-color: #a33f00 !important;
+}
+#ops-calendar .fc-today-button:disabled {
+  background: #d1d5db !important;
+  border-color: #d1d5db !important;
+  opacity: 1 !important;
+}
+#ops-calendar .fc-daygrid-day.fc-day-today {
+  background: rgba(230, 90, 0, .07) !important;
+}
+#ops-calendar .fc-col-header-cell {
+  background: #f9fafb;
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: #6b7280;
+  padding: 6px 0;
+}
+#ops-calendar .fc-daygrid-day-number {
+  font-size: .78rem;
+  color: #374151;
+  padding: 4px 6px;
+}
+#ops-calendar .fc-day-today .fc-daygrid-day-number {
+  background: #e65a00;
+  color: #fff;
+  border-radius: 50%;
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  margin: 3px;
+}
+#ops-calendar .fc-event {
+  border: none !important;
+  border-radius: 4px !important;
+  font-size: .72rem;
+  font-weight: 600;
+  padding: 1px 4px;
+  cursor: pointer;
+}
+#ops-calendar .fc-event:hover {
+  filter: brightness(.9);
+}
+#ops-calendar .fc-list-event:hover td {
+  background: rgba(230, 90, 0, .05) !important;
+}
+#ops-calendar .fc-list-day-cushion {
+  background: #f3f4f6 !important;
+  font-size: .75rem;
+  font-weight: 700;
+  color: #374151;
+  text-transform: capitalize;
+}
+#ops-calendar .fc-list-event-title a {
+  color: #111827;
+  text-decoration: none;
+  font-weight: 600;
+}
+#ops-calendar .fc-list-event-time {
+  color: #6b7280;
+  font-size: .72rem;
+}
+#ops-calendar .fc-scrollgrid {
+  border-color: #e5e7eb !important;
+  border-radius: 8px;
+  overflow: hidden;
+}
+#ops-calendar td, #ops-calendar th {
+  border-color: #e5e7eb !important;
+}
+#ops-calendar .fc-toolbar.fc-header-toolbar {
+  margin-bottom: 12px !important;
+}
+
 /* ── Tabs polish ─────────────────────────────────────────────────── */
 #dashTabs.nav-tabs { border-bottom: 2px solid #e5e7eb !important; }
 #dashTabs .nav-link {
@@ -944,7 +1068,7 @@ document.querySelectorAll('[data-bs-toggle="tab"]').forEach(btn => {
   });
 });
 
-// ── Calendario de próximos eventos ────────────────────────────────
+// ── Calendario de eventos ─────────────────────────────────────────
 (function () {
   const calEl = document.getElementById('ops-calendar');
   if (!calEl || typeof FullCalendar === 'undefined') return;
@@ -956,35 +1080,36 @@ document.querySelectorAll('[data-bs-toggle="tab"]').forEach(btn => {
     return m[3] + '-' + m[2] + '-' + m[1] + 'T' + m[4] + ':' + m[5] + ':00';
   }
 
+  function mkEv(id, name, start, end, url, color, client, venue, owner) {
+    const s = parseCalDate(start);
+    if (!s) return null;
+    return { id, title: name, start: s, end: parseCalDate(end), url,
+             color, extendedProps: { client, venue, owner } };
+  }
+
   const calEvents = [
+    {% for ev in events_past %}{% if ev.id and ev.start %}
+    mkEv({{ ev.id|tojson }}, {{ ev.name|tojson }}, {{ ev.start|tojson }}, {{ ev.end|tojson }},
+         {{ url_for('events.event_edit_get', event_id=ev.id)|tojson }},
+         '#9ca3af', {{ ev.client|tojson }}, {{ ev.venue|tojson }}, {{ (ev.owner or '')|tojson }}),
+    {% endif %}{% endfor %}
     {% for ev in events_in_progress %}{% if ev.id and ev.start %}
-    {
-      id:    {{ ev.id    | tojson }},
-      title: {{ ev.name  | tojson }},
-      start: parseCalDate({{ ev.start | tojson }}),
-      end:   parseCalDate({{ ev.end   | tojson }}),
-      url:   {{ url_for('events.event_edit_get', event_id=ev.id) | tojson }},
-      color: '#dc3545',
-      extendedProps: { client: {{ ev.client | tojson }}, venue: {{ ev.venue | tojson }}, owner: {{ (ev.owner or '') | tojson }} },
-    },
+    mkEv({{ ev.id|tojson }}, {{ ev.name|tojson }}, {{ ev.start|tojson }}, {{ ev.end|tojson }},
+         {{ url_for('events.event_edit_get', event_id=ev.id)|tojson }},
+         '#dc3545', {{ ev.client|tojson }}, {{ ev.venue|tojson }}, {{ (ev.owner or '')|tojson }}),
     {% endif %}{% endfor %}
     {% for ev in events_upcoming %}{% if ev.id and ev.start %}
-    {
-      id:    {{ ev.id    | tojson }},
-      title: {{ ev.name  | tojson }},
-      start: parseCalDate({{ ev.start | tojson }}),
-      end:   parseCalDate({{ ev.end   | tojson }}),
-      url:   {{ url_for('events.event_edit_get', event_id=ev.id) | tojson }},
-      color: '#0d6efd',
-      extendedProps: { client: {{ ev.client | tojson }}, venue: {{ ev.venue | tojson }}, owner: {{ (ev.owner or '') | tojson }} },
-    },
+    mkEv({{ ev.id|tojson }}, {{ ev.name|tojson }}, {{ ev.start|tojson }}, {{ ev.end|tojson }},
+         {{ url_for('events.event_edit_get', event_id=ev.id)|tojson }},
+         '#0d6efd', {{ ev.client|tojson }}, {{ ev.venue|tojson }}, {{ (ev.owner or '')|tojson }}),
     {% endif %}{% endfor %}
-  ].filter(e => e.start !== null);
+  ].filter(Boolean);
 
   const cal = new FullCalendar.Calendar(calEl, {
     initialView: 'dayGridMonth',
     locale: 'es',
     height: 'auto',
+    firstDay: 1,
     headerToolbar: {
       left:   'prev,next today',
       center: 'title',
@@ -992,6 +1117,8 @@ document.querySelectorAll('[data-bs-toggle="tab"]').forEach(btn => {
     },
     buttonText: { today: 'Hoy', month: 'Mes', list: 'Agenda' },
     events: calEvents,
+    dayMaxEvents: 3,
+    eventTimeFormat: { hour: 'numeric', minute: '2-digit', hour12: true },
     eventClick: function (info) {
       if (info.event.url) {
         info.jsEvent.preventDefault();
@@ -1002,6 +1129,19 @@ document.querySelectorAll('[data-bs-toggle="tab"]').forEach(btn => {
       const p = info.event.extendedProps;
       const parts = [p.client, p.venue, p.owner].filter(x => x && x !== '—');
       if (parts.length) info.el.setAttribute('title', parts.join(' · '));
+    },
+    eventContent: function (arg) {
+      const p = arg.event.extendedProps;
+      const client = (p.client && p.client !== '—') ? p.client : '';
+      if (arg.view.type === 'listMonth') {
+        return {
+          html: `<div class="fc-list-event-title">
+            <span style="font-weight:600;">${arg.event.title}</span>
+            ${client ? `<span style="color:#6b7280;font-size:.7rem;margin-left:6px;">${client}</span>` : ''}
+          </div>`
+        };
+      }
+      return true;
     },
   });
   cal.render();
