@@ -15,6 +15,9 @@ from .service import (
     delete_quote_strict,
     get_quote_edit_context,
     list_quotations_with_names,
+    list_trash_quotations,
+    restore_quote,
+    permanent_delete_quote,
     set_quote_status_from_form,
     update_quote_header_from_form,
     update_quote_line_from_form,
@@ -162,6 +165,35 @@ def quotation_print(quote_id: str):
     ctx = get_quote_print_context(quote_id)
     verify_url = url_for("verify.verify_quote", quote_id=quote_id, _external=True)
     return render_template("quotations/quote_print.html", **ctx, verify_url=verify_url)
+
+
+@bp.get("/trash")
+@role_required("admin", "sales")
+def quotation_trash():
+    rows, names = list_trash_quotations()
+    return render_template("quotations/trash.html", rows=rows, names=names)
+
+
+@bp.post("/<quote_id>/restore")
+@role_required("admin", "sales")
+def quotation_restore(quote_id: str):
+    try:
+        restore_quote(quote_id)
+        flash("Cotización restaurada.", "success")
+    except Exception as e:
+        flash_exception("No se pudo restaurar", e)
+    return redirect(url_for("quotations.quotation_trash"))
+
+
+@bp.post("/<quote_id>/permanent-delete")
+@role_required("admin", "sales")
+def quotation_permanent_delete(quote_id: str):
+    try:
+        permanent_delete_quote(quote_id)
+        flash("Cotización eliminada definitivamente.", "success")
+    except Exception as e:
+        flash_exception("No se pudo eliminar", e)
+    return redirect(url_for("quotations.quotation_trash"))
 
 
 @bp.post("/api/clients")

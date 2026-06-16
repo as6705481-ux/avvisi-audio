@@ -113,6 +113,7 @@ def list_quotations_with_names(limit: int = 500):
         return (
             sb.table("quotations")
             .select("id, quote_number, client_id, contact_id, event_id, owner_id, currency, status, total, deposit_due, created_at, valid_until")
+            .is_("deleted_at", "null")
             .order("created_at", desc=True)
             .limit(limit)
             .execute()
@@ -664,9 +665,10 @@ def set_quote_status_from_form(quote_id: str, form):
 
 
 # ==========================
-# Delete con regla draft/cancelled
+# Delete (soft) / Papelera
 # ==========================
 def delete_quote_strict(quote_id: str):
+    """Soft-delete: mueve a papelera seteando deleted_at."""
     sb = get_service_client()
     q = sb.table("quotations").select("status, quote_number").eq("id", quote_id).single().execute().data
     if not q:
@@ -676,12 +678,44 @@ def delete_quote_strict(quote_id: str):
     if st not in {"draft", "cancelled", "void", "expired", "declined"}:
         raise ValueError("No se puede eliminar una cotización aceptada o convertida. Primero anúlala.")
 
-    # en viejo asumías cascada; aquí borramos items por si acaso
+    sb.table("quotations").update({"deleted_at": _now_iso()}).eq("id", quote_id).execute()
+    return True
+
+
+def list_trash_quotations() -> tuple[list, dict]:
+    """Devuelve cotizaciones en papelera (deleted_at IS NOT NULL)."""
+    sb = get_service_client()
+    rows = (
+        sb.table("quotations")
+        .select("id, quote_number, client_id, owner_id, status, total, created_at, deleted_at")
+        .not_.is_("deleted_at", "null")
+        .order("deleted_at", desc=True)
+        .execute()
+        .data or []
+    )
+    cli  = sb.table("clients").select("id,name").execute().data or []
+    own  = sb.table("profiles").select("id,full_name").execute().data or []
+    names = {
+        "clients":  {x["id"]: x["name"]      for x in cli},
+        "profiles": {x["id"]: x["full_name"] for x in own},
+    }
+    return rows, names
+
+
+def restore_quote(quote_id: str):
+    """Restaura una cotización de la papelera."""
+    sb = get_service_client()
+    sb.table("quotations").update({"deleted_at": None}).eq("id", quote_id).execute()
+    return True
+
+
+def permanent_delete_quote(quote_id: str):
+    """Elimina definitivamente una cotización (solo desde papelera)."""
+    sb = get_service_client()
     try:
         sb.table("quotation_items").delete().eq("quotation_id", quote_id).execute()
     except Exception:
         pass
-
     sb.table("quotations").delete().eq("id", quote_id).execute()
     return True
 

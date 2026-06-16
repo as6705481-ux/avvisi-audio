@@ -1,0 +1,81 @@
+<!-- templates/quotations/trash.html -->
+{% extends "layout.html" %}
+{% from "components/av_table.html" import av_table %}
+
+{% set QUOTE_STATUS_ES = {
+    "draft":     "Borrador",
+    "sent":      "Enviada",
+    "approved":  "Aprobada",
+    "firm":      "Firme",
+    "converted": "Convertida",
+    "void":      "Anulada",
+} %}
+
+{% block title %}Papelera – Cotizaciones{% endblock %}
+{% block content %}
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="{{ url_for('quotations.quotations_list') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="fas fa-arrow-left"></i> Volver a Cotizaciones
+    </a>
+    <span class="text-muted small">Las cotizaciones eliminadas permanecen aquí hasta que las elimines definitivamente.</span>
+  </div>
+
+  {% call av_table('trash_table', 'Papelera', 'cotizaciones eliminadas', 'Buscar por #, cliente, estado...', true) %}
+    <thead>
+      <tr>
+        <th data-type="text"># <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Cliente <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Estado <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="number">Total <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="date">Eliminada <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-nosort="1" style="text-align:center;">Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for q in rows %}
+      {% set deleted = (q.deleted_at.split('T')[0] if (q.deleted_at is string) else (q.deleted_at.strftime('%Y-%m-%d') if q.deleted_at else '')) %}
+      {% set client_name = names.clients.get(q.client_id, '—') %}
+      {% set total_num = (q.total or 0) %}
+      <tr>
+        <td>{{ q.quote_number }}</td>
+        <td>{{ client_name }}</td>
+        <td>
+          <span class="av-badge role">{{ QUOTE_STATUS_ES.get(q.status, q.status) }}</span>
+        </td>
+        <td data-sort="{{ '%.6f'|format(total_num) }}">
+          {{ 'L ' }}{{ '%.2f'|format(total_num) }}
+        </td>
+        <td data-sort="{{ deleted }}">{{ deleted or '—' }}</td>
+        <td class="av-actions" style="text-align:center;">
+          <div class="btn-group">
+            <form action="{{ url_for('quotations.quotation_restore', quote_id=q.id) }}" method="POST" class="d-inline">
+              <button class="btn btn-sm btn-outline-success" type="submit"
+                      style="border-radius:10px 0 0 10px;"
+                      title="Restaurar">
+                <i class="fas fa-undo"></i> Restaurar
+              </button>
+            </form>
+            <form action="{{ url_for('quotations.quotation_permanent_delete', quote_id=q.id) }}" method="POST" class="d-inline">
+              <button class="btn btn-sm btn-outline-danger" type="submit"
+                      data-av-confirm
+                      data-av-title="¿Eliminar definitivamente?"
+                      data-av-message="Esta acción no se puede deshacer. ¿Eliminar la cotización {{ q.quote_number }} permanentemente?"
+                      style="border-radius:0 10px 10px 0;"
+                      title="Eliminar definitivo">
+                <i class="fas fa-times"></i> Eliminar
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="text-center text-muted py-4">La papelera está vacía.</td></tr>
+      {% endfor %}
+    </tbody>
+  {% endcall %}
+</div>
+
+{% endblock %}
