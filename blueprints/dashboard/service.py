@@ -277,6 +277,29 @@ def build_dashboard_payload(user_id: str) -> dict:
     status_labels = [STATUS_ES.get(k, k) for k in status_counts]
     status_values = [status_counts[k] for k in status_counts]
 
+    # ── Desglose de cotizaciones por estado (chips del panel) ────────────────
+    _STATUS_HEX = {
+        "draft":     "#6b7280",
+        "sent":      "#0d6efd",
+        "accepted":  "#198754",
+        "converted": "#0891b2",
+        "declined":  "#dc3545",
+        "expired":   "#f59e0b",
+        "cancelled": "#212529",
+        "void":      "#b91c1c",
+    }
+    _STATUS_ORDER = ["draft", "sent", "accepted", "converted", "declined", "expired", "void", "cancelled"]
+    status_breakdown: list[dict] = []
+    _bd_seen: set[str] = set()
+    for _s in _STATUS_ORDER:
+        _c = status_counts.get(_s, 0)
+        if _c:
+            status_breakdown.append({"label": STATUS_ES.get(_s, _s), "count": _c, "color": _STATUS_HEX.get(_s, "#6b7280")})
+            _bd_seen.add(_s)
+    for _s, _c in status_counts.items():
+        if _s not in _bd_seen and _c:
+            status_breakdown.append({"label": STATUS_ES.get(_s, _s), "count": _c, "color": "#6b7280"})
+
     # ── Ingresos por mes ─────────────────────────────────────────────────────
     confirmed_by_ym: dict[str, float] = defaultdict(float)   # aceptadas/convertidas
     quoted_by_ym:    dict[str, float] = defaultdict(float)    # todas
@@ -401,6 +424,7 @@ def build_dashboard_payload(user_id: str) -> dict:
         "pipeline_order":      pipeline_order,
         "status_labels":       status_labels,
         "status_values":       status_values,
+        "status_breakdown":    status_breakdown,
         "recent_quotes":       recent_quotes,
         # Tab Ingresos
         "months":                months_labels,
