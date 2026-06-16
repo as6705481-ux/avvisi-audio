@@ -25,6 +25,7 @@ def get_quote_print_context(quote_id: str) -> dict:
             "currency, exchange_rate, status, "
             "subtotal, discount_total, deposit_due, tax_total, total, "
             "valid_until, created_at, notes_client, "
+            "pricing_mode, flat_total, flat_concept, "
             "clients(id,name)"
         )
         .eq("id", quote_id)
@@ -69,7 +70,8 @@ def get_quote_print_context(quote_id: str) -> dict:
         .data
     ) or []
 
-    if not lines:
+    is_flat = (q.get("pricing_mode") == "flat")
+    if not lines and not is_flat:
         abort(400, "La cotización no tiene líneas de detalle")
 
     currency     = (q.get("currency") or "HNL").strip().upper()[:3]
@@ -83,6 +85,8 @@ def get_quote_print_context(quote_id: str) -> dict:
     return dict(
         q=q,
         lines=lines,
+        is_flat=is_flat,
+        flat_concept=q.get("flat_concept") or "",
         event=event,
         owner=owner,
         client_name=(q.get("clients") or {}).get("name") or "—",

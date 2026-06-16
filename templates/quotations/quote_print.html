@@ -545,6 +545,20 @@ table.items-table-items {
 
   <!-- ══ TABLA DE ÍTEMS ════════════════════════════ -->
   <div class="items-wrap">
+    {% if is_flat %}
+    <table class="items-table-items">
+      <thead>
+        <tr>
+          <th>Concepto</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:14px 12px;white-space:pre-wrap;line-height:1.5;">{{ flat_concept or 'Paquete' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    {% else %}
     {% set ns = namespace(last_section=None) %}
     <table class="items-table-items">
       <thead>
@@ -578,6 +592,7 @@ table.items-table-items {
         {% endfor %}
       </tbody>
     </table>
+    {% endif %}
   </div>
 
   <!-- ══ NOTAS / TÉRMINOS + TOTALES ═══════════════ -->
@@ -605,7 +620,7 @@ table.items-table-items {
     <!-- Columna derecha: totales -->
     <div class="totals-col">
       <div class="tot-row">
-        <span>Subtotal</span>
+        <span>{{ 'Paquete' if is_flat else 'Subtotal' }}</span>
         <span class="tv">{{ currency }} {{ subtotal }}</span>
       </div>
       {% if has_discount %}

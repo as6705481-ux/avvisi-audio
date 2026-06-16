@@ -156,6 +156,44 @@
         </div>
       </div>
 
+      <!-- Tipo de cotización -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-tags"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Tipo de cotización <span class="text-danger">*</span></div>
+          <div class="d-flex gap-3 mt-1 flex-wrap">
+            <label class="form-check form-check-inline m-0">
+              <input class="form-check-input" type="radio" name="pricing_mode" id="pmDetailed" value="detailed" checked>
+              <span class="form-check-label">Detallada (suma de productos)</span>
+            </label>
+            <label class="form-check form-check-inline m-0">
+              <input class="form-check-input" type="radio" name="pricing_mode" id="pmFlat" value="flat">
+              <span class="form-check-label">Precio fijo (paquete)</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campos de precio fijo (solo modo paquete) -->
+      <div id="flatFields" style="display:none;">
+        <div class="ios-row">
+          <div class="ios-ico"><i class="bi bi-card-heading"></i></div>
+          <div class="ios-body">
+            <div class="ios-label">Concepto del paquete</div>
+            <textarea name="flat_concept" class="ios-input" rows="2"
+                      placeholder="Ej. Paquete de audio e iluminación para evento"></textarea>
+          </div>
+        </div>
+        <div class="ios-row">
+          <div class="ios-ico"><i class="bi bi-cash-stack"></i></div>
+          <div class="ios-body">
+            <div class="ios-label">Precio del paquete (L) — sin ISV</div>
+            <input name="flat_total" type="number" step="0.01" min="0" class="ios-input" placeholder="0.00">
+            <small class="text-muted d-block mt-1">El total será este precio + ISV (si aplica), sin importar los productos.</small>
+          </div>
+        </div>
+      </div>
+
       <!-- Términos -->
       <!-- <div class="ios-row">
         <div class="ios-ico"><i class="bi bi-file-earmark-text"></i></div>
@@ -739,6 +777,20 @@ document.addEventListener("DOMContentLoaded", () => {
     initLineTomSelect(initLine);
     syncLineUI(initLine);
   }
+
+  /* -------- toggle tipo de cotización (precio fijo) -------- */
+  (function () {
+    const flatFields = document.getElementById("flatFields");
+    const flatInput  = document.querySelector('input[name="flat_total"]');
+    const radios     = document.querySelectorAll('input[name="pricing_mode"]');
+    function syncPricingMode() {
+      const isFlat = document.querySelector('input[name="pricing_mode"]:checked')?.value === "flat";
+      if (flatFields) flatFields.style.display = isFlat ? "" : "none";
+      if (flatInput)  flatInput.required = isFlat;
+    }
+    radios.forEach((r) => r.addEventListener("change", syncPricingMode));
+    syncPricingMode();
+  })();
 
   /* -------- delegación eventos líneas -------- */
   wrap?.addEventListener("change", (e) => {

@@ -242,13 +242,14 @@ def recompute_totals(sb, quote_id: str):
 
     q_data = (
         sb.table("quotations")
-        .select("tax_rate")
+        .select("tax_rate, pricing_mode, flat_total")
         .eq("id", quote_id)
         .single()
         .execute()
         .data
     ) or {}
-    tax_rate = float(q_data.get("tax_rate") or 0)
+    tax_rate     = float(q_data.get("tax_rate") or 0)
+    pricing_mode = (q_data.get("pricing_mode") or "detailed")
 
     subtotal       = 0.0
     discount_total = 0.0
@@ -278,6 +279,20 @@ def recompute_totals(sb, quote_id: str):
         discount_total += disc_amount
         tax_total      += line_tax
         total          += line_tot
+
+    # Modo "precio fijo" (paquete): el total lo define flat_total + ISV encima,
+    # sin importar las líneas. Las líneas se mantienen sólo como referencia interna.
+    if pricing_mode == "flat":
+        base     = float(q_data.get("flat_total") or 0)
+        flat_tax = round(base * tax_rate / 100.0, 2)
+        sb.table("quotations").update({
+            "subtotal":       round(base, 2),
+            "discount_total": 0.0,
+            "tax_total":      flat_tax,
+            "total":          round(base + flat_tax, 2),
+            "updated_at":     datetime.utcnow().isoformat(),
+        }).eq("id", quote_id).execute()
+        return True
 
     sb.table("quotations").update({
         "subtotal":       round(subtotal, 2),
@@ -339,6 +354,17 @@ def create_quote_from_form(form) -> tuple[str, str]:
     if not client_id or not owner_id:
         raise ValueError("Cliente y Propietario son obligatorios.")
 
+    # Tipo de cotización: 'detailed' (suma de productos) o 'flat' (precio fijo/paquete)
+    pricing_mode = (form.get("pricing_mode") or "detailed").strip().lower()
+    if pricing_mode not in ("detailed", "flat"):
+        pricing_mode = "detailed"
+    flat_concept = (form.get("flat_concept") or "").strip() or None
+    flat_total = None
+    if pricing_mode == "flat":
+        flat_total = _to_float(form.get("flat_total"), 0.0)
+        if not flat_total or flat_total <= 0:
+            raise ValueError("Ingresa el precio del paquete para una cotización de precio fijo.")
+
     quote_no = gen_quote_number(sb)
 
     # 1) cabecera
@@ -363,6 +389,9 @@ def create_quote_from_form(form) -> tuple[str, str]:
                 "tax_total": 0.0,
                 "tax_rate": tax_rate,
                 "total": 0.0,
+                "pricing_mode": pricing_mode,
+                "flat_total": flat_total,
+                "flat_concept": flat_concept,
             },
             returning="representation",
         )
@@ -544,12 +573,24 @@ def add_quote_line(quote_id: str, form):
 def update_quote_header_from_form(quote_id: str, form, allow_quote_number: bool = False):
     sb = get_service_client()
 
-    q = sb.table("quotations").select("id,client_id,owner_id,currency,exchange_rate,deposit_due,tax_rate,valid_until,created_at").eq("id", quote_id).single().execute().data
+    q = sb.table("quotations").select("id,client_id,owner_id,currency,exchange_rate,deposit_due,tax_rate,valid_until,created_at,pricing_mode,flat_total,flat_concept").eq("id", quote_id).single().execute().data
     if not q:
         raise ValueError("Cotización no encontrada.")
 
     apply_tax = (form.get("apply_tax") or "yes").lower().strip()
     new_tax_rate = 15.0 if apply_tax == "yes" else 0.0
+
+    # Tipo de cotización: 'detailed' o 'flat' (precio fijo). Si el form no lo trae, se conserva.
+    pricing_mode = (form.get("pricing_mode") or q.get("pricing_mode") or "detailed").strip().lower()
+    if pricing_mode not in ("detailed", "flat"):
+        pricing_mode = "detailed"
+    flat_concept = (form.get("flat_concept") or "").strip() or None
+    if pricing_mode == "flat":
+        flat_total = _to_float(form.get("flat_total"), q.get("flat_total") or 0.0)
+        if not flat_total or flat_total <= 0:
+            raise ValueError("Ingresa el precio del paquete para una cotización de precio fijo.")
+    else:
+        flat_total = None
 
     upd = {
         "client_id":      (form.get("client_id") or "").strip() or q["client_id"],
@@ -562,6 +603,9 @@ def update_quote_header_from_form(quote_id: str, form, allow_quote_number: bool 
         "notes_client":   (form.get("notes_client") or None),
         "deposit_due":    _to_float(form.get("deposit_due"), q.get("deposit_due") or 0.0),
         "tax_rate":       new_tax_rate,
+        "pricing_mode":   pricing_mode,
+        "flat_total":     flat_total,
+        "flat_concept":   flat_concept,
         "updated_at":     _now_iso(),
     }
 
