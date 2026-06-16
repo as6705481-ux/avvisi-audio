@@ -271,54 +271,10 @@
       {% endif %}
     </h6>
 
-    {% if events_upcoming %}
+    {% if events_upcoming or events_in_progress %}
     <div class="card border-0 shadow-sm">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0 small">
-          <thead class="table-light">
-            <tr>
-              <th>Evento</th>
-              <th>Cliente</th>
-              <th>Lugar</th>
-              <th>Inicio</th>
-              <th>Fin</th>
-              <th>Responsable</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for ev in events_upcoming %}
-            <tr>
-              <td class="fw-semibold">{{ ev.name }}</td>
-              <td class="text-muted">{{ ev.client }}</td>
-              <td class="text-muted">{{ ev.venue }}</td>
-              <td>
-                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary" style="white-space:nowrap;">
-                  {{ ev.start if ev.start else '—' }}
-                </span>
-              </td>
-              <td class="text-muted small">{{ ev.end or '—' }}</td>
-              <td>
-                {% if ev.owner and ev.owner != '—' %}
-                <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border">
-                  <i class="bi bi-person me-1"></i>{{ ev.owner }}
-                </span>
-                {% else %}
-                <span class="text-muted">—</span>
-                {% endif %}
-              </td>
-              <td>
-                {% if ev.id %}
-                <a href="{{ url_for('events.event_edit_get', event_id=ev.id) }}"
-                   class="btn btn-sm btn-outline-secondary">
-                  <i class="bi bi-arrow-right-circle"></i>
-                </a>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div class="card-body p-2">
+        <div id="ops-calendar"></div>
       </div>
     </div>
     {% else %}
@@ -850,6 +806,7 @@
 {# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    SCRIPTS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ #}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
 // ── Datos del servidor ────────────────────────────────────────────
@@ -986,6 +943,69 @@ document.querySelectorAll('[data-bs-toggle="tab"]').forEach(btn => {
     if (target === '#tab-income') initIncomeCharts();
   });
 });
+
+// ── Calendario de próximos eventos ────────────────────────────────
+(function () {
+  const calEl = document.getElementById('ops-calendar');
+  if (!calEl || typeof FullCalendar === 'undefined') return;
+
+  function parseCalDate(str) {
+    if (!str) return null;
+    const m = str.match(/^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/);
+    if (!m) return null;
+    return m[3] + '-' + m[2] + '-' + m[1] + 'T' + m[4] + ':' + m[5] + ':00';
+  }
+
+  const calEvents = [
+    {% for ev in events_in_progress %}{% if ev.id and ev.start %}
+    {
+      id:    {{ ev.id    | tojson }},
+      title: {{ ev.name  | tojson }},
+      start: parseCalDate({{ ev.start | tojson }}),
+      end:   parseCalDate({{ ev.end   | tojson }}),
+      url:   {{ url_for('events.event_edit_get', event_id=ev.id) | tojson }},
+      color: '#dc3545',
+      extendedProps: { client: {{ ev.client | tojson }}, venue: {{ ev.venue | tojson }}, owner: {{ (ev.owner or '') | tojson }} },
+    },
+    {% endif %}{% endfor %}
+    {% for ev in events_upcoming %}{% if ev.id and ev.start %}
+    {
+      id:    {{ ev.id    | tojson }},
+      title: {{ ev.name  | tojson }},
+      start: parseCalDate({{ ev.start | tojson }}),
+      end:   parseCalDate({{ ev.end   | tojson }}),
+      url:   {{ url_for('events.event_edit_get', event_id=ev.id) | tojson }},
+      color: '#0d6efd',
+      extendedProps: { client: {{ ev.client | tojson }}, venue: {{ ev.venue | tojson }}, owner: {{ (ev.owner or '') | tojson }} },
+    },
+    {% endif %}{% endfor %}
+  ].filter(e => e.start !== null);
+
+  const cal = new FullCalendar.Calendar(calEl, {
+    initialView: 'dayGridMonth',
+    locale: 'es',
+    height: 'auto',
+    headerToolbar: {
+      left:   'prev,next today',
+      center: 'title',
+      right:  'dayGridMonth,listMonth',
+    },
+    buttonText: { today: 'Hoy', month: 'Mes', list: 'Agenda' },
+    events: calEvents,
+    eventClick: function (info) {
+      if (info.event.url) {
+        info.jsEvent.preventDefault();
+        window.location.href = info.event.url;
+      }
+    },
+    eventDidMount: function (info) {
+      const p = info.event.extendedProps;
+      const parts = [p.client, p.venue, p.owner].filter(x => x && x !== '—');
+      if (parts.length) info.el.setAttribute('title', parts.join(' · '));
+    },
+  });
+  cal.render();
+})();
 </script>
 
 {% endblock %}
