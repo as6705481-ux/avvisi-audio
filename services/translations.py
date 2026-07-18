@@ -29,3 +29,15 @@ USER_ROLE_ES: dict[str, str] = {
     "finance":   "Finanzas",
     "developer": "Desarrollador",
 }
+
+PAYROLL_STATUS_ES: dict[str, str] = {
+    "draft":    "Borrador",
+    "approved": "Aprobada",
+    "paid":     "Pagada",
+}
+
+PAYROLL_KIND_ES: dict[str, str] = {
+    "base":  "Salario base",
+    "event": "Evento",
+    "bonus": "Bono",
+}

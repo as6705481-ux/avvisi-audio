@@ -1,0 +1,55 @@
+<!-- templates/payroll/payroll_new.html -->
+{% extends "layout.html" %}
+{% block title %}Nueva planilla{% endblock %}
+{% block content %}
+
+<div class="container mt-5" style="max-width:640px;">
+  <form method="POST" action="{{ url_for('payroll.payroll_new_post') }}" class="ios-form">
+    <h1 class="ios-title">Nueva planilla</h1>
+
+    <div class="ios-group">
+      <!-- Título -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-card-heading"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Título</div>
+          <input name="title" class="ios-input" placeholder="Ej. Quincena 1 – Julio 2026" required>
+        </div>
+      </div>
+
+      <!-- Fecha inicio -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-calendar-event"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Desde</div>
+          <input name="period_start" type="date" class="ios-input">
+        </div>
+      </div>
+
+      <!-- Fecha fin -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-calendar-check"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Hasta</div>
+          <input name="period_end" type="date" class="ios-input">
+        </div>
+      </div>
+
+      <!-- Notas -->
+      <div class="ios-row">
+        <div class="ios-ico"><i class="bi bi-sticky"></i></div>
+        <div class="ios-body">
+          <div class="ios-label">Notas (opcional)</div>
+          <input name="notes" class="ios-input" placeholder="Observaciones…">
+        </div>
+      </div>
+    </div>
+
+    <div class="ios-actions">
+      <a href="{{ url_for('payroll.payroll_list') }}" class="btn btn-secondary ios-btn">Cancelar</a>
+      <button class="btn btn-success ios-btn">Crear planilla</button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

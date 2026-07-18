@@ -11,11 +11,18 @@ from extensions.supabase import get_service_client
 USER_ROLES = {"admin", "sales", "ops", "developer"}  # <-- reemplazá por tu fuente real
 
 
+def _to_float(x: Any, default: float = 0.0) -> float:
+    try:
+        return float(str(x).replace(",", "").strip())
+    except Exception:
+        return default
+
+
 def list_users() -> list[dict]:
     sb = get_service_client()
     res = (
         sb.table("profiles")
-        .select("id, full_name, phone, role, active, email, created_at, updated_at")
+        .select("id, full_name, phone, role, active, email, base_salary, created_at, updated_at")
         .order("created_at")
         .execute()
     )
@@ -26,7 +33,7 @@ def get_user_profile(user_id: str) -> dict | None:
     sb = get_service_client()
     return (
         sb.table("profiles")
-        .select("id, full_name, phone, role, active, email, created_at, updated_at")
+        .select("id, full_name, phone, role, active, email, base_salary, created_at, updated_at")
         .eq("id", user_id)
         .single()
         .execute()
@@ -56,6 +63,7 @@ def create_user(form: dict[str, Any]) -> str:
     role = (form.get("role") or "sales").strip()
     password = form.get("password") or ""
     active = True if form.get("active") == "1" else False
+    base_salary = _to_float(form.get("base_salary"))
 
     if role not in USER_ROLES:
         raise ValueError("Rol inválido.")
@@ -82,6 +90,7 @@ def create_user(form: dict[str, Any]) -> str:
             "role": role,
             "email": email,
             "active": active,
+            "base_salary": base_salary,
             "updated_at": datetime.utcnow().isoformat(),
         }
     ).execute()
@@ -103,6 +112,7 @@ def update_user(user_id: str, form: dict) -> bool:
     phone = (form.get("phone") or "").strip() or None
     role = (form.get("role") or "").strip()
     active = True if form.get("active") == "1" else False
+    base_salary = _to_float(form.get("base_salary"))
 
     new_password = (form.get("new_password") or "").strip()
 
@@ -115,6 +125,7 @@ def update_user(user_id: str, form: dict) -> bool:
             "phone": phone,
             "role": role,
             "active": active,
+            "base_salary": base_salary,
             "updated_at": datetime.utcnow().isoformat(),
             "email": (new_email or current_email or profile.get("email")),
         }

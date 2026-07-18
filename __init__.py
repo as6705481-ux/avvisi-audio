@@ -26,6 +26,7 @@ def create_app():
     from blueprints.catalogos.routes import bp as catalogos_bp
     from blueprints.import_quotes import bp as import_quotes_bp
     from blueprints.verify import bp as verify_bp
+    from blueprints.payroll import bp as payroll_bp
 
     # ✅ register_blueprint: método de Flask
     app.register_blueprint(auth_bp)
@@ -40,6 +41,7 @@ def create_app():
     app.register_blueprint(catalogos_bp)
     app.register_blueprint(import_quotes_bp)
     app.register_blueprint(verify_bp)
+    app.register_blueprint(payroll_bp)
 
     # Filtros Jinja2
     app.add_template_filter(fmt_ampm, "ampm")
@@ -51,6 +53,7 @@ def create_app():
     from services.translations import (
         QUOTE_STATUS_ES, ITEM_TYPE_ES,
         RESERVATION_STATUS_ES, USER_ROLE_ES,
+        PAYROLL_STATUS_ES, PAYROLL_KIND_ES,
     )
 
     @app.context_processor
@@ -61,6 +64,8 @@ def create_app():
             "ITEM_TYPE_ES": ITEM_TYPE_ES,
             "RESERVATION_STATUS_ES": RESERVATION_STATUS_ES,
             "USER_ROLE_ES": USER_ROLE_ES,
+            "PAYROLL_STATUS_ES": PAYROLL_STATUS_ES,
+            "PAYROLL_KIND_ES": PAYROLL_KIND_ES,
         }
 
     return app

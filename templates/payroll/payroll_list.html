@@ -1,0 +1,67 @@
+<!-- templates/payroll/payroll_list.html -->
+{% extends "layout.html" %}
+{% from "components/av_table.html" import av_table %}
+{% block title %}Planilla{% endblock %}
+{% block content %}
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0 fw-bold text-dark">
+      <i class="bi bi-cash-coin me-2" style="color:#e65a00;"></i>Planillas
+    </h5>
+    <a href="{{ url_for('payroll.payroll_new_get') }}" class="btn btn-success">
+      <i class="fas fa-plus"></i> Nueva planilla
+    </a>
+  </div>
+
+  {% call av_table('payroll_table', 'Planillas', 'pagos a empleados', 'Buscar por título, estado...', true) %}
+    <thead>
+      <tr>
+        <th data-type="text">Título <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Período <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="number">Empleados <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="number">Total <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Estado <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-nosort="1" style="text-align:center;">Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for p in periods %}
+      <tr data-role="{{ (p.status or '')|lower }}">
+        <td class="fw-semibold">{{ p.title }}</td>
+        <td>
+          {% if p.period_start or p.period_end %}
+            {{ p.period_start or '—' }} → {{ p.period_end or '—' }}
+          {% else %}—{% endif %}
+        </td>
+        <td data-sort="{{ p.employee_count }}">{{ p.employee_count }}</td>
+        <td data-sort="{{ '%.6f'|format(p.total or 0) }}">L {{ '{:,.2f}'.format(p.total or 0) }}</td>
+        <td>
+          <span class="av-badge role">{{ PAYROLL_STATUS_ES.get(p.status, p.status) }}</span>
+        </td>
+        <td class="av-actions" style="text-align:center;">
+          <div class="btn-group">
+            <a class="btn btn-sm btn-outline-primary" style="border-radius:10px 0 0 10px;"
+               href="{{ url_for('payroll.payroll_detail', period_id=p.id) }}">
+              <i class="fas fa-eye"></i>
+            </a>
+            <form action="{{ url_for('payroll.payroll_delete', period_id=p.id) }}" method="POST" class="d-inline">
+              <button class="btn btn-sm btn-outline-danger" type="submit"
+                data-av-confirm
+                data-av-title="¿Eliminar planilla?"
+                data-av-message="Se eliminará la planilla y todas sus líneas. Esta acción no se puede deshacer."
+                style="border-radius:0 10px 10px 0;"><i class="fas fa-trash-alt"></i>
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="text-center text-muted py-4">No hay planillas todavía.</td></tr>
+      {% endfor %}
+    </tbody>
+  {% endcall %}
+</div>
+
+{% endblock %}
