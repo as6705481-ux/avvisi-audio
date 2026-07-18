@@ -120,6 +120,11 @@ def quotation_set_status(quote_id: str):
         flash("Estado actualizado.", "success")
     except Exception as e:
         flash_exception("No se pudo cambiar estado", e)
+
+    # Regresa al listado si el cambio vino desde la tabla (next relativo y seguro)
+    nxt = (request.form.get("next") or "").strip()
+    if nxt.startswith("/") and not nxt.startswith("//"):
+        return redirect(nxt)
     return redirect(url_for("quotations.quotation_edit_get", quote_id=quote_id))
 
 

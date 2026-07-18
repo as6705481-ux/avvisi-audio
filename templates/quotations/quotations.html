@@ -14,6 +14,18 @@
     </a>
   </div>
 
+  {# Transiciones válidas por estado (espejo de ALLOWED_TRANSITIONS en el servicio) #}
+  {% set NEXT_STATES = {
+    "draft":     ["sent", "cancelled", "void"],
+    "sent":      ["accepted", "declined", "expired", "cancelled", "void"],
+    "accepted":  ["converted", "cancelled", "void"],
+    "declined":  ["void"],
+    "expired":   ["void"],
+    "cancelled": ["void"],
+    "converted": ["draft"],
+    "void":      ["draft"],
+  } %}
+
   {#  id, title, subtitle, placeholder, enable_filter #}
   {% call av_table('quotations_table', 'Cotizaciones', 'listado y estado', 'Buscar por #, cliente, evento, estado...', true) %}
     <thead>
@@ -40,11 +52,26 @@
         <td>{{ event_name }}</td>
 
         <td>
+          {% set next_opts = NEXT_STATES.get(q.status, []) %}
+          {% if next_opts %}
+          <form action="{{ url_for('quotations.quotation_set_status', quote_id=q.id) }}" method="POST"
+                class="d-inline js-status-form">
+            <input type="hidden" name="actor_id" value="{{ user.id }}">
+            <input type="hidden" name="next" value="{{ url_for('quotations.quotations_list') }}">
+            <select name="status" class="av-status-select js-status-select" data-current="{{ q.status }}">
+              <option value="{{ q.status }}" selected>{{ QUOTE_STATUS_ES.get(q.status, q.status) }}</option>
+              {% for val in next_opts %}
+              <option value="{{ val }}">→ {{ QUOTE_STATUS_ES.get(val, val) }}</option>
+              {% endfor %}
+            </select>
+          </form>
+          {% else %}
           <span class="av-badge role">{{ QUOTE_STATUS_ES.get(q.status, q.status) }}</span>
+          {% endif %}
         </td>
 
         <td data-sort="{{ '%.6f'|format(total_num) }}">
-          {{ 'L ' if q.currency=='HNL' else '' }}{{ '%.2f'|format(total_num) }}
+          {{ 'L ' if q.currency=='HNL' else '' }}{{ '{:,.2f}'.format(total_num) }}
         </td>
 
         <td data-sort="{{ created }}">{{ created or '—' }}</td>
@@ -78,5 +105,43 @@
     </tbody>
   {% endcall %}
 </div>
+
+<style>
+  .av-status-select{
+    border:1px solid rgba(0,0,0,.15);
+    border-radius:10px;
+    padding:4px 26px 4px 10px;
+    font-size:.85rem;
+    font-weight:600;
+    background-color:#fff;
+    cursor:pointer;
+    max-width:170px;
+  }
+  .av-status-select:focus{
+    outline:none;
+    border-color:#0d6efd;
+    box-shadow:0 0 0 2px rgba(13,110,253,.15);
+  }
+</style>
+
+<script>
+  (function () {
+    document.querySelectorAll('.js-status-select').forEach(function (sel) {
+      sel.addEventListener('change', function () {
+        var current = sel.dataset.current;
+        var target  = sel.value;
+        if (target === current) return;
+
+        if (target === 'void') {
+          if (!confirm('¿Anular esta cotización? Esta acción cambia el estado a Anulada.')) {
+            sel.value = current;
+            return;
+          }
+        }
+        sel.closest('form').submit();
+      });
+    });
+  })();
+</script>
 
 {% endblock %}
