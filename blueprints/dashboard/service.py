@@ -159,7 +159,25 @@ def build_dashboard_payload(user_id: str) -> dict:
         except Exception:
             return []
 
-    with ThreadPoolExecutor(max_workers=9) as ex:
+    def _payroll_periods():
+        """Planillas (egresos). La tabla es pequeña; se traen todas."""
+        try:
+            return sb.table("payroll_periods") \
+                .select("id,title,period_start,period_end,status,created_at") \
+                .order("created_at", desc=True) \
+                .limit(200).execute().data or []
+        except Exception:
+            return []
+
+    def _payroll_entries():
+        try:
+            return sb.table("payroll_entries") \
+                .select("period_id,employee_id,amount") \
+                .limit(5000).execute().data or []
+        except Exception:
+            return []
+
+    with ThreadPoolExecutor(max_workers=11) as ex:
         f_profile     = ex.submit(_profile)
         f_quotes_rec  = ex.submit(_quotations_recent)
         f_quotes_ext  = ex.submit(_all_quotations_ext)
@@ -169,6 +187,8 @@ def build_dashboard_payload(user_id: str) -> dict:
         f_profiles    = ex.submit(_all_profiles_active)
         f_events_op   = ex.submit(_events_operational)
         f_pipeline    = ex.submit(_pipeline_quotations)
+        f_pay_periods = ex.submit(_payroll_periods)
+        f_pay_entries = ex.submit(_payroll_entries)
 
     full_name      = f_profile.result()
     quotes_recent  = f_quotes_rec.result()
@@ -179,6 +199,8 @@ def build_dashboard_payload(user_id: str) -> dict:
     all_profiles   = f_profiles.result()
     events_op      = f_events_op.result()
     pipeline_rows  = f_pipeline.result()
+    pay_periods    = f_pay_periods.result()
+    pay_entries    = f_pay_entries.result()
 
     client_name_map  = {c["id"]: c["name"] for c in clients_names}
     profile_name_map = {p["id"]: p.get("full_name") or "—" for p in all_profiles}
@@ -354,21 +376,69 @@ def build_dashboard_payload(user_id: str) -> dict:
     product_names      = [k for k, _ in top_products] or ["—"]
     product_quantities = [round(v, 2) for _, v in top_products] or [0]
 
-    # ── Top clientes por revenue confirmado (aceptadas + convertidas) ────────
+    # Estados "muertos" que no representan negocio real y no deben sumar.
+    DEAD_STATUSES = {"void", "cancelled"}
+
+    # ── Top clientes por monto cotizado (12m, excluye anuladas/canceladas) ────
     rev_by_client: dict[str, float] = defaultdict(float)
-    for row in quotes_recent:
-        if row.get("status") in REVENUE_STATUSES:
-            rev_by_client[row.get("client_id") or ""] += float(row.get("total") or 0.0)
+    for row in all_quotes_ext:
+        if row.get("status") in DEAD_STATUSES:
+            continue
+        rev_by_client[row.get("client_id") or ""] += float(row.get("total") or 0.0)
     top_cl         = sorted(rev_by_client.items(), key=lambda kv: kv[1], reverse=True)[:6]
-    client_labels  = [client_name_map.get(c, c[:8]) for c, _ in top_cl] or ["—"]
+    client_labels  = [client_name_map.get(c, (c[:8] if c else "Sin cliente")) for c, _ in top_cl] or ["—"]
     client_revenues= [round(v, 2) for _, v in top_cl] or [0]
 
-    # ── Income por estado ─────────────────────────────────────────────────────
-    inc_by_status: dict[str, float] = defaultdict(float)
-    for r in all_quotes_ext:
-        inc_by_status[r.get("status") or "unknown"] += float(r.get("total") or 0)
-    income_status_labels = [STATUS_ES.get(k, k) for k in inc_by_status]
-    income_status_values = [round(inc_by_status[k], 2) for k in inc_by_status]
+    # ── Top vendedores por monto cotizado (12m, excluye anuladas/canceladas) ──
+    rev_by_seller: dict[str, float] = defaultdict(float)
+    for row in all_quotes_ext:
+        if row.get("status") in DEAD_STATUSES:
+            continue
+        rev_by_seller[row.get("owner_id") or ""] += float(row.get("total") or 0.0)
+    top_sellers     = sorted(rev_by_seller.items(), key=lambda kv: kv[1], reverse=True)[:6]
+    seller_labels   = [(profile_name_map.get(s, "Sin asignar") if s else "Sin asignar") for s, _ in top_sellers] or ["—"]
+    seller_revenues = [round(v, 2) for _, v in top_sellers] or [0]
+
+    # ── Egresos: planillas (pagos a empleados) ───────────────────────────────
+    pay_total_by_period: dict[str, float] = defaultdict(float)
+    pay_by_employee:     dict[str, float] = defaultdict(float)
+    pay_emps_by_period:  dict[str, set]   = defaultdict(set)
+    for e in pay_entries:
+        pid = e.get("period_id")
+        amt = float(e.get("amount") or 0)
+        pay_total_by_period[pid] += amt
+        pay_by_employee[e.get("employee_id") or ""] += amt
+        pay_emps_by_period[pid].add(e.get("employee_id"))
+
+    def _period_ym(p: dict) -> str:
+        """Mes al que se imputa la planilla: fin de período > inicio > creación."""
+        raw = p.get("period_end") or p.get("period_start") or p.get("created_at") or ""
+        return str(raw)[:7]
+
+    expenses_by_ym: dict[str, float] = defaultdict(float)
+    expense_periods: list[dict] = []
+    for p in pay_periods:
+        tot = round(pay_total_by_period.get(p["id"], 0.0), 2)
+        expenses_by_ym[_period_ym(p)] += tot
+        expense_periods.append({
+            "id":             p.get("id"),
+            "title":          p.get("title") or "—",
+            "period_start":   (p.get("period_start") or "")[:10],
+            "period_end":     (p.get("period_end") or "")[:10],
+            "status":         p.get("status") or "draft",
+            "employee_count": len(pay_emps_by_period.get(p["id"], set())),
+            "total":          tot,
+        })
+
+    expenses_month = [round(expenses_by_ym.get(_ym(l), 0.0), 2) for l in months_labels]
+    total_expenses = round(sum(expenses_month), 2)
+    balance_month  = [round(incomes[i] - expenses_month[i], 2) for i in range(len(months_labels))]
+    total_balance  = round(total_revenue - total_expenses, 2)
+
+    # Top empleados por monto recibido en planilla
+    top_paid        = sorted(pay_by_employee.items(), key=lambda kv: kv[1], reverse=True)[:6]
+    paid_emp_labels = [(profile_name_map.get(k, "Sin asignar") if k else "Sin asignar") for k, _ in top_paid] or ["—"]
+    paid_emp_values = [round(v, 2) for _, v in top_paid] or [0]
 
     # ── Pipeline ─────────────────────────────────────────────────────────────
     _TRANS = {
@@ -439,8 +509,17 @@ def build_dashboard_payload(user_id: str) -> dict:
         "product_quantities":    product_quantities,
         "client_labels":         client_labels,
         "client_revenues":       client_revenues,
-        "income_status_labels":  income_status_labels,
-        "income_status_values":  income_status_values,
+        "seller_labels":         seller_labels,
+        "seller_revenues":       seller_revenues,
+        # Tab Egresos
+        "expenses_month":        expenses_month,
+        "total_expenses":        total_expenses,
+        "balance_month":         balance_month,
+        "total_balance":         total_balance,
+        "expense_periods":       expense_periods,
+        "payroll_count":         len(expense_periods),
+        "paid_emp_labels":       paid_emp_labels,
+        "paid_emp_values":       paid_emp_values,
         # KPIs de ingresos (nuevos)
         "current_year":          now.year,
         "ytd_revenue":           ytd_revenue,
