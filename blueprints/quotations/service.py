@@ -231,9 +231,11 @@ def recompute_totals(sb, quote_id: str):
     NOTA: usa UPDATE individual por línea (no upsert) para evitar que
     Supabase rechace el upsert parcial por columnas NOT NULL ausentes.
     """
+    # Se traen las filas COMPLETAS para poder reescribirlas en un solo upsert
+    # (ver nota al final de la función).
     rows = (
         sb.table("quotation_items")
-        .select("id, quantity, unit_price, days, discount_pct")
+        .select("*")
         .eq("quotation_id", quote_id)
         .execute()
         .data
@@ -268,17 +270,23 @@ def recompute_totals(sb, quote_id: str):
         line_tax    = round(net * tax_rate / 100.0, 6)
         line_tot    = net + line_tax
 
-        # UPDATE directo — más confiable que upsert con columnas parciales
-        sb.table("quotation_items").update({
-            "line_subtotal": round(net, 6),
-            "line_tax":      line_tax,
-            "line_total":    round(line_tot, 6),
-        }).eq("id", ln["id"]).execute()
+        ln["line_subtotal"] = round(net, 6)
+        ln["line_tax"]      = line_tax
+        ln["line_total"]    = round(line_tot, 6)
 
         subtotal       += net
         discount_total += disc_amount
         tax_total      += line_tax
         total          += line_tot
+
+    # Un solo upsert con las filas COMPLETAS en vez de un UPDATE por línea.
+    # Antes eran N viajes a Supabase (~1.7 s con 11 líneas); ahora es 1.
+    # Se mandan las filas enteras a propósito: el upsert con columnas parciales
+    # fallaba por las columnas NOT NULL (quotation_id, item_type, quantity,
+    # unit_price). Tampoco se paraleliza: escrituras concurrentes sobre el
+    # cliente compartido rompen ~25% de las veces en Windows (HTTP/2).
+    if rows:
+        sb.table("quotation_items").upsert(rows).execute()
 
     # Modo "precio fijo" (paquete): el total lo define flat_total + ISV encima,
     # sin importar las líneas. Las líneas se mantienen sólo como referencia interna.
