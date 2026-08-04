@@ -15,16 +15,16 @@
   {% call av_table('items_table', 'Inventario de Productos', 'items, precios y stock', 'Buscar por SKU, nombre, descripción, proveedor...', true) %}
     <thead>
       <tr>
-        <th data-type="text" class="av-col-opt">SKU <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">SKU <span class="icon-arrow">&UpArrow;</span></th>
         <th data-type="text">Nombre <span class="icon-arrow">&UpArrow;</span></th>
         <!-- <th data-type="text">Descripción <span class="icon-arrow">&UpArrow;</span></th> -->
         <th data-type="text">Estado <span class="icon-arrow">&UpArrow;</span></th>
         <th data-type="text">Tipo <span class="icon-arrow">&UpArrow;</span></th>
         <th data-type="number">Precio Unitario <span class="icon-arrow">&UpArrow;</span></th>
-        <th data-type="number" class="av-col-opt">Precio bajo <span class="icon-arrow">&UpArrow;</span></th>
-        <th data-type="text" class="av-col-opt">Unidad <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="number">Precio bajo <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Unidad <span class="icon-arrow">&UpArrow;</span></th>
         <th data-type="number">Stock <span class="icon-arrow">&UpArrow;</span></th>
-        <th data-type="text" class="av-col-opt">Proveedor <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Proveedor <span class="icon-arrow">&UpArrow;</span></th>
         <th data-nosort="1" class="text-center">Acciones</th>
       </tr>
     </thead>
@@ -33,7 +33,7 @@
       {% for product in products %}
       {% set t = (product.item_type or '—') %}
       <tr data-role="{{ (t)|lower }}">
-        <td class="av-col-opt">{{ product.sku or '—' }}</td>
+        <td>{{ product.sku or '—' }}</td>
 
         <td> {{ product.name or '—' }} </td>
         
@@ -80,8 +80,8 @@
           {% endif %}
         </td>
 
-        <td data-sort="{{ product.low_rate or 0 }}" class="av-col-opt">{{ '%.2f'|format(product.low_rate or 0) }}</td>
-        <td class="av-col-opt">{{ product.unit or 'unit' }}</td>
+        <td data-sort="{{ product.low_rate or 0 }}">{{ '%.2f'|format(product.low_rate or 0) }}</td>
+        <td>{{ product.unit or 'unit' }}</td>
 
         <td class="text-center" data-sort="{{ product.on_hand if product.on_hand is not none else 0 }}">
           {% if product.stock_on_hand is none %}
@@ -91,7 +91,7 @@
             {% endif %}
         </td>
 
-        <td class="text-center av-col-opt" data-sort="{{ product.on_hand if product.on_hand is not none else 0 }}">
+        <td class="text-center" data-sort="{{ product.on_hand if product.on_hand is not none else 0 }}">
           {{ product.suppliers.name }}
         </td>
 

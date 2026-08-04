@@ -16,10 +16,10 @@
       <tr>
         <th data-type="text">Nombre <span class="icon-arrow">&UpArrow;</span></th>
         <th data-type="text">Correo <span class="icon-arrow">&UpArrow;</span></th>
-        <th data-type="text" class="av-col-opt">Teléfono <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Teléfono <span class="icon-arrow">&UpArrow;</span></th>
         <th data-type="text">Rol <span class="icon-arrow">&UpArrow;</span></th>
         <th data-type="text">Estado <span class="icon-arrow">&UpArrow;</span></th>
-        <th data-type="date" class="av-col-opt">Creado <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="date">Creado <span class="icon-arrow">&UpArrow;</span></th>
         <th data-nosort="1" style="text-align:center;">Acciones</th>
       </tr>
     </thead>
@@ -30,13 +30,13 @@
       <tr data-role="{{ (u.role or '')|lower }}">
         <td>{{ u.full_name or '—' }}</td>
         <td>{{ u.email or '—' }}</td>
-        <td class="av-col-opt">{{ u.phone or '—' }}</td>
+        <td>{{ u.phone or '—' }}</td>
         <td><span class="av-badge role">{{ USER_ROLE_ES.get(u.role, u.role) }}</span></td>
         <td>
           {% if u.active %}<span class="av-badge on">Activo</span>
           {% else %}<span class="av-badge off">Inactivo</span>{% endif %}
         </td>
-        <td data-sort="{{ created }}" class="av-col-opt">{{ created or '—' }}</td>
+        <td data-sort="{{ created }}">{{ created or '—' }}</td>
         <td class="av-actions" style="text-align:center;">
           <div class="btn-group">
             <a class="btn btn-sm btn-outline-primary" style="border-radius:10px 0 0 10px;"

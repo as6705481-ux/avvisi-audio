@@ -12,9 +12,12 @@ from .service import (
     accept_quote,
     add_quote_line,
     create_quote_from_form,
+    autosave_quote_draft,
+    duplicate_quote,
     delete_quote_strict,
     get_quote_edit_context,
     list_quotations_with_names,
+    summarize_followups,
     list_trash_quotations,
     restore_quote,
     permanent_delete_quote,
@@ -35,7 +38,17 @@ from .service import (
 @role_required("admin", "sales")
 def quotations_list():
     rows, names = list_quotations_with_names(limit=500)
-    return render_template("quotations/quotations.html", quotations=rows, names=names)
+
+    # Recordatorio de seguimiento. Alcance por rol: admin/developer ven todas;
+    # ventas sólo las suyas (por owner_id).
+    role = session.get("user_role") or ""
+    uid = session.get("user_id")
+    scoped = rows if role in ("admin", "developer") else [r for r in rows if r.get("owner_id") == uid]
+    followups = summarize_followups(scoped, names.get("clients"))
+
+    return render_template(
+        "quotations/quotations.html", quotations=rows, names=names, followups=followups
+    )
 
 
 @bp.get("/add")
@@ -55,6 +68,21 @@ def quotation_add_post():
     except Exception as e:
         flash_exception("No se pudo crear", e)
         return redirect(url_for("quotations.quotation_add_get"))
+
+
+@bp.post("/add/autosave")
+@role_required("admin", "sales")
+def quotation_add_autosave():
+    """Guarda un borrador incompleto en la papelera cuando el usuario abandona
+    la creación sin terminar. Se llama vía sendBeacon; devuelve JSON."""
+    try:
+        res = autosave_quote_draft(request.form, session.get("user_id"))
+        if not res:
+            return jsonify({"ok": True, "saved": False}), 200
+        quote_id, quote_number = res
+        return jsonify({"ok": True, "saved": True, "quote_number": quote_number, "quote_id": quote_id}), 201
+    except Exception as e:
+        return jsonify({"ok": False, "saved": False, "error": str(e)}), 200
 
 
 @bp.get("/<quote_id>/edit")
@@ -126,6 +154,18 @@ def quotation_set_status(quote_id: str):
     if nxt.startswith("/") and not nxt.startswith("//"):
         return redirect(nxt)
     return redirect(url_for("quotations.quotation_edit_get", quote_id=quote_id))
+
+
+@bp.post("/<quote_id>/duplicate")
+@role_required("admin", "sales")
+def quotation_duplicate(quote_id: str):
+    try:
+        new_id, new_no = duplicate_quote(quote_id)
+        flash(f"Cotización duplicada como {new_no}.", "success")
+        return redirect(url_for("quotations.quotation_edit_get", quote_id=new_id))
+    except Exception as e:
+        flash_exception("No se pudo duplicar", e)
+        return redirect(url_for("quotations.quotations_list"))
 
 
 @bp.post("/<quote_id>/accept")

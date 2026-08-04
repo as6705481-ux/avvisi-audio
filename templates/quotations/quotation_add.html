@@ -1826,5 +1826,42 @@ document.addEventListener("DOMContentLoaded", () => {
   </div>
 </div>
 
+<!-- ── Autoguardado a la papelera si se abandona la creación sin terminar ── -->
+<script>
+(function () {
+  const form = document.getElementById('quoteForm');
+  if (!form) return;
+
+  let submitting = false;   // ¿se está creando normalmente?
+  let saved = false;        // evita guardar más de una vez
+
+  // Al crear normalmente NO debe duplicarse un borrador en la papelera.
+  form.addEventListener('submit', function () { submitting = true; });
+
+  function clientSelected() {
+    // Se lee el valor directo (TomSelect lo mantiene sincronizado). Haber
+    // elegido un cliente es señal suficiente de que hay trabajo que guardar,
+    // y además client_id es obligatorio para crear la fila.
+    const el = form.querySelector('[name="client_id"]');
+    return !!(el && (el.value || '').trim());
+  }
+
+  function autosave() {
+    if (saved || submitting) return;
+    if (!clientSelected()) return;
+    saved = true;
+    try {
+      const fd = new FormData(form);
+      navigator.sendBeacon("{{ url_for('quotations.quotation_add_autosave') }}", fd);
+      // El beacon no entrega una respuesta usable durante la descarga de la
+      // página, así que el aviso se muestra en la próxima carga (layout.html).
+      localStorage.setItem('avvisi.autosaveNotice', '1');
+    } catch (e) { /* mejor esfuerzo */ }
+  }
+
+  // pagehide cubre navegación por enlaces, recarga y cierre de pestaña.
+  window.addEventListener('pagehide', autosave);
+})();
+</script>
 
 {% endblock %}

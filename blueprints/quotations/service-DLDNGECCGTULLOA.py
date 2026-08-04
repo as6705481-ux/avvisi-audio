@@ -146,75 +146,6 @@ def list_quotations_with_names(limit: int = 500):
 
 
 # ==========================
-# Recordatorio de seguimiento
-# ==========================
-# Estados que requieren seguimiento (no están cerrados).
-FOLLOWUP_STATUSES = ["draft", "sent", "expired"]
-
-
-def _categorize_followups(rows, today: str):
-    """Divide en buckets EXCLUYENTES: borrador / enviada / vencida.
-    Vencida = estado 'expired', o 'sent' cuya validez (valid_until) ya pasó."""
-    draft, sent, expired = [], [], []
-    for r in rows:
-        st = (r.get("status") or "").lower()
-        vu = r.get("valid_until")
-        if st == "expired" or (st == "sent" and vu and str(vu) < today):
-            expired.append(r)
-        elif st == "sent":
-            sent.append(r)
-        elif st == "draft":
-            draft.append(r)
-    return draft, sent, expired
-
-
-def summarize_followups(rows, client_names: dict | None = None) -> dict:
-    """Resumen para el banner, a partir de filas ya cargadas (evita otra query)."""
-    today = datetime.utcnow().date().isoformat()
-    draft, sent, expired = _categorize_followups(rows, today)
-    cn = client_names or {}
-    expired_list = [
-        {
-            "id": r.get("id"),
-            "quote_number": r.get("quote_number"),
-            "client": cn.get(r.get("client_id"), "—"),
-            "valid_until": (str(r.get("valid_until") or ""))[:10],
-        }
-        for r in expired[:6]
-    ]
-    return {
-        "draft": len(draft),
-        "sent": len(sent),
-        "expired": len(expired),
-        "total": len(draft) + len(sent) + len(expired),
-        "expired_list": expired_list,
-    }
-
-
-def pending_followups(owner_id: str | None = None) -> dict:
-    """Consulta ligera para el aviso al iniciar sesión. Si se pasa owner_id,
-    sólo cuenta las cotizaciones de ese propietario."""
-    sb = get_service_client()
-    today = datetime.utcnow().date().isoformat()
-    q = (
-        sb.table("quotations")
-        .select("id, status, valid_until")
-        .is_("deleted_at", "null")
-        .in_("status", FOLLOWUP_STATUSES)
-    )
-    if owner_id:
-        q = q.eq("owner_id", owner_id)
-    rows = q.limit(1000).execute().data or []
-    draft, sent, expired = _categorize_followups(rows, today)
-    return {
-        "draft": len(draft),
-        "sent": len(sent),
-        "expired": len(expired),
-        "total": len(draft) + len(sent) + len(expired),
-    }
-
-
-# ==========================
 # Catálogos (add/edit)
 # ==========================
 def get_quote_add_context() -> dict:
@@ -300,11 +231,9 @@ def recompute_totals(sb, quote_id: str):
     NOTA: usa UPDATE individual por línea (no upsert) para evitar que
     Supabase rechace el upsert parcial por columnas NOT NULL ausentes.
     """
-    # Se traen las filas COMPLETAS para poder reescribirlas en un solo upsert
-    # (ver nota al final de la función).
     rows = (
         sb.table("quotation_items")
-        .select("*")
+        .select("id, quantity, unit_price, days, discount_pct")
         .eq("quotation_id", quote_id)
         .execute()
         .data
@@ -339,23 +268,17 @@ def recompute_totals(sb, quote_id: str):
         line_tax    = round(net * tax_rate / 100.0, 6)
         line_tot    = net + line_tax
 
-        ln["line_subtotal"] = round(net, 6)
-        ln["line_tax"]      = line_tax
-        ln["line_total"]    = round(line_tot, 6)
+        # UPDATE directo — más confiable que upsert con columnas parciales
+        sb.table("quotation_items").update({
+            "line_subtotal": round(net, 6),
+            "line_tax":      line_tax,
+            "line_total":    round(line_tot, 6),
+        }).eq("id", ln["id"]).execute()
 
         subtotal       += net
         discount_total += disc_amount
         tax_total      += line_tax
         total          += line_tot
-
-    # Un solo upsert con las filas COMPLETAS en vez de un UPDATE por línea.
-    # Antes eran N viajes a Supabase (~1.7 s con 11 líneas); ahora es 1.
-    # Se mandan las filas enteras a propósito: el upsert con columnas parciales
-    # fallaba por las columnas NOT NULL (quotation_id, item_type, quantity,
-    # unit_price). Tampoco se paraleliza: escrituras concurrentes sobre el
-    # cliente compartido rompen ~25% de las veces en Windows (HTTP/2).
-    if rows:
-        sb.table("quotation_items").upsert(rows).execute()
 
     # Modo "precio fijo" (paquete): el total lo define flat_total + ISV encima,
     # sin importar las líneas. Las líneas se mantienen sólo como referencia interna.
@@ -504,163 +427,6 @@ def create_quote_from_form(form) -> tuple[str, str]:
         recompute_totals(sb, quote_id)
     except Exception as exc:
         print(f"[recompute_totals] error en quote {quote_id}: {exc}")
-
-    return quote_id, quote_no
-
-
-def duplicate_quote(quote_id: str) -> tuple[str, str]:
-    """Clona una cotización (cabecera + líneas) como un nuevo borrador con su
-    propio número. No copia estado, fechas de envío/aceptación ni totales
-    (se recalculan). Devuelve (nuevo_id, nuevo_numero)."""
-    sb = get_service_client()
-
-    src = sb.table("quotations").select("*").eq("id", quote_id).single().execute().data
-    if not src:
-        raise ValueError("Cotización no encontrada.")
-
-    new_no  = gen_quote_number(sb)
-    valid_u = (datetime.utcnow().date() + timedelta(days=30)).isoformat()
-
-    header = {
-        "quote_number":   new_no,
-        "client_id":      src.get("client_id"),
-        "contact_id":     src.get("contact_id"),
-        "event_id":       src.get("event_id"),
-        "owner_id":       src.get("owner_id"),
-        "currency":       src.get("currency"),
-        "exchange_rate":  src.get("exchange_rate"),
-        "status":         "draft",
-        "valid_until":    valid_u,
-        "notes_internal": src.get("notes_internal"),
-        "notes_client":   src.get("notes_client"),
-        "deposit_due":    src.get("deposit_due"),
-        "tax_rate":       src.get("tax_rate"),
-        "pricing_mode":   src.get("pricing_mode"),
-        "flat_total":     src.get("flat_total"),
-        "flat_concept":   src.get("flat_concept"),
-        # Los totales se recalculan a partir de las líneas.
-        "subtotal": 0.0, "discount_total": 0.0, "tax_total": 0.0, "total": 0.0,
-    }
-
-    resp = sb.table("quotations").insert(header, returning="representation").execute()
-    rows = getattr(resp, "data", None) or []
-    if not rows:
-        raise RuntimeError(f"No se pudo crear la copia. Detalle: {getattr(resp,'error',None)}")
-    new_id = rows[0]["id"]
-
-    # revisión + historial (best effort)
-    try:
-        sb.table("quotation_revisions").insert(
-            {"quotation_id": new_id, "version": 1, "created_by": src.get("owner_id"),
-             "comment": f"Duplicada de {src.get('quote_number')}"}
-        ).execute()
-    except Exception:
-        pass
-    try:
-        sb.table("quotation_status_history").insert(
-            {"quotation_id": new_id, "old_status": None, "new_status": "draft",
-             "changed_by": src.get("owner_id"), "note": f"Duplicada de {src.get('quote_number')}"}
-        ).execute()
-    except Exception:
-        pass
-
-    # Líneas: se copian completas cambiando sólo el destino. Se descartan id,
-    # created_at y revision_id (apuntaba a la revisión de la cotización origen).
-    src_lines = (
-        sb.table("quotation_items").select("*")
-        .eq("quotation_id", quote_id)
-        .order("sort_order")
-        .execute().data or []
-    )
-    drop = {"id", "created_at", "revision_id"}
-    new_lines = []
-    for ln in src_lines:
-        row = {k: v for k, v in ln.items() if k not in drop}
-        row["quotation_id"] = new_id
-        new_lines.append(row)
-    if new_lines:
-        sb.table("quotation_items").insert(new_lines).execute()
-
-    try:
-        recompute_totals(sb, new_id)
-    except Exception as exc:
-        print(f"[duplicate_quote] recompute error en {new_id}: {exc}")
-
-    return new_id, new_no
-
-
-def autosave_quote_draft(form, user_id: str | None = None) -> tuple[str, str] | None:
-    """Guarda una cotización a medio hacer directamente en la papelera
-    (deleted_at seteado) para no perder el trabajo si no se finaliza.
-
-    Es tolerante a campos faltantes, pero requiere al menos un cliente (la
-    columna client_id es NOT NULL) y un responsable (owner_id NOT NULL; si no
-    se eligió, se usa el usuario de la sesión). Devuelve (id, numero) o None si
-    no hay lo mínimo para guardar."""
-    sb = get_service_client()
-
-    client_id = (form.get("client_id") or "").strip()
-    if not client_id:
-        return None  # sin cliente no se puede crear la fila ni tiene sentido
-
-    owner_id = (form.get("owner_id") or "").strip() or (user_id or None)
-    if not owner_id:
-        return None
-
-    contact_id = (form.get("contact_id") or "").strip() or None
-    if not contact_id:
-        contact_id = _get_or_create_eventual_contact(sb, client_id)
-
-    event_id  = (form.get("event_id") or "").strip() or None
-    currency  = (form.get("currency") or DEFAULT_CURRENCY).strip()[:3].upper() or DEFAULT_CURRENCY
-    exchange  = _to_float(form.get("exchange_rate"), 1.0) or 1.0
-    apply_tax = (form.get("apply_tax") or "yes").lower().strip()
-    tax_rate  = 15.0 if apply_tax == "yes" else 0.0
-
-    pricing_mode = (form.get("pricing_mode") or "detailed").strip().lower()
-    if pricing_mode not in ("detailed", "flat"):
-        pricing_mode = "detailed"
-    flat_total   = _to_float(form.get("flat_total"), 0.0) if pricing_mode == "flat" else None
-    flat_concept = (form.get("flat_concept") or "").strip() or None
-
-    quote_no = gen_quote_number(sb)
-    now_iso  = datetime.utcnow().isoformat()
-
-    resp = sb.table("quotations").insert(
-        {
-            "quote_number":   quote_no,
-            "client_id":      client_id,
-            "contact_id":     contact_id,
-            "event_id":       event_id,
-            "owner_id":       owner_id,
-            "currency":       currency,
-            "exchange_rate":  exchange,
-            "status":         "draft",
-            "valid_until":    (datetime.utcnow().date() + timedelta(days=30)).isoformat(),
-            "notes_internal": (form.get("notes_internal") or "").strip() or None,
-            "notes_client":   (form.get("notes_client") or "").strip() or None,
-            "deposit_due":    _to_float(form.get("deposit_due"), 0.0),
-            "tax_rate":       tax_rate,
-            "pricing_mode":   pricing_mode,
-            "flat_total":     flat_total,
-            "flat_concept":   flat_concept,
-            "subtotal": 0.0, "discount_total": 0.0, "tax_total": 0.0, "total": 0.0,
-            "deleted_at":     now_iso,   # <-- nace en la papelera
-        },
-        returning="representation",
-    ).execute()
-
-    rows = getattr(resp, "data", None) or []
-    if not rows:
-        return None
-    quote_id = rows[0]["id"]
-
-    # Líneas + totales (best effort: un borrador incompleto no debe romper nada)
-    try:
-        _insert_quote_lines_from_form(sb, quote_id, form)
-        recompute_totals(sb, quote_id)
-    except Exception as exc:
-        print(f"[autosave_quote_draft] líneas/totales en {quote_id}: {exc}")
 
     return quote_id, quote_no
 

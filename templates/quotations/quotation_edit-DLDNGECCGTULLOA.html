@@ -44,29 +44,6 @@
 .q-input-desc:focus { outline:none; border-color:#e65a00; background:#fff; }
 .q-lines-empty      { text-align:center; padding:32px; color:#9ca3af;
                       background:#fafafa; border-radius:14px; border:1.5px dashed #e5e7eb; }
-
-/* ── Móvil: controles cómodos para el dedo ───────────────────────
-   Los campos y botones de línea medían ~30px de alto, difíciles de
-   acertar en un teléfono. El font-size de 16px además evita que iOS
-   haga zoom automático al enfocar un campo. */
-@media (max-width: 768px){
-  .q-input-name,
-  .q-input-num,
-  .q-input-price,
-  .q-input-desc     { font-size:16px; }
-  .q-input-name     { padding:9px 11px; }
-  .q-input-num,
-  .q-input-price    { padding:9px 8px; min-height:42px; }
-  .q-input-num      { width:84px; }
-  .q-input-desc     { padding:9px 11px; }
-  .q-btn-save,
-  .q-btn-del        { width:42px; height:42px; font-size:17px; }
-  .q-line-btns      { gap:8px; }
-  .q-metrics        { gap:10px; }
-  .q-field-grow     { min-width:120px; }
-  .q-line-card      { padding:14px 12px 12px; }
-  .q-line-num       { min-width:26px; height:26px; font-size:12px; }
-}
 /* ── Totales ─────────────────────────────────────────────────── */
 .q-totals-card      { background:#fff; border-radius:14px; box-shadow:0 1px 8px rgba(0,0,0,.07);
                       padding:14px 18px; }
@@ -107,79 +84,6 @@
          target="_blank" class="btn btn-outline-secondary ios-btn">
         <i class="bi bi-printer"></i> Imprimir / PDF
       </a>
-      <form action="{{ url_for('quotations.quotation_duplicate', quote_id=q.id) }}" method="POST" class="d-inline">
-        <button type="submit" class="btn btn-outline-success ios-btn"
-          data-av-confirm
-          data-av-title="¿Duplicar cotización?"
-          data-av-message="Se creará una copia en borrador (con un número nuevo) que incluye las mismas líneas.">
-          <i class="bi bi-files"></i> Duplicar
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- ── ESTADO (al inicio, para cambiarlo fácil) ─────────────────── -->
-  {# Mapa de transiciones válidas #}
-  {% set NEXT_STATES = {
-    "draft":     [("sent","Enviado"), ("void","Anulada")],
-    "sent":      [("accepted","Aceptado"), ("declined","Rechazado"), ("expired","Expirado"), ("cancelled","Cancelado"), ("void","Anulada")],
-    "accepted":  [("converted","Convertido"), ("cancelled","Cancelado"), ("void","Anulada")],
-    "declined":  [("void","Anulada")],
-    "expired":   [("void","Anulada")],
-    "cancelled": [("void","Anulada")],
-    "converted": [("draft","Revertir a borrador")],
-    "void":      [("draft","Revertir a borrador")],
-  } %}
-  {% set STATUS_BADGE = {
-    "draft":     "secondary",
-    "sent":      "primary",
-    "accepted":  "success",
-    "declined":  "danger",
-    "expired":   "warning",
-    "cancelled": "dark",
-    "converted": "info",
-    "void":      "danger",
-  } %}
-  {% set next_opts = NEXT_STATES.get(q.status, []) %}
-
-  <div class="card border-0 shadow-sm mb-3">
-    <div class="card-body py-3">
-      <div class="d-flex align-items-center gap-3 flex-wrap">
-        <div class="d-flex align-items-center gap-2">
-          <i class="bi bi-flag-fill text-muted"></i>
-          <span class="fw-semibold text-muted small text-uppercase" style="letter-spacing:.4px;">Estado</span>
-          <span class="badge bg-{{ STATUS_BADGE.get(q.status, 'secondary') }} {{ 'text-dark' if q.status in ('expired',) else '' }}"
-                style="font-size:.9rem;">
-            {{ QUOTE_STATUS_ES.get(q.status, q.status) }}
-          </span>
-          {% if q.status == 'void' %}
-          <span style="font-size:11px;color:#dc3545;font-weight:600;">
-            <i class="bi bi-slash-circle"></i> Anulada — puede eliminarse
-          </span>
-          {% endif %}
-        </div>
-
-        {% if next_opts %}
-        <form action="{{ url_for('quotations.quotation_set_status', quote_id=q.id) }}" method="POST"
-              class="d-flex gap-2 flex-wrap align-items-center ms-auto">
-          <input type="hidden" name="actor_id" value="{{ user.id }}">
-          <i class="bi bi-arrow-repeat text-muted"></i>
-          <select name="status" class="form-select form-select-sm js-ios-select" style="min-width:180px;">
-            <option disabled selected>Cambiar a…</option>
-            {% for val, lbl in next_opts %}
-            <option value="{{ val }}"
-              {% if val == 'void' %}style="color:#dc3545;font-weight:700;"{% endif %}>
-              {% if val == 'void' %}⚠ {% endif %}{{ lbl }}
-            </option>
-            {% endfor %}
-          </select>
-          <input name="note" class="form-control form-control-sm" style="min-width:150px;" placeholder="Nota (opcional)">
-          <button class="btn btn-primary btn-sm">Aplicar</button>
-        </form>
-        {% else %}
-        <span class="text-muted small ms-auto"><i class="bi bi-lock"></i> Estado final, sin transiciones.</span>
-        {% endif %}
-      </div>
     </div>
   </div>
 
@@ -397,6 +301,87 @@
           <button class="btn btn-success ios-btn">Guardar cabecera</button>
         </div>
       </form>
+
+      <!-- ESTADO -->
+      {# Mapa de transiciones válidas #}
+      {% set NEXT_STATES = {
+        "draft":     [("sent","Enviado"), ("void","Anulada")],
+        "sent":      [("accepted","Aceptado"), ("declined","Rechazado"), ("expired","Expirado"), ("cancelled","Cancelado"), ("void","Anulada")],
+        "accepted":  [("converted","Convertido"), ("cancelled","Cancelado"), ("void","Anulada")],
+        "declined":  [("void","Anulada")],
+        "expired":   [("void","Anulada")],
+        "cancelled": [("void","Anulada")],
+        "converted": [("draft","Revertir a borrador")],
+        "void":      [("draft","Revertir a borrador")],
+      } %}
+      {% set STATUS_BADGE = {
+        "draft":     "secondary",
+        "sent":      "primary",
+        "accepted":  "success",
+        "declined":  "danger",
+        "expired":   "warning",
+        "cancelled": "dark",
+        "converted": "info",
+        "void":      "danger",
+      } %}
+
+      <div class="q-section-title mt-3">
+        Estado
+        <small>workflow</small>
+      </div>
+
+      <div class="ios-group ios-form">
+        <div class="ios-row">
+          <div class="ios-ico"><i class="bi bi-flag"></i></div>
+          <div class="ios-body">
+            <div class="ios-label">Estado actual</div>
+            <div style="margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span class="badge bg-{{ STATUS_BADGE.get(q.status, 'secondary') }}
+                {{ 'text-dark' if q.status in ('expired',) else '' }}">
+                {{ QUOTE_STATUS_ES.get(q.status, q.status) }}
+              </span>
+              {% if q.status == 'void' %}
+              <span style="font-size:11px;color:#dc3545;font-weight:600;">
+                <i class="bi bi-slash-circle"></i> Anulada — puede eliminarse
+              </span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        {% set next_opts = NEXT_STATES.get(q.status, []) %}
+        {% if next_opts %}
+        <div class="ios-row">
+          <div class="ios-ico"><i class="bi bi-arrow-repeat"></i></div>
+          <div class="ios-body">
+            <div class="ios-label">Cambiar estado</div>
+            <form action="{{ url_for('quotations.quotation_set_status', quote_id=q.id) }}" method="POST"
+                  class="d-flex gap-2 flex-wrap mt-2">
+              <input type="hidden" name="actor_id" value="{{ user.id }}">
+              <select name="status" class="ios-select js-ios-select" style="max-width:200px;">
+                <option disabled selected>Cambiar a…</option>
+                {% for val, lbl in next_opts %}
+                <option value="{{ val }}"
+                  {% if val == 'void' %}style="color:#dc3545;font-weight:700;"{% endif %}>
+                  {% if val == 'void' %}⚠ {% endif %}{{ lbl }}
+                </option>
+                {% endfor %}
+              </select>
+              <input name="note" class="ios-input" style="min-width:140px;flex:1;" placeholder="Nota (opcional)">
+              <button class="btn btn-outline-primary ios-btn">Aplicar</button>
+            </form>
+          </div>
+        </div>
+        {% else %}
+        <div class="ios-row">
+          <div class="ios-ico"><i class="bi bi-lock"></i></div>
+          <div class="ios-body">
+            <div class="ios-label" style="color:#9ca3af;">Sin transiciones disponibles</div>
+            <small style="color:#d1d5db;">Este estado es final.</small>
+          </div>
+        </div>
+        {% endif %}
+      </div>
 
     </div><!-- /col-lg-5 -->
 

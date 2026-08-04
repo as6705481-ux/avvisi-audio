@@ -53,6 +53,28 @@ def login_post():
 
         # Redirigir según rol
         role = session["user_role"]
+
+        # Recordatorio de cotizaciones pendientes de seguimiento (toast al entrar).
+        # admin/developer: todas; ventas: sólo las suyas; ops: no aplica.
+        if role in ("admin", "sales", "developer"):
+            try:
+                from blueprints.quotations.service import pending_followups
+                owner = None if role in ("admin", "developer") else session["user_id"]
+                pf = pending_followups(owner)
+                if pf["total"]:
+                    partes = []
+                    if pf["sent"]:    partes.append(f"{pf['sent']} enviada(s)")
+                    if pf["expired"]: partes.append(f"{pf['expired']} vencida(s)")
+                    if pf["draft"]:   partes.append(f"{pf['draft']} en borrador")
+                    flash(
+                        f"Tienes {pf['total']} cotización(es) pendientes de seguimiento: "
+                        + ", ".join(partes) + ". Revísalas para saber si fueron aceptadas o rechazadas.",
+                        "warning" if pf["expired"] else "info",
+                    )
+            except Exception as exc:
+                print(f"[login] recordatorio seguimiento: {exc}")
+
+
         if role == "ops":
             return redirect(url_for("events.events_list"))
         if role == "sales":

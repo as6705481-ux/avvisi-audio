@@ -14,40 +14,6 @@
     </a>
   </div>
 
-  {# ── Recordatorio de seguimiento ──────────────────────────────── #}
-  {% if followups and followups.total %}
-  <div class="alert {{ 'alert-warning' if followups.expired else 'alert-info' }} border-0 shadow-sm mb-3">
-    <div class="d-flex align-items-center gap-2 mb-1">
-      <i class="bi bi-bell-fill"></i>
-      <strong>Recordatorio de seguimiento</strong>
-    </div>
-    <div class="small">
-      Tienes cotizaciones esperando definición:
-      {% if followups.sent %}
-      <span class="badge bg-primary bg-opacity-75">{{ followups.sent }} enviada{{ '' if followups.sent == 1 else 's' }}</span>
-      {% endif %}
-      {% if followups.expired %}
-      <span class="badge bg-danger">{{ followups.expired }} vencida{{ '' if followups.expired == 1 else 's' }}</span>
-      {% endif %}
-      {% if followups.draft %}
-      <span class="badge bg-secondary bg-opacity-75">{{ followups.draft }} en borrador</span>
-      {% endif %}
-      — dales seguimiento para saber si fueron <strong>aceptadas</strong> o <strong>rechazadas</strong>.
-    </div>
-    {% if followups.expired_list %}
-    <div class="small mt-2 d-flex flex-wrap gap-1 align-items-center">
-      <span class="text-muted me-1"><i class="bi bi-clock-history"></i> Vencidas:</span>
-      {% for e in followups.expired_list %}
-      <a href="{{ url_for('quotations.quotation_edit_get', quote_id=e.id) }}"
-         class="badge bg-light text-dark border text-decoration-none">
-        #{{ e.quote_number }} · {{ e.client }}{% if e.valid_until %} · venció {{ e.valid_until }}{% endif %}
-      </a>
-      {% endfor %}
-    </div>
-    {% endif %}
-  </div>
-  {% endif %}
-
   {# Transiciones válidas por estado (espejo de ALLOWED_TRANSITIONS en el servicio) #}
   {% set NEXT_STATES = {
     "draft":     ["sent", "cancelled", "void"],
@@ -66,10 +32,10 @@
       <tr>
         <th data-type="text"># <span class="icon-arrow">&UpArrow;</span></th>
         <th data-type="text">Cliente <span class="icon-arrow">&UpArrow;</span></th>
-        <th data-type="text" class="av-col-opt">Evento <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Evento <span class="icon-arrow">&UpArrow;</span></th>
         <th data-type="text">Estado <span class="icon-arrow">&UpArrow;</span></th>
         <th data-type="number">Total <span class="icon-arrow">&UpArrow;</span></th>
-        <th data-type="date" class="av-col-opt">Creada <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="date">Creada <span class="icon-arrow">&UpArrow;</span></th>
         <th data-nosort="1" style="text-align:center;">Acciones</th>
       </tr>
     </thead>
@@ -83,7 +49,7 @@
       <tr data-role="{{ (q.status or '')|lower }}">
         <td>{{ q.quote_number }}</td>
         <td>{{ client_name }}</td>
-        <td class="av-col-opt">{{ event_name }}</td>
+        <td>{{ event_name }}</td>
 
         <td>
           {% set next_opts = NEXT_STATES.get(q.status, []) %}
@@ -108,7 +74,7 @@
           {{ 'L ' if q.currency=='HNL' else '' }}{{ '{:,.2f}'.format(total_num) }}
         </td>
 
-        <td data-sort="{{ created }}" class="av-col-opt">{{ created or '—' }}</td>
+        <td data-sort="{{ created }}">{{ created or '—' }}</td>
 
         <td class="av-actions" style="text-align:center;">
           <div class="btn-group">
@@ -116,15 +82,6 @@
                href="{{ url_for('quotations.quotation_edit_get', quote_id=q.id) }}">
               <i class="fas fa-edit"></i>
             </a>
-
-            <form action="{{ url_for('quotations.quotation_duplicate', quote_id=q.id) }}" method="POST" class="d-inline">
-              <button class="btn btn-sm btn-outline-success" type="submit"
-                data-av-confirm
-                data-av-title="¿Duplicar cotización?"
-                data-av-message="Se creará una copia en borrador (con un número nuevo) que incluye las mismas líneas."
-                title="Duplicar"><i class="fas fa-copy"></i>
-              </button>
-            </form>
 
             <a class="btn btn-sm btn-outline-secondary"
                href="{{ url_for('quotations.quotation_print', quote_id=q.id) }}" target="_blank">
@@ -164,16 +121,6 @@
     outline:none;
     border-color:#0d6efd;
     box-shadow:0 0 0 2px rgba(13,110,253,.15);
-  }
-
-  /* ── Móvil ─────────────────────────────────────────────────────
-     En móvil av_table muestra cada fila como tarjeta. Las columnas
-     marcadas con .av-col-opt (Evento y Creada) se omiten ahí para
-     que la tarjeta no quede larga; siguen visibles al abrir la
-     cotización. El ocultamiento lo maneja av_table.css. */
-  @media (max-width: 768px){
-    .av-status-select { font-size: 16px; padding: 9px 26px 9px 10px; max-width: 160px; }
-    #quotations_table .av-actions .btn { padding: 8px 11px; }
   }
 </style>
 

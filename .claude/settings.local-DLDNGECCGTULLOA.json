@@ -27,14 +27,7 @@
       "Bash(python -m py_compile blueprints/quotations/service.py blueprints/quotations/pdf.py)",
       "PowerShell($n = Get-Command node -ErrorAction SilentlyContinue; if \\($n\\) { \"node: $\\($n.Source\\)\"; node --version } else { \"node NO encontrado\" }; $np = Get-Command npx -ErrorAction SilentlyContinue; if \\($np\\) { \"npx: $\\($np.Source\\)\" } else { \"npx NO encontrado\" })",
       "Bash(curl -sL https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js -o chart.umd.min.js)",
-      "PowerShell(Get-CimInstance Win32_Process -Filter \"CommandLine LIKE '%http.server%'\" | ForEach-Object { try { Stop-Process -Id $_.ProcessId -Force -ErrorAction Stop } catch {} }; 'cleaned')",
-      "PowerShell(Get-CimInstance Win32_Process -Filter \"CommandLine LIKE '%http.server%'\" | ForEach-Object { try { Stop-Process -Id $_.ProcessId -Force -ErrorAction Stop } catch {} }; 'ok')",
-      "Bash(git commit *)",
-      "Bash(git config *)",
-      "Bash(git remote *)",
-      "Bash(powershell -NoProfile -Command 'Get-CimInstance Win32_Process -Filter \"CommandLine LIKE '\\\\''%http.server%'\\\\''\" | ForEach-Object { try { Stop-Process -Id $_.ProcessId -Force -ErrorAction Stop } catch {} }')",
-      "Bash(python -m http.server 8941)",
-      "Bash(python -)"
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"CommandLine LIKE '%http.server%'\" | ForEach-Object { try { Stop-Process -Id $_.ProcessId -Force -ErrorAction Stop } catch {} }; 'cleaned')"
     ]
   }
 }
