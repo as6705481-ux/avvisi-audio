@@ -32,10 +32,10 @@
       <tr>
         <th data-type="text"># <span class="icon-arrow">&UpArrow;</span></th>
         <th data-type="text">Cliente <span class="icon-arrow">&UpArrow;</span></th>
-        <th data-type="text">Evento <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text" class="av-col-opt">Evento <span class="icon-arrow">&UpArrow;</span></th>
         <th data-type="text">Estado <span class="icon-arrow">&UpArrow;</span></th>
         <th data-type="number">Total <span class="icon-arrow">&UpArrow;</span></th>
-        <th data-type="date">Creada <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="date" class="av-col-opt">Creada <span class="icon-arrow">&UpArrow;</span></th>
         <th data-nosort="1" style="text-align:center;">Acciones</th>
       </tr>
     </thead>
@@ -49,7 +49,7 @@
       <tr data-role="{{ (q.status or '')|lower }}">
         <td>{{ q.quote_number }}</td>
         <td>{{ client_name }}</td>
-        <td>{{ event_name }}</td>
+        <td class="av-col-opt">{{ event_name }}</td>
 
         <td>
           {% set next_opts = NEXT_STATES.get(q.status, []) %}
@@ -74,7 +74,7 @@
           {{ 'L ' if q.currency=='HNL' else '' }}{{ '{:,.2f}'.format(total_num) }}
         </td>
 
-        <td data-sort="{{ created }}">{{ created or '—' }}</td>
+        <td data-sort="{{ created }}" class="av-col-opt">{{ created or '—' }}</td>
 
         <td class="av-actions" style="text-align:center;">
           <div class="btn-group">
@@ -121,6 +121,16 @@
     outline:none;
     border-color:#0d6efd;
     box-shadow:0 0 0 2px rgba(13,110,253,.15);
+  }
+
+  /* ── Móvil ─────────────────────────────────────────────────────
+     En móvil av_table muestra cada fila como tarjeta. Las columnas
+     marcadas con .av-col-opt (Evento y Creada) se omiten ahí para
+     que la tarjeta no quede larga; siguen visibles al abrir la
+     cotización. El ocultamiento lo maneja av_table.css. */
+  @media (max-width: 768px){
+    .av-status-select { font-size: 16px; padding: 9px 26px 9px 10px; max-width: 160px; }
+    #quotations_table .av-actions .btn { padding: 8px 11px; }
   }
 </style>
 

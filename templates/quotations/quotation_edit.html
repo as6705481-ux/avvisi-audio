@@ -44,6 +44,29 @@
 .q-input-desc:focus { outline:none; border-color:#e65a00; background:#fff; }
 .q-lines-empty      { text-align:center; padding:32px; color:#9ca3af;
                       background:#fafafa; border-radius:14px; border:1.5px dashed #e5e7eb; }
+
+/* ── Móvil: controles cómodos para el dedo ───────────────────────
+   Los campos y botones de línea medían ~30px de alto, difíciles de
+   acertar en un teléfono. El font-size de 16px además evita que iOS
+   haga zoom automático al enfocar un campo. */
+@media (max-width: 768px){
+  .q-input-name,
+  .q-input-num,
+  .q-input-price,
+  .q-input-desc     { font-size:16px; }
+  .q-input-name     { padding:9px 11px; }
+  .q-input-num,
+  .q-input-price    { padding:9px 8px; min-height:42px; }
+  .q-input-num      { width:84px; }
+  .q-input-desc     { padding:9px 11px; }
+  .q-btn-save,
+  .q-btn-del        { width:42px; height:42px; font-size:17px; }
+  .q-line-btns      { gap:8px; }
+  .q-metrics        { gap:10px; }
+  .q-field-grow     { min-width:120px; }
+  .q-line-card      { padding:14px 12px 12px; }
+  .q-line-num       { min-width:26px; height:26px; font-size:12px; }
+}
 /* ── Totales ─────────────────────────────────────────────────── */
 .q-totals-card      { background:#fff; border-radius:14px; box-shadow:0 1px 8px rgba(0,0,0,.07);
                       padding:14px 18px; }

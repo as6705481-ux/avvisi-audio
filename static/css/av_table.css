@@ -241,6 +241,72 @@
     display: none !important;
     }
 
-  @media (max-width: 1000px){
+  /* Entre 769px y 1000px la tabla sigue siendo tabla: se evita el corte
+     de palabras y, si hace falta, el contenedor scrollea. */
+  @media (min-width: 769px) and (max-width: 1000px){
     .av-table th, .av-table td{ white-space: nowrap; }
+  }
+
+  /* ── Móvil: la tabla se convierte en tarjetas ────────────────────
+     Con 6-7 columnas, en un teléfono la tabla llegaba a ~1300px y
+     obligaba a un scroll horizontal enorme. Cada fila pasa a ser una
+     tarjeta con pares "etiqueta: valor"; la etiqueta sale de
+     data-label, que av_table.js copia desde el encabezado. */
+  @media (max-width: 768px){
+    .av-table__body{ max-height: none; overflow: visible; }
+
+    .av-table table,
+    .av-table tbody,
+    .av-table tbody tr,
+    .av-table tbody td{ display: block; width: 100%; }
+
+    .av-table thead{ display: none; }   /* los encabezados van por celda */
+
+    .av-table tbody tr{
+      background: #fff;
+      border: 1px solid rgba(15,23,42,.10);
+      border-radius: 12px;
+      margin: 10px;
+      padding: 4px 12px;
+      width: auto;
+      box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    }
+    .av-table tbody tr:nth-child(even){ background: #fff; }
+    .av-table tbody tr:hover{ background: #fff !important; }
+
+    .av-table tbody td{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(15,23,42,.06);
+      white-space: normal;              /* anula el nowrap que ensanchaba */
+      text-align: right;
+      font-size: 14px;
+    }
+    .av-table tbody td:last-child{ border-bottom: none; }
+
+    .av-table tbody td::before{
+      content: attr(data-label);
+      font-weight: 700;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      color: #6b7280;
+      text-align: left;
+      flex-shrink: 0;
+    }
+
+    /* Columnas marcadas como opcionales: se omiten en móvil */
+    .av-table tbody td.av-col-opt,
+    .av-table thead th.av-col-opt{ display: none; }
+
+    /* Acciones: sin etiqueta y centradas */
+    .av-table tbody td.av-actions{ justify-content: center; padding-top: 12px; }
+    .av-table tbody td.av-actions::before{ content: none; }
+
+    /* Fila de "no hay datos" */
+    .av-table tbody td[colspan]{ justify-content: center; text-align: center; }
+    .av-table tbody td[colspan]::before{ content: none; }
   }

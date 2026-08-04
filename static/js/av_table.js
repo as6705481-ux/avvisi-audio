@@ -19,6 +19,28 @@
     const rows = () => Array.from(tbody.querySelectorAll('tr'));
     const isEmptyRow = (row) => row.children.length === 1 && row.querySelector('td[colspan]');
 
+    /* En móvil la tabla se muestra como tarjetas "etiqueta: valor".
+       La etiqueta se toma del encabezado y se guarda en data-label,
+       que el CSS pinta con ::before. Así no hay que tocar cada
+       plantilla que use el componente. */
+    function labelCells() {
+      const heads = Array.from(root.querySelectorAll('thead th')).map(th => {
+        const clone = th.cloneNode(true);
+        clone.querySelectorAll('.icon-arrow').forEach(n => n.remove());
+        return (clone.textContent || '').trim();
+      });
+      if (!heads.length) return;
+
+      rows().forEach(row => {
+        if (isEmptyRow(row)) return;
+        Array.from(row.children).forEach((cell, i) => {
+          if (heads[i] && !cell.hasAttribute('data-label')) {
+            cell.setAttribute('data-label', heads[i]);
+          }
+        });
+      });
+    }
+
     function buildRoleOptions() {
       if (!roleFilter) return;
 
@@ -129,6 +151,7 @@
     prevBtn.addEventListener('click', () => { page -= 1; applyPagination(); });
     nextBtn.addEventListener('click', () => { page += 1; applyPagination(); });
 
+    labelCells();
     buildRoleOptions();
     runAll();
 

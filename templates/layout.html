@@ -235,12 +235,78 @@
         .flash-close { position: absolute; top: 12px; right: 12px; opacity: .7; }
         .flash-close:hover { opacity: 1; }
 
+        /* ── Botón de menú (sólo móvil) ──────────────────────────── */
+        .btn-menu {
+            display: none;                 /* se muestra en el media query */
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            color: rgba(255,255,255,.85);
+            font-size: 23px;
+            line-height: 1;
+            padding: 5px 12px 5px 4px;
+            margin-right: 2px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background .18s, color .18s;
+        }
+        .btn-menu:hover { background: rgba(255,255,255,.12); color: #fff; }
+
+        /* Fondo oscuro detrás del sidebar abierto */
+        .sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.45);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s ease;
+        }
+        .sidebar-backdrop.show { opacity: 1; pointer-events: auto; }
+
         /* ── Responsive ──────────────────────────────────────────── */
         @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); transition: transform .25s ease; }
+            .btn-menu { display: inline-flex; }
+
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+                z-index: 1001;             /* por encima del backdrop */
+                box-shadow: 4px 0 24px rgba(0,0,0,.35);
+            }
             .sidebar.show { transform: translateX(0); }
+
             .topbar { left: 0; width: 100%; }
-            .main-content { margin-left: 0; }
+            .main-content { margin-left: 0; padding: 14px 12px; }
+
+            /* Formularios en móvil: objetivos táctiles cómodos.
+               El font-size de 16px evita que iOS haga zoom automático
+               al enfocar un campo. */
+            .ios-input,
+            .ios-select,
+            .form-control,
+            .form-select,
+            .ts-control { font-size: 16px; min-height: 42px; }
+            textarea.ios-input,
+            textarea.form-control { min-height: 70px; }
+
+            /* Casillas y radios: 16px es muy chico para el dedo */
+            .form-check-input { width: 20px; height: 20px; margin-top: .15em; }
+
+            .btn-menu { font-size: 25px; padding: 8px 13px 8px 6px; }
+        }
+
+        @media (min-width: 769px) {
+            /* En escritorio el backdrop nunca debe interferir */
+            .sidebar-backdrop { display: none; }
+        }
+
+        @media (max-width: 576px) {
+            .main-content { padding: 12px 10px; }
+            h1 { font-size: 1.4rem; }
+            table { font-size: 13px; }
+            .flash-wrap { top: 58px; right: 8px; width: calc(100vw - 16px); }
         }
     </style>
 </head>
@@ -352,8 +418,16 @@
 
     </nav>
 
+    <!-- Fondo oscuro al abrir el menú en móvil -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
     <!-- ══════════════ TOP BAR ══════════════ -->
     <div class="topbar" id="topbar">
+        <button class="btn-menu" id="sidebarToggle" type="button"
+                aria-label="Abrir menú" aria-expanded="false" aria-controls="sidebar">
+            <i class="bi bi-list"></i>
+        </button>
+
         {% if request.endpoint != 'dashboard.dashboard' %}
         <button class="btn-back" onclick="history.back()">
             <i class="bi bi-arrow-left-circle-fill"></i>
@@ -404,6 +478,45 @@
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     <script src="{{ url_for('static', filename='js/av_table.js') }}"></script>
     <script src="{{ url_for('static', filename='js/av_confirm.js') }}"></script>
+
+    <!-- Menú lateral en móvil: abrir / cerrar -->
+    <script>
+    (function () {
+        const sidebar  = document.getElementById('sidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        const toggle   = document.getElementById('sidebarToggle');
+        if (!sidebar || !backdrop || !toggle) return;
+
+        function open() {
+            sidebar.classList.add('show');
+            backdrop.classList.add('show');
+            toggle.setAttribute('aria-expanded', 'true');
+            document.body.style.overflow = 'hidden';   // evita scroll de fondo
+        }
+        function close() {
+            sidebar.classList.remove('show');
+            backdrop.classList.remove('show');
+            toggle.setAttribute('aria-expanded', 'false');
+            document.body.style.overflow = '';
+        }
+
+        toggle.addEventListener('click', function () {
+            sidebar.classList.contains('show') ? close() : open();
+        });
+        backdrop.addEventListener('click', close);
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') close();
+        });
+        // Al navegar, el menú no debe quedar abierto
+        sidebar.querySelectorAll('a[href]').forEach(function (a) {
+            a.addEventListener('click', close);
+        });
+        // Si se pasa a escritorio, limpiar el estado
+        window.addEventListener('resize', function () {
+            if (window.innerWidth > 768) close();
+        });
+    })();
+    </script>
 
     <!-- Marcar link activo en sidebar -->
     <script>
