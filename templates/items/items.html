@@ -12,19 +12,17 @@
   </div>
 
   {# true => muestra select (lo usamos para "Tipo") #}
-  {% call av_table('items_table', 'Inventario de Productos', 'items, precios y stock', 'Buscar por SKU, nombre, descripción, proveedor...', true) %}
+  {% call av_table('items_table', 'Inventario de Productos', 'items, categorías y precios', 'Buscar por código, nombre, categoría, tipo...', true) %}
     <thead>
       <tr>
-        <th data-type="text" class="av-col-opt">SKU <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Código <span class="icon-arrow">&UpArrow;</span></th>
         <th data-type="text">Nombre <span class="icon-arrow">&UpArrow;</span></th>
         <!-- <th data-type="text">Descripción <span class="icon-arrow">&UpArrow;</span></th> -->
         <th data-type="text">Estado <span class="icon-arrow">&UpArrow;</span></th>
         <th data-type="text">Tipo <span class="icon-arrow">&UpArrow;</span></th>
+        <th data-type="text">Categoría <span class="icon-arrow">&UpArrow;</span></th>
         <th data-type="number">Precio Unitario <span class="icon-arrow">&UpArrow;</span></th>
-        <th data-type="number" class="av-col-opt">Precio bajo <span class="icon-arrow">&UpArrow;</span></th>
         <th data-type="text" class="av-col-opt">Unidad <span class="icon-arrow">&UpArrow;</span></th>
-        <th data-type="number">Stock <span class="icon-arrow">&UpArrow;</span></th>
-        <th data-type="text" class="av-col-opt">Proveedor <span class="icon-arrow">&UpArrow;</span></th>
         <th data-nosort="1" class="text-center">Acciones</th>
       </tr>
     </thead>
@@ -33,7 +31,13 @@
       {% for product in products %}
       {% set t = (product.item_type or '—') %}
       <tr data-role="{{ (t)|lower }}">
-        <td class="av-col-opt">{{ product.sku or '—' }}</td>
+        <td data-sort="{{ product.sku or '' }}">
+          {% if product.sku %}
+            <svg class="js-barcode" data-code="{{ product.sku }}"></svg>
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
+        </td>
 
         <td> {{ product.name or '—' }} </td>
         
@@ -61,39 +65,34 @@
           </span>
         </td>
 
+        <td data-sort="{{ product.category or '' }}">
+          {% if product.category %}
+            <span class="av-badge role">{{ product.category }}</span>
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
+        </td>
+
         {# Precio Unitario: si hay tiers -> select, si no -> default_rate #}
         <td data-sort="{% if product.default_rate is defined and product.default_rate is not none %}{{ product.default_rate }}{% else %}0{% endif %}">
           {% if product.up_price is defined or product.down_price is defined %}
             <select name="unit_price" class="form-select form-select-sm w-auto d-inline-block">
               {% if product.up_price is defined and product.up_price is not none %}
-                <option value="{{ product.up_price }}">↑ {{ '%.2f'|format(product.up_price) }}</option>
+                <option value="{{ product.up_price }}">↑ {{ '{:,.2f}'.format(product.up_price) }}</option>
               {% endif %}
               {% if product.down_price is defined and product.down_price is not none %}
-                <option value="{{ product.down_price }}">↓ {{ '%.2f'|format(product.down_price) }}</option>
+                <option value="{{ product.down_price }}">↓ {{ '{:,.2f}'.format(product.down_price) }}</option>
               {% endif %}
               {% if product.default_rate is defined %}
-                <option value="{{ product.default_rate }}" selected>STD {{ '%.2f'|format(product.default_rate or 0) }}</option>
+                <option value="{{ product.default_rate }}" selected>STD {{ '{:,.2f}'.format(product.default_rate or 0) }}</option>
               {% endif %}
             </select>
           {% else %}
-            {{ '%.2f'|format(product.default_rate or 0) }}
+            {{ '{:,.2f}'.format(product.default_rate or 0) }}
           {% endif %}
         </td>
 
-        <td data-sort="{{ product.low_rate or 0 }}" class="av-col-opt">{{ '%.2f'|format(product.low_rate or 0) }}</td>
         <td class="av-col-opt">{{ product.unit or 'unit' }}</td>
-
-        <td class="text-center" data-sort="{{ product.on_hand if product.on_hand is not none else 0 }}">
-          {% if product.stock_on_hand is none %}
-              —
-            {% else %}
-              {{ product.stock_on_hand }}
-            {% endif %}
-        </td>
-
-        <td class="text-center av-col-opt" data-sort="{{ product.on_hand if product.on_hand is not none else 0 }}">
-          {{ product.suppliers.name }}
-        </td>
 
         <td class="av-actions text-center">
           <div class="btn-group" role="group">
@@ -126,10 +125,37 @@
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="10" class="text-center text-muted py-4">No hay productos para mostrar.</td></tr>
+      <tr><td colspan="8" class="text-center text-muted py-4">No hay productos para mostrar.</td></tr>
       {% endfor %}
     </tbody>
   {% endcall %}
 </div>
+
+<!-- Códigos de barras de la tabla (Code128 del SKU) -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script>
+(function () {
+  if (typeof JsBarcode === 'undefined') return;
+  document.querySelectorAll('svg.js-barcode').forEach(function (el) {
+    const code = el.getAttribute('data-code');
+    if (!code) return;
+    try {
+      // El SKU va como texto legible debajo (displayValue), así la columna
+      // "Código" reemplaza al SKU sin perder legibilidad y sigue siendo
+      // buscable/ordenable.
+      JsBarcode(el, code, {
+        format: 'CODE128',
+        displayValue: true,
+        fontSize: 11,
+        height: 28,
+        width: 1.1,
+        margin: 2,
+        textMargin: 1,
+        background: '#ffffff'
+      });
+    } catch (e) { console.error('barcode', code, e); }
+  });
+})();
+</script>
 
 {% endblock %}

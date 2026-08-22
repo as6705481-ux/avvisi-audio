@@ -148,6 +148,69 @@
       applyPagination();
     }
 
+    /* ── Ordenamiento por columna ──────────────────────────────────
+       Al hacer clic en un encabezado se ordenan las filas por esa
+       columna, alternando ascendente/descendente. El valor se toma de
+       data-sort si existe; si no, del valor de un control (select/input)
+       de la celda; y en último caso del texto. El tipo (texto/número/
+       fecha) viene de data-type en el <th>. */
+    const thead = root.querySelector('thead');
+    const headerCells = thead ? Array.from(thead.querySelectorAll('th')) : [];
+    const sortState = { index: -1, dir: 1 };   // dir: 1 asc, -1 desc
+
+    function cellSortValue(row, index, type) {
+      const cell = row.children[index];
+      if (!cell) return type === 'number' ? -Infinity : '';
+      let raw = cell.getAttribute('data-sort');
+      if (raw === null) {
+        const ctrl = cell.querySelector('select, input, textarea');
+        raw = ctrl ? (ctrl.value || '') : cell.textContent;
+      }
+      raw = (raw || '').trim();
+      if (type === 'number') {
+        const n = parseFloat(raw.replace(/[^0-9.\-]/g, ''));
+        return isNaN(n) ? -Infinity : n;
+      }
+      return raw;
+    }
+
+    function sortBy(index) {
+      const th = headerCells[index];
+      if (!th || th.hasAttribute('data-nosort')) return;
+      const type = th.getAttribute('data-type') || 'text';
+
+      if (sortState.index === index) sortState.dir *= -1;
+      else { sortState.index = index; sortState.dir = 1; }
+      const dir = sortState.dir;
+
+      const dataRows = rows().filter(r => !isEmptyRow(r));
+      dataRows.sort((a, b) => {
+        const va = cellSortValue(a, index, type);
+        const vb = cellSortValue(b, index, type);
+        let cmp;
+        if (type === 'number') cmp = va - vb;
+        else cmp = String(va).localeCompare(String(vb), 'es', { numeric: true, sensitivity: 'base' });
+        return cmp * dir;
+      });
+
+      // Reordenar el DOM (la fila de "sin datos" queda al final)
+      const emptyRow = rows().find(isEmptyRow);
+      dataRows.forEach(r => tbody.appendChild(r));
+      if (emptyRow) tbody.appendChild(emptyRow);
+
+      // Indicador visual en el encabezado
+      headerCells.forEach(h => h.classList.remove('active', 'asc', 'desc'));
+      th.classList.add('active', dir === 1 ? 'asc' : 'desc');
+
+      page = 1;
+      applyPagination();
+    }
+
+    headerCells.forEach((th, i) => {
+      if (th.hasAttribute('data-nosort')) return;
+      th.addEventListener('click', () => sortBy(i));
+    });
+
     prevBtn.addEventListener('click', () => { page -= 1; applyPagination(); });
     nextBtn.addEventListener('click', () => { page += 1; applyPagination(); });
 

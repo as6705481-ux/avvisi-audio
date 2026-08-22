@@ -93,12 +93,31 @@
   .av-select{
     height: 38px;
     border-radius: 999px;
-    padding: 6px 12px;
+    padding: 6px 36px 6px 14px;      /* espacio a la derecha para el caret */
     border: 1px solid rgba(255,255,255,.18);
-    background: rgba(255,255,255,.10);
+    background-color: rgba(255,255,255,.10);
     color: #fff;
+    font-size: 14px;
     outline: none;
     width: min(220px, 100%);
+    cursor: pointer;
+
+    /* Quita la apariencia nativa y pone un caret propio (chevron blanco),
+       igual que el buscador de al lado. */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    background-size: 14px;
+    transition: background-color .2s ease, box-shadow .2s ease, border-color .2s ease;
+  }
+  .av-select:hover,
+  .av-select:focus{
+    background-color: rgba(255,255,255,.18);
+    box-shadow: 0 .1rem .4rem rgba(0,0,0,.20);
+    border-color: rgba(247,148,29,.75);
   }
   .av-select option{
     color: #0f172a; /* en dropdown nativo */
@@ -145,7 +164,9 @@
     font-size: 0.85rem;
     margin-left: .4rem;
     transition: .15s ease;
+    opacity: .35;               /* atenuada mientras la columna no está ordenada */
   }
+  .av-table thead th:hover .icon-arrow{ opacity: .8; }
 
   .av-table thead th:hover{
     color:#0f172a;
@@ -161,8 +182,11 @@
     background:#F7941D;
     color:#0b0f1a;
     border-color:#F7941D;
+    opacity: 1;
   }
-  .av-table thead th.asc .icon-arrow{
+  /* La flecha base apunta hacia arriba (↑ = ascendente). En descendente
+     se rota 180° para que apunte hacia abajo (↓). */
+  .av-table thead th.desc .icon-arrow{
     transform: rotate(180deg);
   }
 
